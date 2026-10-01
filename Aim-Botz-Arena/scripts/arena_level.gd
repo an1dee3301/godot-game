@@ -53,8 +53,8 @@ func set_sound_fx(sound_fx: SoundFX) -> void:
 func _build_materials() -> void:
 	_materials["floor"] = _dev_material(Color(0.42, 0.43, 0.45), Color(0.55, 0.56, 0.58), Color(0.33, 0.34, 0.36), 0.25)
 	_materials["wall"] = _dev_material(Color(0.86, 0.5, 0.17), Color(0.95, 0.62, 0.3), Color(0.7, 0.38, 0.1), 0.25)
-	_materials["platform"] = _dev_material(Color(0.28, 0.42, 0.6), Color(0.42, 0.56, 0.74), Color(0.2, 0.3, 0.45), 0.5)
-	_materials["concrete"] = _dev_material(Color(0.62, 0.62, 0.6), Color(0.7, 0.7, 0.68), Color(0.5, 0.5, 0.48), 0.25)
+	_materials["platform"] = _dev_material(Color(0.2, 0.3, 0.45), Color(0.32, 0.43, 0.58), Color(0.14, 0.22, 0.34), 0.5)
+	_materials["concrete"] = _dev_material(Color(0.5, 0.5, 0.49), Color(0.58, 0.58, 0.57), Color(0.4, 0.4, 0.39), 0.25)
 	_materials["crate"] = _dev_material(Color(0.55, 0.38, 0.2), Color(0.66, 0.48, 0.28), Color(0.38, 0.24, 0.12), 0.5)
 	_materials["container_red"] = _dev_material(Color(0.6, 0.16, 0.12), Color(0.5, 0.12, 0.1), Color(0.45, 0.1, 0.08), 0.33)
 	_materials["container_blue"] = _dev_material(Color(0.16, 0.32, 0.55), Color(0.12, 0.26, 0.46), Color(0.1, 0.22, 0.4), 0.33)
@@ -96,10 +96,11 @@ func _build_environment() -> void:
 	environment.background_mode = Environment.BG_SKY
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.75
+	environment.ambient_light_energy = 0.5
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.glow_enabled = true
-	environment.glow_intensity = 0.4
+	environment.glow_intensity = 0.25
+	environment.glow_hdr_threshold = 1.2
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
 	add_child(world_environment)
@@ -107,7 +108,7 @@ func _build_environment() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-52.0, -32.0, 0.0)
-	sun.light_energy = 1.15
+	sun.light_energy = 0.95
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 90.0
 	add_child(sun)
@@ -284,8 +285,8 @@ func _bake_navigation() -> void:
 	navigation_mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	navigation_mesh.geometry_collision_mask = 1
 	navigation_mesh.agent_radius = 0.5
-	navigation_mesh.agent_height = 1.9
-	navigation_mesh.agent_max_climb = 0.35
+	navigation_mesh.agent_height = 2.0
+	navigation_mesh.agent_max_climb = 0.25
 	navigation_mesh.agent_max_slope = 40.0
 	navigation_mesh.cell_size = 0.25
 	navigation_mesh.cell_height = 0.25
