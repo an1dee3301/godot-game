@@ -88,7 +88,6 @@ func _build_health_visual() -> void:
 	_add_box(Vector3(0.6, 0.42, 0.42), Vector3.ZERO, Color(0.95, 0.95, 0.95))
 	_add_box(Vector3(0.36, 0.1, 0.44), Vector3.ZERO, Color(0.85, 0.1, 0.1), true)
 	_add_box(Vector3(0.1, 0.32, 0.44), Vector3.ZERO, Color(0.85, 0.1, 0.1), true)
-	_add_box(Vector3(0.62, 0.1, 0.1), Vector3(0.0, 0.0, 0.0), Color(0.85, 0.1, 0.1), true)
 
 
 func _build_ammo_visual() -> void:
