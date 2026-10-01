@@ -40,6 +40,7 @@ var headshots := 0
 var shots := 0
 var hits := 0
 var score := 0
+var leaks := 0
 var elapsed := 0.0
 var best_score := 0
 var sensitivity := 1.0
@@ -51,7 +52,8 @@ var _wave_break_timer := 0.0
 var _end_timer := 0.0
 var _end_victory := false
 var _end_stats := ""
-var _practice_strafe := false
+var _practice_mode := Bot.PracticeMode.STATIC
+var _rush_used := false
 var _menu_orbit := 0.0
 var _name_index := 0
 var _rng := RandomNumberGenerator.new()
@@ -105,6 +107,7 @@ func _ready() -> void:
 	menus.name = "Menus"
 	add_child(menus)
 	menus.start_requested.connect(start_game)
+	menus.rush_requested.connect(_start_rush)
 	menus.resume_requested.connect(resume)
 	menus.restart_requested.connect(restart_game)
 	menus.main_menu_requested.connect(go_to_menu)
@@ -116,11 +119,13 @@ func _ready() -> void:
 	go_to_menu()
 	if "--waves" in OS.get_cmdline_user_args():
 		start_game(false)
-	elif "--practice" in OS.get_cmdline_user_args():
-		start_game(true)
 	elif "--strafe" in OS.get_cmdline_user_args():
 		start_game(true)
-		set_practice_strafe(true)
+		set_practice_mode(Bot.PracticeMode.STRAFE)
+	elif "--rush" in OS.get_cmdline_user_args():
+		_start_rush()
+	elif "--practice" in OS.get_cmdline_user_args():
+		start_game(true)
 
 
 # --- State transitions -----------------------------------------------------------
@@ -135,12 +140,14 @@ func start_game(practice_mode: bool) -> void:
 	shots = 0
 	hits = 0
 	score = 0
+	leaks = 0
 	elapsed = 0.0
 	wave_index = -1
 	alive_bots = 0
 	_pending_spawns.clear()
 	_end_timer = 0.0
-	_practice_strafe = false
+	_practice_mode = Bot.PracticeMode.STATIC
+	_rush_used = false
 
 	player.infinite_reserve = practice
 	player.invulnerable = practice
@@ -157,7 +164,7 @@ func start_game(practice_mode: bool) -> void:
 	if practice:
 		for spot in level.practice_spots:
 			_spawn_bot(Bot.Type.STANDARD, spot, true)
-		hud.show_banner("AIM PRACTICE", "60 seconds - B toggles strafing - Esc pauses", 3.0)
+		hud.show_banner("AIM PRACTICE", "B cycles Static / Strafe / Rush - Esc pauses", 3.0)
 	else:
 		_spawn_props()
 		_wave_break_timer = FIRST_WAVE_DELAY
@@ -197,16 +204,24 @@ func resume() -> void:
 
 
 func restart_game() -> void:
-	var strafe := _practice_strafe
+	var mode := _practice_mode
 	start_game(practice)
 	if practice:
-		set_practice_strafe(strafe)
+		set_practice_mode(mode)
 
 
-func set_practice_strafe(enabled: bool) -> void:
-	_practice_strafe = enabled
+func _start_rush() -> void:
+	start_game(true)
+	set_practice_mode(Bot.PracticeMode.RUSH)
+
+
+func set_practice_mode(mode: Bot.PracticeMode) -> void:
+	_practice_mode = mode
+	if mode == Bot.PracticeMode.RUSH:
+		_rush_used = true
 	for node in bots_root.get_children():
-		(node as Bot).practice_strafe = enabled
+		(node as Bot).set_practice_mode(mode)
+	_refresh_hud()
 
 
 func _finish(victory: bool) -> void:
@@ -237,6 +252,8 @@ func _prepare_result(victory: bool) -> void:
 		lines.append("Session time  %s" % GameHUD.format_time(elapsed))
 		lines.append("Shots  %d     Accuracy  %.1f%%" % [shots, accuracy])
 	lines.append("Kills  %d     Headshots  %d (%d%%)" % [kills, headshots, _headshot_rate()])
+	if practice and _rush_used:
+		lines.append("Leaks  %d" % leaks)
 	lines.append("")
 	if victory and not practice and score > best_score:
 		best_score = score
@@ -300,8 +317,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			resume()
 		get_viewport().set_input_as_handled()
 	elif state == GameState.PLAYING and event.is_action_pressed("toggle_strafe") and practice:
-		set_practice_strafe(not _practice_strafe)
-		hud.show_banner("", "Strafing bots %s" % ("ON" if _practice_strafe else "OFF"), 1.2)
+		set_practice_mode((_practice_mode + 1) % 3)
+		hud.show_banner("", "Target mode: %s" % _practice_mode_name(), 1.2)
 	elif state == GameState.PLAYING and event is InputEventMouseButton and event.pressed:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			_capture_mouse(true)
@@ -315,6 +332,8 @@ func _notification(what: int) -> void:
 # --- Waves and bots ---------------------------------------------------------------
 
 func _begin_wave(index: int) -> void:
+	if index >= WAVES.size():
+		return
 	wave_index = index
 	var config: Dictionary = WAVES[index]
 	_pending_spawns.clear()
@@ -335,13 +354,14 @@ func _spawn_bot(bot_type: int, spot: Vector3, practice_target: bool) -> Bot:
 	bot.bot_name = "BOT %s" % BOT_NAMES[_name_index % BOT_NAMES.size()]
 	_name_index += 1
 	bot.practice_target = practice_target
-	bot.practice_strafe = _practice_strafe
+	bot.practice_mode = _practice_mode
 	bot.player = player
 	bot.sound_fx = sound_fx
 	bot.effects_root = effects_root
 	bot.position = spot + Vector3.UP * 0.05
 	bot.set_meta("spot", spot)
 	bot.died.connect(_on_bot_died)
+	bot.leaked.connect(_on_bot_leaked)
 	bots_root.add_child(bot)
 	alive_bots += 1
 	if not practice_target:
@@ -391,6 +411,18 @@ func _on_bot_died(bot: Bot, headshot: bool, cause: String, by_player: bool) -> v
 		else:
 			_wave_break_timer = WAVE_BREAK
 			hud.show_banner("WAVE %d CLEARED" % (wave_index + 1), "Next wave in %d seconds - grab health and ammo" % int(WAVE_BREAK), WAVE_BREAK - 0.5)
+	_refresh_hud()
+
+
+func _on_bot_leaked(bot: Bot) -> void:
+	if not practice or state != GameState.PLAYING:
+		return
+	bot.queue_free()
+	alive_bots = maxi(alive_bots - 1, 0)
+	leaks += 1
+	_pending_practice.append({"spot": bot.get_meta("spot"), "remaining": PRACTICE_RESPAWN})
+	sound_fx.play("hurt", -3.0)
+	hud.show_damage_flash()
 	_refresh_hud()
 
 
@@ -458,7 +490,8 @@ func _clear_run() -> void:
 func _refresh_hud() -> void:
 	hud.set_score(score)
 	if practice:
-		hud.set_objective("AIM PRACTICE  -  %d KILLS" % kills)
+		var leak_text := "  -  %d LEAKS" % leaks if _practice_mode == Bot.PracticeMode.RUSH else ""
+		hud.set_objective("%s  -  %d KILLS%s" % [_practice_mode_name(), kills, leak_text])
 	elif wave_index < 0:
 		hud.set_objective("GET READY")
 	else:
@@ -476,6 +509,10 @@ func _accuracy() -> float:
 
 func _headshot_rate() -> int:
 	return 0 if kills == 0 else int(float(headshots) / float(kills) * 100.0)
+
+
+func _practice_mode_name() -> String:
+	return ["STATIC", "STRAFE", "RUSH"][_practice_mode]
 
 
 func _orbit_menu_camera(delta: float) -> void:

@@ -10,6 +10,6 @@ Record a 2–4 minute video showing the game and explaining the improvements. Us
 6. Explore the original cover, container lane and two-room bunker. Open the bunker door with E.
 7. Pause and resume. Show that the mission timer is frozen during pause.
 8. Demonstrate Game Over and restart. Capture Mission Complete by clearing all three waves; this can be a separately recorded clip.
-9. Briefly show Aim Practice (B toggles strafing), accuracy/head hit statistics and the timed result screen.
+9. Show Aim Practice and cycle Static → Strafe → Rush with B. In Rush, let a bot reach you or the platform edge to show the leak flash, sound and counter, then show its respawn and the leak count on the timed result screen. You can also start Rush from the main menu. Point out accuracy and headshot statistics.
 
 Identify at least two Version 2 improvements in your commentary, such as sprint, pickups, score, menus, door interaction or damage feedback. Keep the source project available for assessment. A playable export can be created through Godot's Export dialog when the appropriate export templates are installed.

@@ -6,7 +6,7 @@
 
 1. Open this folder's `project.godot` in Godot 4 (tested with 4.8.dev3 on macOS with the Compatibility renderer).
 2. Press `F5`.
-3. Choose **PLAY MISSION** or **AIM PRACTICE**.
+3. Choose **PLAY MISSION**, **AIM PRACTICE**, or **AIM PRACTICE - RUSH**.
 
 | Key | Action |
 | --- | --- |
@@ -19,12 +19,12 @@
 | `R` | Reload |
 | `1` / `2` / `Q` / mouse wheel | Switch weapon |
 | `E` | Open or close doors |
-| `B` | Toggle strafing bots (practice mode) |
+| `B` | Cycle Static → Strafe → Rush targets (practice mode) |
 | `Esc` / `P` | Pause menu |
 
 **Mission:** survive 3 waves of bots (3, then 5, then 7, including red **heavy** bots) and eliminate them all to get **MISSION COMPLETE**. If your health reaches 0, it's **GAME OVER**. Both end screens show your stats and have **Restart** and **Main Menu** buttons.
 
-**Aim Practice:** a 60-second Aim Botz drill. Press B to toggle static or strafing targets. Three rows of bots stand in the field and respawn one second after each kill. You get unlimited reserve ammo and take no damage, and the HUD tracks kills, headshot % and accuracy. At the end, a Practice Complete screen shows your session results. Practice scores are separate from the saved best mission score.
+**Aim Practice:** a 60-second Aim Botz drill. Press B to cycle Static, Strafe, and Rush targets, or choose **AIM PRACTICE - RUSH** from the menu. In Rush, bots run toward you; reaching you or the raised platform edge counts as a leak and gives visual and audio feedback, but no kill credit. Targets respawn at their home spots after one second. You get unlimited reserve ammo and take no damage. The HUD shows the target mode, kills, headshot %, accuracy, and Rush leaks. The Practice Complete screen includes leaks if Rush was used. Practice scores are separate from the saved best mission score.
 
 Pause freezes the session timer, combat, reloads and target respawns. Restart resets the session and cancels the previous death camera animation.
 
@@ -56,7 +56,7 @@ Pause freezes the session timer, combat, reloads and target respawns. Restart re
 11. **Simple timer** (mission clock or practice countdown in the HUD)
 12. **Damage feedback** (red flash, low-health vignette, directional hit arcs, camera shake)
 
-Student-proposed extra: **Aim Botz practice mode** with headshot and accuracy statistics.
+Student-proposed extra: **Aim Botz practice mode** with headshot and accuracy statistics, plus **Rush targets that run toward the player** and a leak counter.
 
 ### Optional / bonus features
 
@@ -89,8 +89,8 @@ godot --headless --editor --path . --quit
 godot --headless --path . -s tests/smoke_test.gd
 ```
 
-The import step registers script classes on a fresh checkout. The integration test checks movement, sprint, jump/gravity, navigation and enemy fire, raycast head/body damage, ammo/reload, pause, pickups, door motion and barrels, all waves and win/lose screens, result statistics for the final shot, restart during a death animation, and practice respawns/countdown/strafing/session cleanup.
+The import step registers script classes on a fresh checkout. The integration test checks movement, sprint, jump/gravity, navigation and enemy fire, raycast head/body damage, ammo/reload, pause, pickups, door motion and barrels, all waves and win/lose screens, result statistics for the final shot, restart during a death animation, and practice respawns/countdown/strafing/Rush movement, leaks and session cleanup.
 
-For a direct launch, add `-- --waves`, `-- --practice` or `-- --strafe` to your Godot command.
+For a direct launch, add `-- --waves`, `-- --practice`, `-- --strafe`, or `-- --rush` to your Godot command.
 
 See `documentation/DEMO_GUIDE.md` for a suggested 2–4 minute student recording. The demo video stays outside this repository. PDF files are ignored by Git; the local assignment PDF is not committed.

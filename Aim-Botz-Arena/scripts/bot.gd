@@ -3,21 +3,25 @@ extends CharacterBody3D
 ## Enemy bot driven by a small finite state machine:
 ## IDLE -> CHASE (navmesh pathing toward the player) -> ATTACK (strafe and
 ## shoot while it has line of sight) -> DEAD.
-## In practice mode the bot is a static (or strafing) Aim Botz target.
+## In practice mode the bot is a static, strafing or rushing Aim Botz target.
 
 signal died(bot: Bot, headshot: bool, cause: String, by_player: bool)
+signal leaked(bot: Bot)
 
 enum Type { STANDARD, HEAVY }
 enum BotState { IDLE, CHASE, ATTACK, DEAD }
+enum PracticeMode { STATIC, STRAFE, RUSH }
 
 const GRAVITY := 18.0
 const SIGHT_RANGE := 60.0
 const THINK_INTERVAL := 0.15
+const RUSH_SPEED := 6.5
+const LEAK_DISTANCE := 2.5
 
 var bot_type := Type.STANDARD
 var bot_name := "BOT"
 var practice_target := false
-var practice_strafe := false
+var practice_mode := PracticeMode.STATIC
 var player: Player
 var sound_fx: SoundFX
 var effects_root: Node3D
@@ -104,6 +108,13 @@ func _ready() -> void:
 
 func is_alive() -> bool:
 	return state != BotState.DEAD
+
+
+func set_practice_mode(mode: PracticeMode) -> void:
+	practice_mode = mode
+	if practice_target and is_alive():
+		global_position = _home
+		velocity = Vector3.ZERO
 
 
 func is_headshot_position(hit_position: Vector3) -> bool:
@@ -326,8 +337,27 @@ func _open_nearby_doors() -> void:
 
 func _practice_update(delta: float) -> void:
 	_practice_time += delta
+	if practice_mode == PracticeMode.RUSH and player:
+		var destination := player.global_position
+		# The raised spawn platform starts at z = 27; reaching its front edge leaks.
+		if destination.y > 1.5 and destination.z > 27.0:
+			destination.z = 27.0
+		destination.y = global_position.y
+		var toward := destination - global_position
+		if toward.length() <= LEAK_DISTANCE:
+			_leak()
+			return
+		var direction := toward.normalized()
+		velocity.x = direction.x * RUSH_SPEED
+		velocity.z = direction.z * RUSH_SPEED
+		move_and_slide()
+		_face_direction(direction)
+		_animate(delta)
+		if Vector2(global_position.x - destination.x, global_position.z - destination.z).length() <= LEAK_DISTANCE:
+			_leak()
+		return
 	var target_x := _home.x
-	if practice_strafe:
+	if practice_mode == PracticeMode.STRAFE:
 		target_x += sin(_practice_time * 1.3) * 2.5
 	velocity.x = (target_x - global_position.x) * 6.0
 	velocity.z = (_home.z - global_position.z) * 6.0
@@ -335,6 +365,12 @@ func _practice_update(delta: float) -> void:
 	if player:
 		_face_towards(player.global_position)
 	_animate(delta)
+
+
+func _leak() -> void:
+	state = BotState.DEAD
+	velocity = Vector3.ZERO
+	leaked.emit(self)
 
 
 # --- Presentation -------------------------------------------------------------

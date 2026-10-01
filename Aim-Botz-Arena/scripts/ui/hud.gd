@@ -186,6 +186,10 @@ func set_stats(text: String) -> void:
 	_stats_label.text = text
 
 
+func show_damage_flash() -> void:
+	_flash_alpha = maxf(_flash_alpha, 0.8)
+
+
 func show_banner(title: String, subtitle := "", duration := 2.5) -> void:
 	_banner_label.text = title
 	_sub_banner_label.text = subtitle

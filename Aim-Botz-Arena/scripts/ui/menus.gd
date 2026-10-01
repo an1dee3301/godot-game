@@ -3,6 +3,7 @@ extends CanvasLayer
 ## Main menu, pause menu and end-of-round screen (Game Over / Mission Complete).
 
 signal start_requested(practice: bool)
+signal rush_requested
 signal resume_requested
 signal restart_requested
 signal main_menu_requested
@@ -111,6 +112,7 @@ func _build_main_menu() -> void:
 	column.add_child(_spacer(16))
 	_add_button(column, "PLAY MISSION", func() -> void: start_requested.emit(false))
 	_add_button(column, "AIM PRACTICE", func() -> void: start_requested.emit(true))
+	_add_button(column, "AIM PRACTICE - RUSH", func() -> void: rush_requested.emit())
 	var sensitivity_row := HBoxContainer.new()
 	sensitivity_row.add_theme_constant_override("separation", 12)
 	column.add_child(sensitivity_row)
@@ -144,7 +146,7 @@ func _build_main_menu() -> void:
 		"",
 		"PRACTICE",
 		"60-second drill with respawning target rows.",
-		"Press B to make them strafe. No damage taken.",
+		"B cycles Static / Strafe / Rush. No damage taken.",
 		"",
 		"CONTROLS",
 		"WASD  move        Mouse  look",

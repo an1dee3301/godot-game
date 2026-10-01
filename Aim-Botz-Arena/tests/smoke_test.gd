@@ -109,6 +109,7 @@ func _run() -> void:
 	game.player.get_weapon().reserve = 0
 	_check(ammo_pickup.try_collect(game.player) and game.player.get_weapon().reserve > 0, "ammo pickup replenishes reserve ammunition")
 	var door: SlidingDoor = game.level.doors[0]
+	door.reset()  # a chasing bot may already have opened it
 	door.interact(game.player)
 	_check(door.is_open, "interacting opens the bunker door")
 	await _frames(45)
@@ -132,8 +133,14 @@ func _run() -> void:
 			if game.wave_index == 2 and _live_bots().size() == 1:
 				game.player.reset(Transform3D(Basis.IDENTITY, Vector3(0, 0.05, 24)))
 				enemy.set_physics_process(false)
+				enemy.health = 1.0  # the last bot may be a heavy; one real shot must still finish it
 				enemy.global_position = Vector3(0, 0.05, 20)
 				await _frames(8)
+				for settle in 30:
+					if game.player.is_on_floor():
+						break
+					await _frames(1)
+				game.player._bloom = 0.0
 				game.player.aiming = true
 				game.player.get_camera().look_at(enemy.get_head_position())
 				_check(game.player.try_fire(), "the final mission enemy is defeated by a real shot")
@@ -180,7 +187,7 @@ func _run() -> void:
 	await _frames(60)
 	_check(game.state == game.GameState.VICTORY and game.menus._end_title.text == "PRACTICE COMPLETE", "practice timer ends the session")
 	game.start_game(true)
-	game.set_practice_strafe(true)
+	game.set_practice_mode(Bot.PracticeMode.STRAFE)
 	await _frames(4)
 	var strafe_start: Array[Vector3] = []
 	for enemy in _live_bots():
@@ -190,6 +197,36 @@ func _run() -> void:
 	for index in _live_bots().size():
 		moved = moved or _live_bots()[index].global_position.distance_to(strafe_start[index]) > 0.2
 	_check(moved, "strafing targets move")
+	game.set_practice_mode(Bot.PracticeMode.RUSH)
+	_check(_live_bots().all(func(b: Bot): return b.global_position.distance_to(b.get_meta("spot")) < 0.2), "switching target mode resets bots to home spots")
+	game.player.reset(Transform3D(Basis.IDENTITY, Vector3(0, 0.05, -5)))
+	game.player.input_enabled = false
+	var rusher: Bot = _live_bots()[2]
+	var rush_home: Vector3 = rusher.get_meta("spot")
+	var rush_distance := Vector2(rusher.global_position.x - game.player.global_position.x, rusher.global_position.z - game.player.global_position.z).length()
+	await _frames(20)
+	_check(Vector2(rusher.global_position.x - game.player.global_position.x, rusher.global_position.z - game.player.global_position.z).length() < rush_distance - 1.0, "rush target runs toward the player")
+	var frozen_position := rusher.global_position
+	game.pause()
+	await create_timer(0.1, true).timeout
+	_check(rusher.global_position.distance_to(frozen_position) < 0.01, "pause freezes rushing bots")
+	game.resume()
+	rusher.global_position = game.player.global_position + Vector3(0, 0, -2.0)
+	var leaks_before: int = game.leaks
+	var kills_before: int = game.kills
+	await _frames(3)
+	_check(game.leaks == leaks_before + 1 and game.kills == kills_before and not is_instance_valid(rusher), "reaching the player registers a leak without a kill")
+	await _frames(70)
+	var respawned := false
+	for enemy in _live_bots():
+		if enemy.get_meta("spot") == rush_home:
+			respawned = true
+	_check(respawned, "leaked rush target respawns at home")
+	game.elapsed = 59.99
+	await _frames(60)
+	_check("Leaks" in game.menus._end_stats.text, "practice results include rush leaks")
+	game.start_game(true)
+	game.set_practice_mode(Bot.PracticeMode.STRAFE)
 	_live_bots()[0].take_damage(1000, _live_bots()[0].get_head_position(), false, game.player)
 	game.go_to_menu()
 	await _start_mission()
