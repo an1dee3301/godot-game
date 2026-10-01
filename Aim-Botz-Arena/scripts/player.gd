@@ -90,6 +90,7 @@ var _ads_blend := 0.0
 var _prompt := ""
 var _prompt_timer := 0.0
 var _trigger_released := true
+var _death_tween: Tween
 
 
 func _ready() -> void:
@@ -171,6 +172,8 @@ func get_spread_degrees() -> float:
 
 
 func reset(spawn: Transform3D) -> void:
+	if _death_tween:
+		_death_tween.kill()
 	global_transform = Transform3D(Basis.IDENTITY, spawn.origin)
 	rotation.y = spawn.basis.get_euler().y
 	velocity = Vector3.ZERO
@@ -191,10 +194,21 @@ func reset(spawn: Transform3D) -> void:
 	_recoil_yaw = 0.0
 	_shake = 0.0
 	_ads_blend = 0.0
+	sprinting = false
+	_flash_timer = 0.0
+	_kick = 0.0
+	_sway = Vector2.ZERO
+	_bob_time = 0.0
+	_step_accumulator = 0.0
+	_fall_speed = 0.0
+	_prompt = ""
+	_prompt_timer = 0.0
+	_trigger_released = true
 	_select_model(0)
 	_view_root.visible = true
 	health_changed.emit(health, MAX_HEALTH)
 	_emit_ammo()
+	interact_prompt_changed.emit("")
 
 
 func heal(amount: float) -> bool:
@@ -278,6 +292,7 @@ func try_fire() -> bool:
 	weapon.mag -= 1
 	_fire_cooldown = weapon.fire_interval
 	_since_shot = 0.0
+	shot_fired.emit()
 	_fire_ray(weapon)
 	_bloom = minf(_bloom + weapon.bloom_per_shot, 6.0)
 	_recoil_pitch += deg_to_rad(weapon.recoil)
@@ -286,7 +301,6 @@ func try_fire() -> bool:
 	_flash_timer = 0.05
 	if sound_fx:
 		sound_fx.play(weapon.sound, -2.0, _rng.randf_range(0.95, 1.05))
-	shot_fired.emit()
 	_emit_ammo()
 	return true
 
@@ -543,10 +557,10 @@ func _die() -> void:
 	reloading = false
 	aiming = false
 	_view_root.visible = false
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(_head, "position:y", 0.35, 0.7).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_head, "rotation:z", 0.6, 0.7)
+	_death_tween = create_tween()
+	_death_tween.set_parallel(true)
+	_death_tween.tween_property(_head, "position:y", 0.35, 0.7).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	_death_tween.tween_property(_head, "rotation:z", 0.6, 0.7)
 	died.emit()
 
 

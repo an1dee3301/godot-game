@@ -284,8 +284,8 @@ func _bake_navigation() -> void:
 	navigation_mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	navigation_mesh.geometry_collision_mask = 1
 	navigation_mesh.agent_radius = 0.5
-	navigation_mesh.agent_height = 1.9
-	navigation_mesh.agent_max_climb = 0.35
+	navigation_mesh.agent_height = 2.25
+	navigation_mesh.agent_max_climb = 0.25
 	navigation_mesh.agent_max_slope = 40.0
 	navigation_mesh.cell_size = 0.25
 	navigation_mesh.cell_height = 0.25

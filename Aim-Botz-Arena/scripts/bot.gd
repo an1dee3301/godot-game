@@ -274,12 +274,18 @@ func _shoot() -> void:
 	if not hit:
 		var miss := Vector3(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-0.4, 0.9), _rng.randf_range(-1.0, 1.0)).normalized()
 		end = target + miss * _rng.randf_range(0.7, 1.4) + (target - from).normalized() * 6.0
+	var query := PhysicsRayQueryParameters3D.create(from, end, 1 | 2, [get_rid()])
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	var hits_player := false
+	if not result.is_empty():
+		end = result["position"]
+		hits_player = result["collider"] == player
 	if sound_fx:
 		sound_fx.play_at("bot_shot", from, -3.0, _rng.randf_range(0.92, 1.05))
 	if effects_root:
 		Fx.flash(effects_root, from, 0.12 * _scale)
 		Fx.tracer(effects_root, from, end, Color(1.0, 0.55, 0.3), 0.03, 0.09)
-	if hit:
+	if hits_player:
 		player.take_damage(_damage, target, false, self)
 
 
