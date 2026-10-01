@@ -1,86 +1,96 @@
 # Aim Botz Arena
 
-An original, self-contained Godot 4 FPS training game for the **First FPS Game – Version 2** assignment. The arena, weapons, characters, textures, effects, menus and sounds are built at runtime. It uses no Counter-Strike, Valve or tutorial map assets.
+**First FPS Game – Version 2.** A small, complete FPS for Godot 4 in the style of *Aim Botz*, the CS2 community training map. It has a dev-textured arena, a raised spawn platform overlooking the field, and bots to shoot, with headshots doing the most damage. As in the other games in this repo, everything (level, models, UI and sound) is built at runtime from Godot primitives, so the project requires no external game assets.
 
 ## Play
 
-Open `project.godot` in Godot 4 and press **F5**. Tested with Godot 4.8.dev3 on macOS using the Compatibility renderer.
+1. Open this folder's `project.godot` in Godot 4 (tested with 4.8.dev3 on macOS with the Compatibility renderer).
+2. Press `F5`.
+3. Choose **PLAY MISSION** or **AIM PRACTICE**.
 
-Choose a mode from the main menu:
-
-- **Wave mission:** clear three waves of 3, 5 and 7 armed bots. The later waves introduce heavy bots. You have 100 health and finite ammunition. Find the green health kits and yellow ammo crates around the arena. Clearing all 15 enemies completes the mission; reaching 0 health ends it.
-- **Static practice:** a 60-second aim session with 15 stationary targets. Targets respawn one second after a kill. The player is invulnerable and reserve ammunition is unlimited; magazines still require reloads.
-- **Strafing practice:** the same timed session with moving targets. Compare score, accuracy and head hits on the result screen.
-
-Pause freezes movement, combat, reloads, respawns and the session timer. Restart returns health, weapons, supplies, barrels, doors and statistics to their starting state.
-
-## Controls
-
-| Action | Input |
+| Key | Action |
 | --- | --- |
-| Move / look | WASD / mouse |
-| Jump / sprint | Space / hold Shift while moving forward |
-| Fire | Left mouse button (rifle automatic; pistol one shot per click) |
-| Aim down sights | Hold right mouse button |
-| Reload | R |
-| Rifle / pistol | 1 / 2, or mouse wheel |
-| Open / close bunker door | E while looking at the door within reach |
-| Pause / resume | Escape |
-| Restart after a result | Enter, or Play Again |
+| `W A S D` | Move |
+| Mouse | Look |
+| `Space` | Jump |
+| `Shift` | Sprint |
+| Left mouse | Shoot (AK-47 is automatic, Desert Eagle is semi-auto) |
+| Right mouse | Aim down sights |
+| `R` | Reload |
+| `1` / `2` / `Q` / mouse wheel | Switch weapon |
+| `E` | Open or close doors |
+| `B` | Toggle strafing bots (practice mode) |
+| `Esc` / `P` | Pause menu |
 
-## Weapons and scoring
+**Mission:** survive 3 waves of bots (3, then 5, then 7, including red **heavy** bots) and eliminate them all to get **MISSION COMPLETE**. If your health reaches 0, it's **GAME OVER**. Both end screens show your stats and have **Restart** and **Main Menu** buttons.
 
-The AK-style rifle has a 30-round magazine and deals 30 body damage; the Deagle-style pistol has a 7-round magazine and deals 55 body damage. Head hits deal four times body damage. Movement, jumping and sustained fire increase spread; aiming reduces spread. Standard enemies have 100 health and heavy enemies have 250 health.
+**Aim Practice:** a 60-second Aim Botz drill. Press B to toggle static or strafing targets. Three rows of bots stand in the field and respawn one second after each kill. You get unlimited reserve ammo and take no damage, and the HUD tracks kills, headshot % and accuracy. At the end, a Practice Complete screen shows your session results. Practice scores are separate from the saved best mission score.
 
-Player kills award 100 points for a standard bot or 250 for a heavy, plus 50 for a headshot kill. Accuracy is bullets that hit a bot divided by bullets fired. Head hits count successful headshot impacts, including nonlethal hits on heavy bots. Explosive barrel kills award points but do not count as bullet hits.
+Pause freezes the session timer, combat, reloads and target respawns. Restart resets the session and cancels the previous death camera animation.
 
-The HUD displays health, magazine/reserve, selected weapon, reload progress, elapsed or remaining time, objective, score, accuracy, head hits and a radar. The crosshair expands with weapon spread. Hits produce a marker; damage produces red screen edges and a direction arrow. Orange radar dots mark heavy bots, red dots mark standard bots and the green triangle marks the player.
-
-## Assignment coverage
+## Assignment checklist
 
 | Requirement | Implementation |
 | --- | --- |
-| A. FPS controller | Movement, mouse look, jumping, gravity and capsule collision |
-| B. Shooting | Two raycast weapons, head damage, gunshots, recoil, muzzle flashes, tracers and impacts |
-| C. Ammo / reload | Magazines, finite reserves in wave mode, empty trigger, R reload and HUD |
-| D. Health | Player and bot health, enemy fire, death animations and removal |
-| E. Enemies | Three waves; enemies detect, navigate, chase, strafe and shoot |
-| F. Original level | Grid textures, raised platform and ramps, cover, container lane and two-room bunker |
-| G. HUD | Health, ammo and dynamic crosshair, plus statistics and radar |
-| H. Result | Game Over, Mission Complete and restart |
+| **A. FPS controller** | `CharacterBody3D` with WASD, mouse look (pitch clamped), jump, gravity and capsule collision (`scripts/player.gd`) |
+| **B. Shooting** | Two weapons, both hitscan raycast. Bots take damage, and headshots deal 4×. Gunshot sound, muzzle flash, tracer, bullet holes and blood/spark particles |
+| **C. Ammo & reload** | HUD shows magazine / reserve. Firing empties the magazine, then `R` reloads (empty-click plus auto-reload, "Press R to reload" prompt) |
+| **D. Health** | Player has 100 HP. Bots have 100 (standard) or 250 (heavy) HP and shoot the player. Dead bots fall over, fade out and are removed |
+| **E. Enemies** | Waves of 3–7 bots. Each one detects the player with line-of-sight raycasts, paths toward them on a navmesh, then strafes and burst-fires |
+| **F. Level** | Original arena: an 80 m dev-texture floor and walls, a raised platform with ramps and cover, crates, pillars, low walls, a container lane, and a two-room bunker with a sliding door. Floor distance markers like Aim Botz |
+| **G. HUD** | Health with bar, ammo and weapon name, dynamic CS-style crosshair with hit marker |
+| **H. Game result** | GAME OVER at 0 HP. Win by clearing every wave. Restart from the end screen or pause menu |
 
-Version 2 improvements include sprint, health/ammo pickups, scoring, enemy health bars, muzzle flash, reload/footstep sounds, main/pause menus, an interactive sliding door, timer and damage feedback. Bonus features include weapon switching, standard/heavy enemies, baked navigation, bot states, waves, radar, ADS, explosive barrels and practice modes.
+### Version 2 improvements (the brief asks for 2; this has 12)
 
-## Verification
+1. **Sprint** (`Shift`, with FOV kick and weapon tilt)
+2. **Health pickup** (+40 HP, respawns after 25 s)
+3. **Ammo pickup** (refills reserve)
+4. **Score system** (100 per kill, 250 per heavy, +50% for headshots, +50 for barrel kills, plus time and accuracy bonuses; best score is saved)
+5. **Enemy health bars** (billboard bar and name tag above every bot)
+6. **Gun muzzle flash** (flash quads plus a light)
+7. **Reload sound** (magazine-out and magazine-in clicks timed to the animation)
+8. **Footstep sound** (stride-based, louder when sprinting, plus a landing thud)
+9. **Main menu** (mode select, mouse-sensitivity slider, controls and best score), plus a **pause menu**
+10. **Simple door system** (the bunker's sliding door: `E` for the player, opens automatically for bots)
+11. **Simple timer** (mission clock or practice countdown in the HUD)
+12. **Damage feedback** (red flash, low-health vignette, directional hit arcs, camera shake)
 
-Run the included integration test with your Godot executable:
+Student-proposed extra: **Aim Botz practice mode** with headshot and accuracy statistics.
 
-```sh
-godot --headless --editor --path . --quit
-godot --headless --path . --script res://tests/smoke.gd
-```
+### Optional / bonus features
 
-The test exercises the actual scene and physics: launch/menu, movement/sprint/jump, empty magazine/reload, pause, a raycast headshot, scoring, pickups, door motion, all waves, win/lose/restart, target respawning, practice timer, strafing, session cleanup, navigation to the platform and enemy fire. The import step is needed for a fresh checkout so Godot registers script classes.
-
-Launch directly into a mode for quick checks:
-
-```sh
-godot --path . -- --waves
-godot --path . -- --practice
-godot --path . -- --strafe
-```
+- Multiple weapons and **weapon switching** (AK-47 and Desert Eagle)
+- **Two enemy types** (standard and heavy)
+- **Navigation mesh** pathfinding (baked at runtime from the level colliders)
+- **Finite state machine** bot AI (IDLE → CHASE → ATTACK → DEAD)
+- **Wave survival** mode (3 waves)
+- **Mini-map** radar that rotates with the player
+- **Aim down sights** (right mouse: zoom, tighter spread, slower movement)
+- **Explosive barrels** that chain-react and damage bots and the player
 
 ## Project layout
 
-- `scenes/main.tscn` — entry scene.
-- `scripts/main.gd` — session state, modes, spawning, waves, statistics and input bindings.
-- `scripts/hud.gd` — HUD, radar, menus and damage/hit feedback.
-- `scripts/player.gd` — FPS movement, weapons, health and first-person models.
-- `scripts/bot.gd` — enemy states, navigation, combat, health bars and death animation.
-- `scripts/arena_level.gd` — procedural geometry, textures, lighting and navigation bake.
-- `scripts/pickup.gd`, `sliding_door.gd`, `explosive_barrel.gd` — interactive arena objects.
-- `scripts/fx.gd`, `sound_fx.gd` — procedural visual and audio effects.
-- `tests/smoke.gd` — integration test.
-- `documentation/DEMO_GUIDE.md` — suggested student recording checklist.
+- `scenes/main.tscn` — launch scene
+- `scripts/main.gd` — game flow: menus, waves, score, timer, win/lose, restart, practice mode, input map
+- `scripts/arena_level.gd` — level geometry, dev textures, lighting, spawn points, navmesh bake
+- `scripts/player.gd` — FPS controller, weapons, recoil/spread, reload, health, viewmodel
+- `scripts/bot.gd` — enemy FSM, navigation, shooting, hitboxes, health bar, death animation
+- `scripts/pickup.gd`, `scripts/explosive_barrel.gd`, `scripts/sliding_door.gd` — interactive props
+- `scripts/fx.gd` — tracers, impacts, muzzle flashes, spawn beams, explosions
+- `scripts/sound_fx.gd` — procedurally synthesised sound effects
+- `scripts/ui/` — HUD, crosshair, radar, damage indicator, menus
+- `tests/smoke_test.gd` — headless gameplay test
 
-The assignment PDF stays local and is ignored by Git. Record the demo video separately; it is not part of the repository.
+## Test
+
+```sh
+godot --headless --editor --path . --quit
+godot --headless --path . -s tests/smoke_test.gd
+```
+
+The import step registers script classes on a fresh checkout. The integration test checks movement, sprint, jump/gravity, navigation and enemy fire, raycast head/body damage, ammo/reload, pause, pickups, door motion and barrels, all waves and win/lose screens, result statistics for the final shot, restart during a death animation, and practice respawns/countdown/strafing/session cleanup.
+
+For a direct launch, add `-- --waves`, `-- --practice` or `-- --strafe` to your Godot command.
+
+See `documentation/DEMO_GUIDE.md` for a suggested 2–4 minute student recording. The demo video stays outside this repository. PDF files are ignored by Git; the local assignment PDF is not committed.

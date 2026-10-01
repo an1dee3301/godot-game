@@ -89,7 +89,9 @@ func _ready() -> void:
 	_build_visual()
 	_build_health_bar()
 	_agent = NavigationAgent3D.new()
-	_agent.path_desired_distance = 0.7
+	_agent.path_desired_distance = 1.0
+	# Path points sit on the navmesh surface, slightly above the bot's origin.
+	_agent.path_height_offset = 0.5
 	_agent.target_desired_distance = 1.0
 	_agent.radius = 0.45
 	_agent.height = 1.8 * _scale
@@ -220,14 +222,13 @@ func _chase_direction() -> Vector3:
 	var next := _agent.get_next_path_position()
 	var to_next := next - global_position
 	to_next.y = 0.0
-	var direction: Vector3
+	var direction := to_next
 	if to_next.length() < 0.05 or _agent.is_navigation_finished():
+		# No usable path yet (or already there): head straight for the player.
 		direction = player.global_position - global_position
 		direction.y = 0.0
-	else:
-		direction = to_next
-	if direction.length() < 0.6:
-		return Vector3.ZERO
+		if direction.length() < 1.2:
+			return Vector3.ZERO
 	direction = direction.normalized()
 	_face_direction(direction)
 	return direction

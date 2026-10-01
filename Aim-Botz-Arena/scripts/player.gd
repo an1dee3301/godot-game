@@ -491,8 +491,8 @@ func _update_view_model(delta: float) -> void:
 			_flash_meshes[index].rotation.z = _rng.randf() * TAU
 	_flash_light.light_energy = 3.0 if flash_on else 0.0
 
-	var hip := Vector3(0.22, -0.2, -0.42) if current_weapon == 0 else Vector3(0.18, -0.17, -0.38)
-	var ads := Vector3(0.0, -0.115, -0.3)
+	var hip := Vector3(0.17, -0.16, -0.36) if current_weapon == 0 else Vector3(0.15, -0.14, -0.36)
+	var ads := Vector3(0.0, -0.085, -0.3)
 	var offset := hip.lerp(ads, _ads_blend)
 	var moving := Vector2(velocity.x, velocity.z).length() > 1.5 and is_on_floor()
 	var bob_amount := (0.012 if not sprinting else 0.03) * (1.0 - _ads_blend * 0.8)
@@ -659,6 +659,7 @@ func _add_muzzle(model: Node3D, muzzle_position: Vector3) -> void:
 func _build_rifle_model() -> Node3D:
 	var model := Node3D.new()
 	model.name = "Rifle"
+	model.scale = Vector3.ONE * 0.62
 	_view_root.add_child(model)
 	var metal := Color(0.13, 0.13, 0.14)
 	var wood := Color(0.48, 0.27, 0.12)
@@ -676,6 +677,7 @@ func _build_rifle_model() -> Node3D:
 func _build_pistol_model() -> Node3D:
 	var model := Node3D.new()
 	model.name = "Pistol"
+	model.scale = Vector3.ONE * 0.75
 	_view_root.add_child(model)
 	var metal := Color(0.55, 0.56, 0.58)
 	var grip := Color(0.12, 0.12, 0.12)
