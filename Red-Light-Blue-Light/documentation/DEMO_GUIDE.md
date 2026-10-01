@@ -1,0 +1,16 @@
+# Demo guide (3–5 minutes)
+
+Record two 1280×720 game windows side by side, with both player names visible. Use the editor's **Debug → Customize Run Instances → 2 instances**, or the two terminal commands in the [README](../README.md). Host in one instance, join `127.0.0.1` in the other. Free the mouse with Esc when clicking HUD buttons. Rehearse the race once; use cuts between moments if the full 90-second timer would crowd the video.
+
+| Time | Shot and action | What to say |
+| --- | --- | --- |
+| **0:00–0:25** | **1. Start the game.** Show the Godot project and press Run; show the menu. | “This is a Godot 4.8 3D race. The scene, characters, interface and sounds are generated in GDScript.” |
+| **0:25–0:50** | **2. Host a session.** Enter a name and click Host Game in the left window. Show the lobby and connection line. | “The host is the ENet server and also plays as peer 1. It owns the match rules.” |
+| **0:50–1:15** | **3. Join another instance.** Enter the host address in the right window and click Join Game. | “The client registers its name with peer 1. Only the server allocates a slot and calls `MultiplayerSpawner.spawn()`.” |
+| **1:15–1:40** | **4. Show both players.** Place windows side by side; show both runners and both roster entries. | “Each runner is named for its peer ID. Its own peer has authority over that runner and its synchronizer.” |
+| **1:40–2:15** | **5. Independent movement.** Move the left runner while the right stands still, then reverse. Pan each camera separately. | “Only the local owner reads input and creates a camera. Position, model yaw and speed replicate; remote copies interpolate.” |
+| **2:15–3:25** | **6. Shared multiplayer gameplay.** Ready both, host starts, show countdown, blue, amber and red. Move one runner on red so both windows show elimination. In another short take, reach the finish and show ranking/results. | “The server broadcasts phase and light, judges movement after a short grace, and sets status for everyone. It also decides finish order and wins. The clock is corrected periodically.” |
+| **3:25–4:15** | **7. Additional features.** Show a shove within reach, results/lobby reset, name tags, doll/laser, obstacles and audio. | “The server checks shove range and cooldown, then tells the target owner to apply the impulse. A reset RPC tells each owner to reposition its own runner. Late joiners spectate until the next round.” |
+| **4:15–4:45** | Show `scenes/player.tscn` Sync properties, `scripts/main.gd` server spawn, and `scripts/match_controller.gd` request checks; finish on both live windows. | “Movement is owner-authoritative for response time; rules are server-authoritative. A modified client could falsify movement, which is a known LAN-prototype trade-off.” |
+
+Before recording, set the same UDP port in both instances (default 7777), confirm the host firewall allows it for two-computer play, and test both windows moving independently. For a final proof shot, run `RLBL_TEST_PORT=17815 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s res://tests/smoke_test.gd` from the project directory and show the final PASS line. Keep any full-screen code view brief so the two-player evidence remains easy to see.
