@@ -204,8 +204,7 @@ func _state_chase(delta: float) -> void:
 			_set_target(player.global_position + lead.limit_length(2.0))
 	else:
 		_lose_left -= delta
-		var player := KK.get_player(get_tree())
-		if _lose_left <= 0.0 and (player == null or global_position.distance_to(player.global_position) > 6.0):
+		if _lose_left <= 0.0:
 			# We lost sight for the full grace period: search the last sighting.
 			set_state(State.SEARCH)
 			return

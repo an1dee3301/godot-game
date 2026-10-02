@@ -71,7 +71,7 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		_sconce(kit, room_id, p, -PI * 0.5 if p.x > 26.0 else PI * 0.5)
 	# Reflected warm fill lifts silhouettes between the fixture pools.
 	for z in [-3.0, 5.5, 14.5, 21.0]:
-		kit.omni(room_id, Vector3(26.0, 3.6, z), WARM, 0.45, 7.8)
+		kit.omni(room_id, Vector3(26.0, 3.6, z), WARM, 0.55, 7.8)
 	# Cold spill enters through the east service threshold from its windowed corridor.
 	kit.spot(room_id, Vector3(37.3, 2.8, -4.0), Vector3(32.0, 0.8, -2.0), Color(0.57, 0.72, 1.0), 0.85, 7.2, 43.0)
 	_piece(kit, room_id, Vector3(33, 5.3, -7.0), Vector3(0.32, 0.16, 0.26), kit.mat("brass"))
@@ -181,7 +181,7 @@ static func _picture_light(kit: LevelKit, room_id: String, pos: Vector3, yaw: fl
 	_piece(kit, room_id, pos + facing * Vector3(0, -0.045, 0.045), Vector3(bar_width * 0.88, 0.02, 0.045), kit.mat("emissive_warm"), yaw)
 	for side in [-1.0, 1.0]:
 		_piece(kit, room_id, pos + facing * Vector3(side * bar_width * 0.42, 0.0, -0.12), Vector3(0.025, 0.025, 0.28), kit.mat("brass"), yaw)
-	kit.spot(room_id, pos + facing * Vector3(0, -0.05, 0.08), pos + facing * Vector3(0, -1.0, 0.1), WARM, 1.35, 3.8, 61.0)
+	kit.spot(room_id, pos + facing * Vector3(0, -0.05, 0.08), pos + facing * Vector3(0, -1.0, 0.1), WARM, 1.65, 3.8, 61.0)
 
 
 static func _chandelier(kit: LevelKit, room_id: String, pos: Vector3, shadows: bool) -> void:

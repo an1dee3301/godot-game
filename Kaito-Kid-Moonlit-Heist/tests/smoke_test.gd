@@ -59,8 +59,13 @@ func _run() -> void:
 	await _physics(30)
 	var g0: Guard = _guards()[0]
 	var pos0 := g0.global_position
-	await _physics(180)
-	_check(g0.global_position.distance_to(pos0) > 1.0 or g0.state == Guard.State.PATROL, "T2 guard patrols (moved %.2f m, state %s)" % [g0.global_position.distance_to(pos0), g0.state_name()])
+	var patrolled := false
+	for i in 60 * 10:
+		await physics_frame
+		if g0.state == Guard.State.PATROL and g0.global_position.distance_to(pos0) > 1.0:
+			patrolled = true
+			break
+	_check(patrolled, "T2 guard patrols (moved %.2f m, state %s)" % [g0.global_position.distance_to(pos0), g0.state_name()])
 	_check(g0.state == Guard.State.PATROL, "T2 guard still PATROL while player hidden in lobby (got %s)" % g0.state_name())
 
 	# Isolate a single test guard from now on.

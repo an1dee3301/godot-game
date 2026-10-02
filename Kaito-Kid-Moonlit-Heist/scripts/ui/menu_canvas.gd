@@ -76,10 +76,20 @@ func _draw() -> void:
 func _draw_grade(w: float, h: float) -> void:
 	var dark := 0.48 if screen == "title" else 0.77
 	draw_rect(Rect2(0, 0, w, h), Color(INK.r, INK.g, INK.b, 0.23 if screen == "title" else dark))
-	for i in 48:
-		var t := float(i) / 47.0
-		var a := (1.0 - smoothstep(0.0, 1.0, t)) * (0.72 if screen == "title" else 0.58)
-		draw_rect(Rect2(w * t, 0, w / 47.0 + 2.0, h), Color(INK.r, INK.g, INK.b, a))
+	draw_polygon(
+		PackedVector2Array([Vector2.ZERO, Vector2(w, 0), Vector2(w, h), Vector2(0, h)]),
+		PackedColorArray([
+			Color(INK.r, INK.g, INK.b, 0.72 if screen == "title" else 0.58),
+			Color(INK.r, INK.g, INK.b, 0.0),
+			Color(INK.r, INK.g, INK.b, 0.0),
+			Color(INK.r, INK.g, INK.b, 0.72 if screen == "title" else 0.58)
+		]))
+	if screen == "title":
+		for i in 48:
+			var x := fposmod(float(i) * 173.3, w)
+			var y := fposmod(float(i) * 227.7 + _time * (140.0 + float(i % 5) * 19.0), h + 40.0) - 20.0
+			var length := 10.0 + float(i % 4) * 5.0
+			draw_line(Vector2(x, y), Vector2(x, y + length), Color(0.58, 0.72, 0.85, 0.045), 1.0)
 	if screen != "title":
 		for i in 12:
 			var edge := float(i) * 3.0
