@@ -6,7 +6,7 @@ extends RefCounted
 ## card gun. Rest space: metres, +Y up, +Z = his front, +X = his left. Head bone (0, 1.545, 0.006),
 ## eyes y 1.608 at x ±0.023, Neck 1.456, UpperChest 1.305, hair top ~1.81.
 
-const MODEL := "res://assets/characters/vroid/hairsample_male.glb"   ## Kaito: face, hair, long-sleeved top -> jacket.
+const MODEL := "res://assets/characters/vroid/kaito_suit.glb"   ## Kaito: face, hair, long-sleeved top -> jacket.
 const SHIRT_MODEL := "res://assets/characters/vroid/base_male.glb"   ## Source of the shirt + tie worn under the jacket.
 const HEAD_MODEL := "res://assets/characters/vroid/hairsample_male.glb"   ## Kaito's face and messy hair.
 const WHITE := Color(0.95, 0.955, 0.97)
@@ -24,10 +24,9 @@ static var _paint_shader: Shader
 
 static func build(rig: HumanRig) -> Dictionary:
 	# Shirt + tie under the jacket: real skinned garments transplanted from Base_Male.
-	var shirt := rig.transplant_skinned(SHIRT_MODEL, ["Tops"], -0.022, ["Arm", "Shoulder"])
-	var tie := rig.transplant_skinned(SHIRT_MODEL, ["Tie"], 0.002)
+	# The body under the open jacket is painted as the blue dress shirt; only the red tie is transplanted.
+	var tie := rig.transplant_skinned(SHIRT_MODEL, ["Tie"], 0.006)
 	_paint_outfit(rig)
-	_paint_shirt(shirt)
 	_paint_shirt(tie)
 	var cape := _build_cape(rig)
 	var head := Node3D.new()
@@ -96,23 +95,15 @@ void fragment() {
 	if (role == 0) {
 		if (region == 6) { col = vec3(0.97) * mix(0.85, 1.0, lum); rough = 0.5; }   // white gloves
 		else if (region == 4 || region == 5) { col = vec3(0.16, 0.32, 0.78) * mix(0.82, 1.02, lum); rough = 0.45; }   // long shirt sleeves
-		else if (region == 2 || (region == 1 && rest.y < 1.47)) { col = vec3(0.13, 0.27, 0.68) * mix(0.8, 1.05, lum); rough = 0.45; }   // shirt collar
+		else if (region == 2 || region == 3 || (region == 1 && rest.y < 1.47)) { col = vec3(0.16, 0.32, 0.78) * mix(0.9, 1.02, lum); rough = 0.45; }   // dress shirt under the jacket
 		else { rough = 0.55; spec = 0.25; }
 	} else if (role == 1) {
-		// Long-sleeved top -> white tailored jacket. Remove the hood, open the front.
-		if (rest.y > 1.42 && (rest.z < 0.02 || abs(rest.x) < 0.125)) { discard; }   // hood + hood rim
-		float open_w = -1.0;
-		if (rest.z > 0.0 && rest.y > 1.06) {
-			open_w = 0.014 + (1.45 - rest.y) * 0.235;   // open V to the button; buttoned closed below
-			if (abs(rest.x) < open_w) { discard; }
-		}
-		float pocket = (rest.z > 0.03 && rest.y > 0.88 && rest.y < 1.13 && abs(rest.x) < 0.18) ? 1.0 : 0.0;   // hide the pouch pocket
-		float shade = mix(smoothstep(0.35, 0.95, lum), 0.8, pocket);
+		// Tailored white suit jacket (geometry cut in Blender: open V, lapels, no hood).
+		float pocket = (rest.z > 0.03 && rest.y > 0.88 && rest.y < 1.13 && abs(rest.x) < 0.18) ? 1.0 : 0.0;
+		float shade = mix(smoothstep(0.35, 0.95, lum), 0.82, pocket);
 		col = vec3(0.955, 0.96, 0.975) * mix(0.8, 1.04, shade);
-		float d = abs(rest.x) - open_w;
-		if (open_w > 0.0 && d < 0.006) { col *= 0.7; }                                        // piping on the cut edge
-		else if (open_w > 0.0 && d < 0.045 && rest.y > 1.18) { col *= 1.03; rough = 0.3; }      // satin lapel
-		if (rest.z > 0.0 && rest.y < 1.12 && rest.y > 1.06 && d > 0.012 && d < 0.03 && rest.x > 0.0) { col = vec3(0.86, 0.72, 0.38); rough = 0.25; }   // button
+		rough = 0.55;
+		if (rest.z > 0.0 && abs(rest.y - 1.08) < 0.012 && abs(abs(rest.x) - 0.03) < 0.012) { col = vec3(0.86, 0.72, 0.38); rough = 0.25; }   // button
 		if (!FRONT_FACING) { col *= 0.5; }
 	} else if (role == 5) {
 		col = vec3(0.16, 0.32, 0.78) * mix(0.7, 1.08, smoothstep(0.0, 0.8, lum));   // blue dress shirt
