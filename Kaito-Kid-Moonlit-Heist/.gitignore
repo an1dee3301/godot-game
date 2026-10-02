@@ -1,0 +1,4 @@
+.godot/
+*.import
+specs/
+.shots/
