@@ -1,4 +1,4 @@
-import sys; sys.path.insert(0, "/private/tmp/claude-501/-Users-andytran-Coding-Godot/eccd311a-705d-4e77-9182-c5a7d6315bd3/scratchpad/blender")
+import os, sys; sys.path.insert(0, os.path.dirname(__file__))
 from common import *
 from mathutils.bvhtree import BVHTree
 load()
@@ -84,6 +84,49 @@ for v in tv:
     loc, n, i, d = bvh.find_nearest(v.co)
     if loc is not None:
         v.co = v.co.lerp(loc + n * 0.0135, 0.85 * blend)
+
+# Smooth the hood cut into one neckline, then raise a short stand collar from it.
+# Restrict this to the inner top boundary: the shoulder and sleeve mesh stays put.
+def neck_vert(v):
+    return v in tv and v.co.z > 1.38 and abs(v.co.x) < 0.24 and v.co.y < 0.065
+
+neck_edges = [e for e in bm.edges if e.is_boundary and all(neck_vert(v) for v in e.verts)]
+neck_verts = {v for e in neck_edges for v in e.verts}
+neighbors = {v: [e.other_vert(v) for e in neck_edges if v in e.verts] for v in neck_verts}
+# Average only along the cut; pin the ends where it meets the existing lapels.
+for _ in range(3):
+    xy = {v: (v.co.x, v.co.y) for v in neck_verts}
+    for v in neck_verts:
+        ns = neighbors[v]
+        if len(ns) != 2: continue
+        v.co.x = 0.5 * xy[v][0] + 0.25 * (xy[ns[0]][0] + xy[ns[1]][0])
+        v.co.y = 0.5 * xy[v][1] + 0.25 * (xy[ns[0]][1] + xy[ns[1]][1])
+
+def collar_fade(y):
+    t = max(0.0, min(1.0, (0.055 - y) / 0.16))
+    return t * t * (3.0 - 2.0 * t)
+
+for v in neck_verts:
+    # The back rises gently above the side of the neck; the front joins the V.
+    v.co.z = 1.415 + 0.035 * collar_fade(v.co.y)
+
+res_collar = bmesh.ops.extrude_edge_only(bm, edges=neck_edges)
+collar_verts = [g for g in res_collar["geom"] if isinstance(g, bmesh.types.BMVert)]
+for v in collar_verts:
+    source = next((e.other_vert(v) for e in v.link_edges if e.other_vert(v) in neck_verts), None)
+    if source is None: continue
+    rise = max(0.001, 0.03 * collar_fade(source.co.y))
+    v.co.z = source.co.z + rise
+    # A slight outward roll keeps the stand collar clear of the neck.
+    v.co.x = source.co.x + (0.004 if source.co.x >= 0 else -0.004) * collar_fade(source.co.y)
+    v.co.y = source.co.y - 0.003 * collar_fade(source.co.y)
+    if deform is not None:
+        for bone, weight in source[deform].items():
+            v[deform][bone] = weight
+for f in [g for g in res_collar["geom"] if isinstance(g, bmesh.types.BMFace)]:
+    f.material_index = TOPS
+    for l in f.loops: l[uvl].uv = clean_uv
+print("collar edges", len(neck_edges))
 
 # 5) Lapels: fold a strip outward along each side of the V opening.
 bm.edges.ensure_lookup_table()
