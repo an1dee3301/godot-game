@@ -26,14 +26,20 @@ var _collider: CollisionShape3D
 var _model: Node3D
 var _hat: Node3D
 var _right_hand: Node3D
+var _shot_anim: AnimationPlayer
+var _stand_check: ShapeCast3D
 var _cape_material: ShaderMaterial
 var _cape_lining_material: ShaderMaterial
 var _crouching := false
 var _sprinting := false
 var _coyote := 0.0
+var _jump_buffer := 0.0
 var _air_time := 0.0
+var _landing_time := 0.0
+var _jump_start_time := 0.0
 var _step_time := 0.0
 var _fire_time := 0.0
+var _gun_hide_time := 0.0
 var _invuln := 0.0
 var _action_time := 0.0
 var _flash_time := 0.0
@@ -51,6 +57,15 @@ func _ready() -> void:
 	capsule.height = 1.8
 	_collider.shape = capsule
 	add_child(_collider)
+	_stand_check = ShapeCast3D.new()
+	var stand_shape := capsule.duplicate() as CapsuleShape3D
+	stand_shape.height = 1.74
+	_stand_check.shape = stand_shape
+	_stand_check.position.y = 0.91
+	_stand_check.target_position = Vector3.ZERO
+	_stand_check.collision_mask = collision_mask
+	_stand_check.add_exception(self)
+	add_child(_stand_check)
 	_build_model()
 	anim.play("idle")
 
@@ -61,7 +76,7 @@ func _build_model() -> void:
 	add_child(rig)
 	rig.build_vroid(KaitoVroid.MODEL, {"idle": "Idle", "walk": "Walk_Formal", "run": "Sprint",
 		"crouch_idle": "Crouch_Idle", "crouch_walk": "Crouch_Fwd",
-		"jump": "Jump_Start", "fall": "Jump", "throw": "Pistol_Shoot",
+		"jump": "Jump_Start", "fall": "Jump", "land": "Jump_Land", "throw": "Pistol_Shoot",
 		"hurt": "Hit_Chest", "death": "Death01"},
 		["idle", "walk", "run", "crouch_idle", "crouch_walk", "fall"])
 	_model = rig
@@ -71,6 +86,21 @@ func _build_model() -> void:
 	_right_hand = costume["hand"]
 	_cape_material = costume["cape_material"]
 	_cape_lining_material = costume["lining_material"]
+	# A second player writes only upper-body tracks, after the locomotion player.
+	# This leaves the legs running while the card-gun recoil plays.
+	_shot_anim = AnimationPlayer.new()
+	_shot_anim.name = "UpperBodyAction"
+	anim.get_parent().add_child(_shot_anim)
+	var shot := (anim.get_animation("throw") as Animation).duplicate(true) as Animation
+	for track in range(shot.get_track_count() - 1, -1, -1):
+		var path := String(shot.track_get_path(track))
+		var upper := path.contains(":Chest") or path.contains(":UpperChest") \
+			or path.contains(":Neck") or path.contains(":Head") or path.contains(":Right")
+		if not upper or path.contains("UpperLeg") or path.contains("LowerLeg") or path.contains("Foot"):
+			shot.remove_track(track)
+	var shot_library := AnimationLibrary.new()
+	shot_library.add_animation("throw", shot)
+	_shot_anim.add_animation_library("", shot_library)
 	anim.set_blend_time("idle", "walk", 0.18)
 	anim.set_blend_time("walk", "run", 0.2)
 	anim.set_blend_time("run", "walk", 0.17)
@@ -79,8 +109,14 @@ func _build_model() -> void:
 
 func _physics_process(delta: float) -> void:
 	_fire_time = maxf(0.0, _fire_time - delta)
+	_gun_hide_time = maxf(0.0, _gun_hide_time - delta)
+	if _gun_hide_time <= 0.0:
+		_right_hand.visible = false
 	_invuln = maxf(0.0, _invuln - delta)
 	_action_time = maxf(0.0, _action_time - delta)
+	_jump_buffer = maxf(0.0, _jump_buffer - delta)
+	_landing_time = maxf(0.0, _landing_time - delta)
+	_jump_start_time = maxf(0.0, _jump_start_time - delta)
 	_flash_time += delta
 	if _invuln > 0.0:
 		_model.visible = fmod(_flash_time, 0.11) < 0.065
@@ -92,11 +128,16 @@ func _physics_process(delta: float) -> void:
 	if controls_enabled and not is_dead:
 		input = scripted_input if use_scripted_input else Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 		input = input.limit_length()
-		_crouching = Input.is_action_pressed("crouch") and not use_scripted_input
+		var wants_crouch := Input.is_action_pressed("crouch") and not use_scripted_input
+		_crouching = wants_crouch or (_crouching and not _can_stand())
 		_sprinting = not _crouching and input.length() > 0.15 and Input.is_action_pressed("sprint") and not use_scripted_input
-		if Input.is_action_just_pressed("jump") and _coyote > 0.0 and not _crouching:
+		if Input.is_action_just_pressed("jump"):
+			_jump_buffer = 0.14
+		if _jump_buffer > 0.0 and _coyote > 0.0 and not _crouching:
 			velocity.y = KK.PLAYER_JUMP_VELOCITY
 			_coyote = 0.0
+			_jump_buffer = 0.0
+			_jump_start_time = 0.16
 		if Input.is_action_just_pressed("fire"):
 			fire_card()
 		if Input.is_action_just_pressed("smoke"):
@@ -113,11 +154,19 @@ func _physics_process(delta: float) -> void:
 	var direction := (Basis(Vector3.UP, yaw) * Vector3(input.x, 0.0, -input.y)).normalized()
 	var speed := KK.PLAYER_CROUCH_SPEED if _crouching else (KK.PLAYER_SPRINT_SPEED if _sprinting else KK.PLAYER_WALK_SPEED)
 	var desired := direction * speed
-	var rate := 16.0 if direction.length() > 0.0 else 22.0
+	var rate := 24.0 if direction.length() > 0.0 else 34.0
+	if not was_grounded:
+		rate *= 0.38
 	velocity.x = move_toward(velocity.x, desired.x, rate * delta)
 	velocity.z = move_toward(velocity.z, desired.z, rate * delta)
 	if direction.length() > 0.1:
-		rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), minf(1.0, delta * 12.0))
+		rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), 1.0 - exp(-12.0 * delta))
+	var turn_amount := wrapf(atan2(-direction.x, -direction.z) - rotation.y, -PI, PI) if direction.length() > 0.1 else 0.0
+	_model.rotation.z = lerpf(_model.rotation.z, clampf(-turn_amount * 0.09, -0.09, 0.09), 1.0 - exp(-9.0 * delta))
+	var aim_twist := 0.0
+	if _shot_anim.is_playing() and camera_rig:
+		aim_twist = clampf(wrapf(camera_rig.get_yaw() - rotation.y, -PI, PI), -0.45, 0.45)
+	_model.rotation.y = lerp_angle(_model.rotation.y, aim_twist, 1.0 - exp(-15.0 * delta))
 	if not is_on_floor():
 		velocity.y -= 14.0 * delta
 		_air_time += delta
@@ -125,10 +174,18 @@ func _physics_process(delta: float) -> void:
 		velocity.y = minf(velocity.y, 0.0)
 	move_and_slide()
 	if not was_grounded and is_on_floor():
+		_landing_time = 0.19
+		if camera_rig:
+			camera_rig.land_dip(minf(1.0, _air_time / 0.5))
 		if _air_time > 0.4:
 			landed.emit()
 			KK.emit_noise(get_tree(), global_position, KK.NOISE_LAND)
 		_air_time = 0.0
+		if _jump_buffer > 0.0 and not _crouching:
+			velocity.y = KK.PLAYER_JUMP_VELOCITY
+			_jump_buffer = 0.0
+			_coyote = 0.0
+			_jump_start_time = 0.16
 	var planar_speed := Vector2(velocity.x, velocity.z).length()
 	if is_on_floor() and planar_speed > 0.5 and not is_dead:
 		_step_time += delta
@@ -148,21 +205,28 @@ func _physics_process(delta: float) -> void:
 		return
 	var state := "idle"
 	if not is_on_floor():
-		state = "jump" if velocity.y > 0.0 else "fall"
+		state = "jump" if _jump_start_time > 0.0 else "fall"
+	elif _landing_time > 0.0:
+		state = "land"
 	elif _crouching:
 		state = "crouch_walk" if planar_speed > 0.4 else "crouch_idle"
 	elif planar_speed > 0.5:
-		state = "run" if _sprinting else "walk"
+		state = "run" if planar_speed > 5.0 else "walk"
 	if anim.current_animation != state:
 		anim.play(state, 0.18)
 	if state == "walk":
-		anim.speed_scale = clampf(planar_speed / KK.PLAYER_WALK_SPEED, 0.65, 1.35)
+		anim.speed_scale = clampf(planar_speed / 1.4, 0.65, 3.4)
 	elif state == "run":
-		anim.speed_scale = clampf(planar_speed / KK.PLAYER_SPRINT_SPEED, 0.72, 1.25)
+		anim.speed_scale = clampf(planar_speed / 5.5, 0.72, 1.5)
 	elif state == "crouch_walk":
-		anim.speed_scale = clampf(planar_speed / KK.PLAYER_CROUCH_SPEED, 0.65, 1.2)
+		anim.speed_scale = clampf(planar_speed / 1.2, 0.65, 2.2)
 	else:
 		anim.speed_scale = 1.0
+
+
+func _can_stand() -> bool:
+	_stand_check.force_shapecast_update()
+	return not _stand_check.is_colliding()
 
 
 ## Applies damage with brief immunity, knockback, and a one-shot death signal.
@@ -247,18 +311,14 @@ func fire_card() -> bool:
 	projectile.launch(origin, (aim - origin).normalized(), self)
 	_muzzle_flash(origin)
 	_show_card_gun()
-	_action_time = 0.38
-	anim.play("throw", 0.07)
+	_shot_anim.play("throw", 0.04)
 	card_fired.emit()
 	return true
 
 
 func _show_card_gun() -> void:
 	_right_hand.visible = true
-	get_tree().create_timer(0.34).timeout.connect(func() -> void:
-		if is_instance_valid(_right_hand):
-			_right_hand.visible = false
-	)
+	_gun_hide_time = _shot_anim.get_animation("throw").length
 
 
 func _tumble_hat() -> void:
@@ -307,8 +367,7 @@ func throw_smoke() -> bool:
 	cloud.setup()
 	effects_root.add_child(cloud)
 	cloud.global_position = global_position
-	_action_time = 0.38
-	anim.play("throw", 0.07)
+	_shot_anim.play("throw", 0.04)
 	smoke_thrown.emit(global_position)
 	return true
 

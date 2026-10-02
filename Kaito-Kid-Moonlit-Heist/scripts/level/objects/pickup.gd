@@ -106,6 +106,11 @@ func _build_rose() -> void:
 		var petal := _sphere(_model, 0.17, Vector3(cos(angle) * 0.12, 0.07 + (i % 2) * 0.06, sin(angle) * 0.12), pink if i % 3 == 0 else red)
 		petal.scale = Vector3(0.78, 1.25, 0.56)
 		petal.rotation.y = angle
+	for i in 5:
+		var angle := TAU * float(i) / 5.0
+		var sepal := _sphere(_model, 0.09, Vector3(cos(angle) * 0.13, -0.07, sin(angle) * 0.13), green)
+		sepal.scale = Vector3(0.65, 0.27, 1.5)
+		sepal.rotation.y = angle
 	for side in [-1, 1]:
 		var leaf := _sphere(_model, 0.12, Vector3(side * 0.15, -0.25, 0), green)
 		leaf.scale = Vector3(1.5, 0.28, 0.5)
@@ -116,6 +121,15 @@ func _build_smoke() -> void:
 	var black := KK.standard_material(Color(0.055, 0.055, 0.09), 0.26, 0.4)
 	var silver := KK.standard_material(Color(0.6, 0.65, 0.72), 0.25, 0.8)
 	_sphere(_model, 0.28, Vector3.ZERO, black)
+	var band := KK.standard_material(Color(0.49, 0.4, 0.66), 0.28, 0.65)
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.265
+	ring.outer_radius = 0.285
+	var ring_node := MeshInstance3D.new()
+	ring_node.mesh = ring
+	ring_node.material_override = band
+	ring_node.position.y = 0.045
+	_model.add_child(ring_node)
 	_cylinder(_model, 0.12, 0.09, Vector3(0, 0.27, 0), silver)
 	_cylinder(_model, 0.025, 0.22, Vector3(0.04, 0.41, 0), black).rotation.z = 0.4
 	var emblem := Label3D.new()

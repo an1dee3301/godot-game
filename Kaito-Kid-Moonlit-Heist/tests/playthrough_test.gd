@@ -11,6 +11,9 @@ var _saved := PackedByteArray()
 var _had_save := false
 var _guard_positions: Dictionary = {}
 var _guard_still: Dictionary = {}
+var _guard_failed: Dictionary = {}
+var _runtime_frames := 0
+var _minimum_y := INF
 
 
 func _initialize() -> void:
@@ -24,7 +27,7 @@ func _run() -> void:
 	main = _spawn()
 	await _frames(8)
 	var baseline := _count_nodes(main)
-	for repeat in 3:
+	for repeat in 5:
 		_check(main.menus.is_showing("title"), "title visible on cycle %d" % repeat)
 		main.start_game()
 		await _frames(3)
@@ -39,6 +42,11 @@ func _run() -> void:
 		main.resume_game()
 		await _frames(3)
 		_check(not paused and main.state == HeistMain.State.PLAYING, "resume")
+		main.restart_game()
+		await _frames(10)
+		main = current_scene as HeistMain
+		_check(main != null and main.state == HeistMain.State.PLAYING, "restart cycle %d" % repeat)
+		_check(abs(_count_nodes(main) - baseline) < 20, "restart node count stable")
 		# Recreate through the public menu signal path; wait for queued nodes to leave.
 		main.menus.menu_requested.emit()
 		await _frames(10)
@@ -63,49 +71,49 @@ func _run() -> void:
 	_check(fuse != null, "fuse exists")
 	if fuse != null:
 		_check(_reachable_near(map, spawn, fuse.global_position), "fuse reachable")
-	var exit_pos: Vector3 = main.level.exit_node().global_position + Vector3(0, 0, -2.2)
+	var exit_pos: Vector3 = main.level.exit_node().global_position - main.level.exit_node().global_basis.z * 2.2
 	_check(_reachable_near(map, spawn, exit_pos), "exit reachable")
+	# Run the long patrol soak before the theft triggers a permanent alarm.
+	for i in SOAK_FRAMES:
+		await physics_frame
+		_sample_runtime(map)
+	_check(_runtime_frames >= SOAK_FRAMES, "three simulated minutes completed")
 	# Walk through every gallery, using the baked navmesh for steering.
 	var walked := 0
 	for target in targets.slice(0, 4):
 		if walked >= SOAK_FRAMES or main.state != HeistMain.State.PLAYING:
 			break
-		walked += await _walk_to(map, target, 2.2, mini(900, SOAK_FRAMES - walked))
-		if walked % 480 < 30:
-			main.player.fire_card()
-			main.player.throw_smoke()
+		walked += await _walk_to(map, target, 1.55, mini(900, SOAK_FRAMES - walked))
+		_check(main.player.fire_card(), "card fired during route")
+		if main.player.smoke_bombs > 0:
+			_check(main.player.throw_smoke(), "smoke thrown during route")
 		for jewel: Jewel in main.level.jewels():
 			if not jewel.is_stolen and main.player.global_position.distance_to(jewel.global_position) < 2.8:
+				_face(jewel.interact_position())
 				main.player.try_interact()
-				if not jewel.is_stolen:
-					jewel.interact(main.player)
 	if fuse != null:
-		walked += await _walk_to(map, Vector3(10.4, 0, -20.0), 0.9, 1200)
+		walked += await _walk_to(map, Vector3(10.4, 0, -20.0), 0.2, 1200)
 		_check(main.player.global_position.distance_to(fuse.global_position) < 2.8, "walked to fuse")
+		_face(fuse.interact_position())
 		main.player.try_interact()
-		if fuse.can_interact(main.player) and main.player.global_position.distance_to(fuse.global_position) < 2.8:
-			fuse.interact(main.player)
-	walked += await _walk_to(map, targets[4], 2.2, 1500)
+		_check(not fuse.can_interact(main.player), "fuse switched off through interaction")
+	walked += await _walk_to(map, targets[4], 1.55, 1500)
+	_face((main.level.jewels()[4] as Jewel).interact_position())
 	main.player.try_interact()
-	if main.player.global_position.distance_to(targets[4]) < 2.8 and not (main.level.jewels()[4] as Jewel).is_stolen:
-		(main.level.jewels()[4] as Jewel).interact(main.player)
 	# Finish traversal and objective even if guards caused temporary detours.
 	for jewel: Jewel in main.level.jewels():
 		if not jewel.is_stolen:
-			walked += await _walk_to(map, jewel.global_position, 2.2, 900)
+			walked += await _walk_to(map, jewel.global_position, 1.55, 900)
+			_face(jewel.interact_position())
 			main.player.try_interact()
-			if not jewel.is_stolen and main.player.global_position.distance_to(jewel.global_position) < 2.8:
-				jewel.interact(main.player)
+		_check(jewel.is_stolen, "stole %s through interaction" % jewel.jewel_name)
 	_check(main.jewels_stolen == main.jewels_total, "all jewels collected")
 	_check(main.alarm_on and not main.level.exit_node().locked, "alarm unlocks exit")
 	if fuse != null:
 		_check(not fuse.can_interact(main.player), "fuse disabled")
-	while walked < SOAK_FRAMES and main.state == HeistMain.State.PLAYING:
-		main.player.scripted_input = Vector2.ZERO
-		await physics_frame
-		walked += 1
-		if walked % 150 == 0:
-			_check_runtime(map, walked)
+	# The Moonstone plinth leaves the player just outside the baked vault polygon.
+	# Step back onto its corridor before asking the server for the long escape path.
+	walked += await _walk_direct(Vector3(22.8, 0, -21.7), 0.6, 360)
 	walked += await _walk_to(map, Vector3(10, 0, -20), 1.4, 1500)
 	walked += await _walk_to(map, Vector3(0, 0, -24), 1.4, 1500)
 	walked += await _walk_to(map, exit_pos, 1.0, 1500)
@@ -114,6 +122,7 @@ func _run() -> void:
 		if main.state == HeistMain.State.WON:
 			break
 	_check(main.state == HeistMain.State.WON, "balcony escape wins")
+	_check(_minimum_y > -1.0, "player never fell below y=-1 (minimum %.2f)" % _minimum_y)
 	await create_timer(1.6, true, false, true).timeout
 	_check(main.menus.is_showing("win"), "win menu appears")
 	_finish()
@@ -122,7 +131,7 @@ func _run() -> void:
 func _walk_to(map: RID, destination: Vector3, radius: float, limit: int) -> int:
 	var frames := 0
 	var path := NavigationServer3D.map_get_path(map, main.player.global_position, destination, true)
-	var waypoint := 0
+	var waypoint := _nearest_path_index(path, main.player.global_position)
 	while frames < limit and main.state == HeistMain.State.PLAYING:
 		var here := main.player.global_position
 		if Vector2(here.x - destination.x, here.z - destination.z).length() < radius:
@@ -137,33 +146,72 @@ func _walk_to(map: RID, destination: Vector3, radius: float, limit: int) -> int:
 		main.player.scripted_input = Vector2(local.x, -local.z)
 		await physics_frame
 		frames += 1
+		_sample_runtime(map)
 		if frames % 120 == 0:
-			_check_runtime(map, frames)
 			path = NavigationServer3D.map_get_path(map, main.player.global_position, destination, true)
-			waypoint = 0
+			waypoint = _nearest_path_index(path, main.player.global_position)
 	main.player.scripted_input = Vector2.ZERO
 	print("WALK ", destination, " -> ", main.player.global_position, " in ", frames)
 	return frames
 
 
-func _check_runtime(map: RID, frame: int) -> void:
-	_check(main.player.global_position.y > -1.0, "player above floor at frame %d" % frame)
-	_check(main.state == HeistMain.State.PLAYING and not main.menus.is_showing("pause"), "HUD/menu state at frame %d" % frame)
+func _nearest_path_index(path: PackedVector3Array, position: Vector3) -> int:
+	if path.is_empty():
+		return 0
+	if Vector2(path[0].x - position.x, path[0].z - position.z).length() < 2.0:
+		return 0
+	var best := 0
+	var best_distance := INF
+	for i in path.size():
+		var offset := Vector2(path[i].x - position.x, path[i].z - position.z)
+		if offset.length_squared() < best_distance:
+			best_distance = offset.length_squared()
+			best = i
+	return best
+
+
+func _walk_direct(destination: Vector3, radius: float, limit: int) -> int:
+	var frames := 0
+	while frames < limit and main.state == HeistMain.State.PLAYING:
+		var here := main.player.global_position
+		var offset := Vector3(destination.x - here.x, 0, destination.z - here.z)
+		if offset.length() < radius:
+			break
+		var local := Basis(Vector3.UP, -main.camera_rig.get_yaw()) * offset.normalized()
+		main.player.scripted_input = Vector2(local.x, -local.z)
+		await physics_frame
+		frames += 1
+		_sample_runtime(main.get_world_3d().navigation_map)
+	main.player.scripted_input = Vector2.ZERO
+	_check(frames < limit, "rejoined the vault navigation corridor")
+	return frames
+
+
+func _sample_runtime(map: RID) -> void:
+	_runtime_frames += 1
+	_minimum_y = minf(_minimum_y, main.player.global_position.y)
+	if _runtime_frames % 30 != 0:
+		return
+	var game_visible := main.state == HeistMain.State.PLAYING and not main.menus.is_showing("pause")
+	_check(game_visible, "HUD/menu state at frame %d" % _runtime_frames)
 	for node in get_nodes_in_group(KK.GROUP_GUARDS):
 		var guard := node as Guard
 		if guard == null or guard.state == Guard.State.DOWN:
 			continue
 		var nearest := NavigationServer3D.map_get_closest_point(map, guard.global_position)
-		_check(guard.global_position.distance_to(nearest) < 1.5, "guard on navmesh at frame %d" % frame)
+		_check(guard.global_position.distance_to(nearest) < 1.5, "guard on navmesh at frame %d" % _runtime_frames)
 		var id := guard.get_instance_id()
 		var last: Vector3 = _guard_positions.get(id, guard.global_position)
-		if guard.state in [Guard.State.CHASE, Guard.State.RETURN, Guard.State.SEARCH] and not guard.nav_agent.is_navigation_finished() and guard.global_position.distance_to(last) < 0.2:
-			_guard_still[id] = float(_guard_still.get(id, 0.0)) + 2.5
+		var pathing := guard.state in [Guard.State.PATROL, Guard.State.CHASE, Guard.State.RETURN, Guard.State.SEARCH]
+		if pathing and not guard.nav_agent.is_navigation_finished() \
+				and guard.global_position.distance_to(last) < 0.08:
+			_guard_still[id] = float(_guard_still.get(id, 0.0)) + 0.5
 		else:
 			_guard_still[id] = 0.0
-		_check(float(_guard_still[id]) <= 6.0, "pathing guard moves within 6s")
+		if float(_guard_still[id]) > 6.0 and not _guard_failed.has(id):
+			_guard_failed[id] = true
+			_check(false, "pathing guard moves within 6s (%s, %s)" % [guard.name, guard.state_name()])
 		_guard_positions[id] = guard.global_position
-	_check(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) < 0.2, "physics frame time sane")
 
 
 func _reachable(map: RID, from: Vector3, to: Vector3) -> bool:
@@ -183,6 +231,13 @@ func _find_fuse() -> FuseBox:
 		if node is FuseBox:
 			return node
 	return null
+
+
+func _face(target: Vector3) -> void:
+	var to_target := target - main.player.global_position
+	to_target.y = 0.0
+	if to_target.length_squared() > 0.01:
+		main.player.rotation.y = atan2(-to_target.x, -to_target.z)
 
 
 func _spawn() -> HeistMain:

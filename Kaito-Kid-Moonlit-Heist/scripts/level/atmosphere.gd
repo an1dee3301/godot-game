@@ -95,8 +95,8 @@ var _flash_strength := 0.0
 var _double_flash := false
 var _bolt: MeshInstance3D
 var _rng := RandomNumberGenerator.new()
-var _base_ambient := Color(0.27, 0.32, 0.43)
-var _base_fog := Color(0.22, 0.29, 0.39)
+var _base_ambient := Color(0.37, 0.40, 0.48)
+var _base_fog := Color(0.27, 0.33, 0.41)
 
 
 ## Build the sky, windows and exterior effects around the playable AABB.
@@ -158,7 +158,7 @@ func _process(delta: float) -> void:
 		pulse = pow(maxf(0.0, 1.0 - (_flash_age - 0.33) / 0.19), 2.0) * 0.57
 	pulse *= _flash_strength
 	_flash_light.light_energy = pulse * 3.6
-	_environment.ambient_light_energy = 0.92 + pulse * 1.4
+	_environment.ambient_light_energy = 1.08 + pulse * 1.4
 	for beam: SpotLight3D in _window_beams:
 		beam.light_energy = 0.82 + pulse * 3.4
 	_sky_material.set_shader_parameter("flash", pulse)
@@ -194,7 +194,7 @@ func _make_environment() -> void:
 	_environment.sky = sky
 	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_environment.ambient_light_color = _base_ambient
-	_environment.ambient_light_energy = 0.92
+	_environment.ambient_light_energy = 1.08
 	_environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_environment.tonemap_mode = Environment.TONE_MAPPER_AGX
 	_environment.glow_enabled = true
@@ -215,7 +215,7 @@ func _make_environment() -> void:
 	_environment.ssr_enabled = true
 	_environment.ssr_max_steps = 48
 	_environment.volumetric_fog_enabled = true
-	_environment.volumetric_fog_density = 0.011
+	_environment.volumetric_fog_density = 0.008
 	_environment.volumetric_fog_albedo = _base_fog
 	_environment.volumetric_fog_anisotropy = 0.6
 	_environment.volumetric_fog_gi_inject = 0.45
@@ -234,7 +234,7 @@ func _make_moon() -> void:
 	_moon = DirectionalLight3D.new()
 	_moon.name = "Moonlight"
 	_moon.light_color = Color(0.70, 0.81, 1.0)
-	_moon.light_energy = 0.75
+	_moon.light_energy = 0.95
 	_moon.shadow_enabled = true
 	_moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	_moon.directional_shadow_max_distance = 80.0

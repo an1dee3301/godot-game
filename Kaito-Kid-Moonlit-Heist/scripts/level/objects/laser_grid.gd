@@ -94,8 +94,21 @@ func _build() -> void:
 	red.emission_energy_multiplier = 1.8
 	for side in [-1, 1]:
 		_box(self, Vector3(0.13, _size.y, 0.18), Vector3(side * _size.x * 0.5, _size.y * 0.5, 0), metal)
+		var rail := KK.standard_material(Color(0.5, 0.39, 0.2), 0.23, 0.76)
+		_box(self, Vector3(0.018, _size.y - 0.16, 0.02), Vector3(side * _size.x * 0.5, _size.y * 0.5, 0.105), rail)
 		for i in 6:
 			_box(self, Vector3(0.19, 0.14, 0.23), Vector3(side * _size.x * 0.5, 0.25 + i * (_size.y - 0.5) / 5.0, 0), metal)
+			var barrel := CylinderMesh.new()
+			barrel.top_radius = 0.042
+			barrel.bottom_radius = 0.052
+			barrel.height = 0.15
+			barrel.radial_segments = 12
+			var emitter := MeshInstance3D.new()
+			emitter.mesh = barrel
+			emitter.material_override = rail
+			emitter.rotation.z = PI * 0.5
+			emitter.position = Vector3(side * (_size.x * 0.5 - 0.055), 0.25 + i * (_size.y - 0.5) / 5.0, 0)
+			add_child(emitter)
 			for face in [-1, 1]:
 				var socket := _box(self, Vector3(0.10, 0.055, 0.014), Vector3(side * _size.x * 0.5, 0.25 + i * (_size.y - 0.5) / 5.0, face * 0.123), red)
 				socket.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

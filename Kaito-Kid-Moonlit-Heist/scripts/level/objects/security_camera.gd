@@ -99,18 +99,27 @@ func _build() -> void:
 	var dark := KK.standard_material(Color(0.05, 0.075, 0.11), 0.28, 0.6)
 	_box(self, Vector3(0.28, 0.13, 0.35), Vector3(0, 0.08, 0.13), steel)
 	_box(self, Vector3(0.09, 0.18, 0.35), Vector3(0, -0.08, -0.06), steel)
+	_box(self, Vector3(0.39, 0.035, 0.39), Vector3(0, 0.16, 0.13), dark)
 	_head = Node3D.new()
 	_head.position = Vector3(0, -0.17, -0.27)
 	_head.rotation.x = deg_to_rad(-30.0)
 	add_child(_head)
 	_box(_head, Vector3(0.45, 0.26, 0.58), Vector3.ZERO, steel)
 	_box(_head, Vector3(0.37, 0.18, 0.10), Vector3(0, 0, -0.33), dark)
+	_box(_head, Vector3(0.53, 0.025, 0.65), Vector3(0, 0.15, -0.05), dark)
+	for side in [-1, 1]:
+		_box(_head, Vector3(0.035, 0.12, 0.4), Vector3(side * 0.24, 0.0, 0.04), dark)
+		for i in 3:
+			var vent_position := Vector3(side * 0.262, 0.02, -0.09 + float(i) * 0.1)
+			_box(_head, Vector3(0.008, 0.055, 0.04), vent_position, steel)
 	var blue := KK.standard_material(Color(0.22, 0.48, 0.82), 0.08, 0.15)
 	blue.emission_enabled = true
 	blue.emission = Color(0.36, 0.76, 1.0)
 	blue.emission_energy_multiplier = 0.6
 	_lens = _sphere(_head, 0.105, Vector3(0, 0, -0.40), blue)
 	_lens.scale.z = 0.45
+	var lens_glass := KK.standard_material(Color(0.015, 0.035, 0.085), 0.035, 0.45)
+	_sphere(_head, 0.069, Vector3(0, 0, -0.435), lens_glass).scale.z = 0.23
 	_ring_mat = KK.standard_material(Color(0.8, 0.92, 1), 0.2)
 	_ring_mat.emission_enabled = true
 	_ring_mat.emission = Color(0.8, 0.92, 1)
@@ -126,7 +135,16 @@ func _build() -> void:
 	_head.add_child(_ring)
 	var cone_mat := ShaderMaterial.new()
 	var shader := Shader.new()
-	shader.code = "shader_type spatial; render_mode blend_add, unshaded, cull_disabled, depth_draw_never; void fragment() { float fade = 1.0 - clamp(length(VERTEX) / 14.0, 0.0, 1.0); ALBEDO = vec3(0.32, 0.65, 1.0); EMISSION = ALBEDO * 0.15; ALPHA = 0.042 * fade; }"
+	shader.code = """
+shader_type spatial;
+render_mode blend_add, unshaded, cull_disabled, depth_draw_never;
+void fragment() {
+	float fade = 1.0 - clamp(length(VERTEX) / 14.0, 0.0, 1.0);
+	ALBEDO = vec3(0.32, 0.65, 1.0);
+	EMISSION = ALBEDO * 0.15;
+	ALPHA = 0.042 * fade;
+}
+"""
 	cone_mat.shader = shader
 	_cone = MeshInstance3D.new()
 	_cone.material_override = cone_mat

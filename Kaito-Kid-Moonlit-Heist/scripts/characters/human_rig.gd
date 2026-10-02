@@ -76,6 +76,63 @@ func build_vroid(model_path: String, aliases: Dictionary, loops: Array = []) -> 
 	anim.add_animation_library("", lib)
 
 
+## Copies meshes (e.g. a face and hairstyle) from another VRoid model onto this rig's `bone`.
+## The source meshes are baked into their rest pose, expressed relative to the source's `bone`, and
+## mounted rigidly on ours (no hair physics). Returns the new MeshInstance3Ds.
+func transplant_static(source_path: String, mesh_names: Array, bone := "Head") -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	var src := (load(source_path) as PackedScene).instantiate()
+	var src_skel := src.find_children("GeneralSkeleton", "Skeleton3D", true, false)[0] as Skeleton3D
+	var src_bone_rest := src_skel.get_bone_global_rest(src_skel.find_bone(bone))
+	var to_bone := src_bone_rest.affine_inverse()
+	var anchor := Node3D.new()
+	anchor.name = "Transplant_" + bone
+	attach(bone, anchor)
+	for mi_node in src.find_children("*", "MeshInstance3D", true, false):
+		var mi := mi_node as MeshInstance3D
+		if not (mi.name in mesh_names):
+			continue
+		var skin := mi.skin
+		var bind_xf: Array[Transform3D] = []
+		for b in skin.get_bind_count():
+			var bone_name := String(skin.get_bind_name(b))
+			var idx := src_skel.find_bone(bone_name) if not bone_name.is_empty() else skin.get_bind_bone(b)
+			bind_xf.append(to_bone * src_skel.get_bone_global_rest(idx) * skin.get_bind_pose(b))
+		var baked := ArrayMesh.new()
+		for s in mi.mesh.get_surface_count():
+			var arrays := mi.mesh.surface_get_arrays(s)
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var bones_arr: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+			var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+			var per := bones_arr.size() / maxi(verts.size(), 1)
+			for v in verts.size():
+				var p := Vector3.ZERO
+				var n := Vector3.ZERO
+				for j in per:
+					var w := weights[v * per + j]
+					if w > 0.0:
+						var xf := bind_xf[bones_arr[v * per + j]]
+						p += (xf * verts[v]) * w
+						n += (xf.basis * normals[v]) * w
+				verts[v] = p
+				normals[v] = n.normalized()
+			arrays[Mesh.ARRAY_VERTEX] = verts
+			arrays[Mesh.ARRAY_NORMAL] = normals
+			arrays[Mesh.ARRAY_BONES] = null
+			arrays[Mesh.ARRAY_WEIGHTS] = null
+			arrays[Mesh.ARRAY_TANGENT] = null
+			baked.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			baked.surface_set_material(s, mi.mesh.surface_get_material(s))
+		var copy := MeshInstance3D.new()
+		copy.name = String(mi.name)
+		copy.mesh = baked
+		anchor.add_child(copy)
+		out.append(copy)
+	src.free()
+	return out
+
+
 func build(aliases: Dictionary, loops: Array = [], shape: Dictionary = SHAPE_HERO) -> void:
 	_shape = shape
 	var scene := (load(MODEL_SCENE) as PackedScene).instantiate()

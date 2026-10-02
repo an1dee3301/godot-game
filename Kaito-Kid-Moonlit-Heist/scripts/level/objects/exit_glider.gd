@@ -97,6 +97,11 @@ func _build() -> void:
 	add_child(craft)
 	_box(craft, Vector3(0.11, 0.10, 1.72), Vector3(0, -0.07, -0.25), blue)
 	_box(craft, Vector3(0.75, 0.07, 0.32), Vector3(0, -0.25, 0.36), white)
+	# A suspended A-frame and hand bar make the craft read as a flyable glider.
+	_rod(craft, Vector3(0, 0, -0.9), Vector3(-0.45, -0.85, 0.35), 0.026, gold)
+	_rod(craft, Vector3(0, 0, -0.9), Vector3(0.45, -0.85, 0.35), 0.026, gold)
+	_rod(craft, Vector3(-0.45, -0.85, 0.35), Vector3(0.45, -0.85, 0.35), 0.031, blue)
+	_rod(craft, Vector3(0, -0.1, 0.4), Vector3(0, -0.72, 0.52), 0.018, gold)
 	_left_wing = _wing(craft, -1, white, blue)
 	_right_wing = _wing(craft, 1, white, blue)
 	_left_wing.scale = Vector3(0.14, 1, 1)
@@ -182,6 +187,13 @@ func _wing(parent: Node3D, side: int, cloth: Material, frame: Material) -> Node3
 	_rod(pivot, c, d, 0.030, frame)
 	_rod(pivot, a, d, 0.025, frame)
 	_rod(pivot, a, c, 0.018, frame)
+	for j in 1:
+		var t := 0.48 + float(j) * 0.2
+		var front := a.lerp(b, t)
+		var rear := d.lerp(c, t)
+		_rod(pivot, front, rear, 0.013, frame)
+	var hem := KK.standard_material(Color(0.76, 0.81, 0.88), 0.72)
+	_rod(pivot, b, d, 0.011, hem)
 	return pivot
 
 

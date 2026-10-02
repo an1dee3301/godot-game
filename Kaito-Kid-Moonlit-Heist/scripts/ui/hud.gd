@@ -6,6 +6,8 @@ var level: MuseumLevel
 var player: PhantomThief
 var canvas: HeistHUDCanvas
 var _banner_tween: Tween
+var _banner_queue: Array[Dictionary] = []
+var _recent_banners: Dictionary = {}
 
 
 func _ready() -> void:
@@ -66,7 +68,7 @@ func set_prompt(prompt: String) -> void:
 func set_objective(objective: String) -> void:
 	if canvas == null:
 		return
-	canvas.objective = objective
+	canvas.objective = "ONE LAST VANISH" if objective.to_lower().contains("escape") else "FIVE JEWELS. ONE ENCORE."
 	canvas.queue_redraw()
 
 
@@ -85,21 +87,56 @@ func set_alert(alert_level: int) -> void:
 	tween.tween_property(canvas, "alert_fade", 1.0 if alert_level >= 2 else 0.0, 0.5)
 
 
-## Slide a temporary calling-card announcement across the lower screen.
+## Queue a restrained announcement; repeated warnings are suppressed briefly.
 func show_banner(message: String, color: Color = Color.WHITE, seconds: float = 2.5) -> void:
 	if canvas == null:
 		return
-	if _banner_tween != null and _banner_tween.is_running():
-		_banner_tween.kill()
-	canvas.banner = message
-	canvas.banner_color = color
+	var line := _rewrite_banner(message)
+	var now := Time.get_ticks_msec()
+	if int(_recent_banners.get(line, -100000)) + 6500 > now:
+		return
+	_recent_banners[line] = now
+	if _banner_queue.size() >= 3:
+		_banner_queue.pop_front()
+	_banner_queue.append({"text": line, "color": color, "seconds": minf(seconds, 2.8)})
+	if _banner_tween == null or not _banner_tween.is_running():
+		_play_next_banner()
+
+
+func _rewrite_banner(message: String) -> String:
+	var lower := message.to_lower()
+	var rewritten := message
+	if lower.contains("showtime"):
+		rewritten = "Ladies and gentlemen…"
+	elif lower.contains("laser grid offline"):
+		rewritten = "A little sleight of hand."
+	elif lower.contains("laser tripped"):
+		rewritten = "A rather loud entrance."
+	elif lower.contains("camera spotted"):
+		rewritten = "Caught my good side?"
+	elif lower.contains("kaito kid") or lower.contains("get him"):
+		rewritten = "Too slow, Inspector!"
+	elif lower.contains("all jewels") or lower.contains("alarm!"):
+		rewritten = "And now, the grand exit."
+	elif lower.contains("stolen"):
+		rewritten = "%s — gone without a trace." % message.get_slice(" stolen", 0)
+	return rewritten
+
+
+func _play_next_banner() -> void:
+	if _banner_queue.is_empty() or canvas == null:
+		return
+	var item: Dictionary = _banner_queue.pop_front()
+	canvas.banner = String(item["text"])
+	canvas.banner_color = item["color"] as Color
 	canvas.banner_alpha = 0.0
-	canvas.banner_slide = 28.0
+	canvas.banner_slide = 13.0
 	_banner_tween = create_tween().set_parallel(true)
-	_banner_tween.tween_property(canvas, "banner_alpha", 1.0, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_banner_tween.tween_property(canvas, "banner_slide", 0.0, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_banner_tween.chain().tween_interval(seconds)
-	_banner_tween.chain().tween_property(canvas, "banner_alpha", 0.0, 0.35)
+	_banner_tween.tween_property(canvas, "banner_alpha", 1.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_banner_tween.tween_property(canvas, "banner_slide", 0.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_banner_tween.chain().tween_interval(float(item["seconds"]))
+	_banner_tween.chain().tween_property(canvas, "banner_alpha", 0.0, 0.38)
+	_banner_tween.finished.connect(_play_next_banner)
 
 
 ## Pulse crimson at the screen edge when Kaito is hurt.

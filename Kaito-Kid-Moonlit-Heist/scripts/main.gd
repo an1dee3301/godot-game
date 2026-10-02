@@ -28,6 +28,12 @@ var _chasing := 0
 var _alert_level := 0
 var _prompt_hold := 0.0
 var _last_prompt := ""
+var _first_jewel_hint := false
+var _vault_hint := false
+var _time_effect_started := 0
+var _time_effect_duration := 0.0
+var _time_effect_scale := 1.0
+var _time_effect_end := false
 
 
 func _ready() -> void:
@@ -122,7 +128,7 @@ func _connect_signals() -> void:
 	level.laser_tripped.connect(_on_laser_tripped)
 	level.lasers_disabled.connect(func() -> void:
 		sound.play("laser_off")
-		hud.show_banner("Laser grid offline", Color(0.6, 0.9, 1.0)))
+		hud.show_banner("Vault lasers offline. The Moonstone is yours to take.", Color(0.6, 0.9, 1.0)))
 	level.camera_spotted.connect(_on_camera_spotted)
 	level.pickup_collected.connect(func(kind: String, pos: Vector3) -> void:
 		sound.play("pickup_" + kind, pos))
@@ -143,7 +149,16 @@ func _enter_title() -> void:
 	state = State.TITLE
 	player.controls_enabled = false
 	camera_rig.input_enabled = false
-	camera_rig.set_showcase(true)
+	camera_rig.set_showcase(false)
+	var exit := level.exit_node()
+	player.global_position = exit.global_position - exit.global_basis.z * 4.0 + exit.global_basis.x * 3.0
+	player.global_rotation.y = exit.global_rotation.y
+	var title_camera: Camera3D = preload("res://scripts/ui/menu_title_camera.gd").new()
+	title_camera.name = "TitleCamera"
+	title_camera.position = exit.global_position + Vector3(-8.0, 3.2, 1.5)
+	title_camera.set("focus", player)
+	add_child(title_camera)
+	title_camera.current = true
 	hud.set_visible_hud(false)
 	menus.show_screen("title")
 	sound.set_music("title")
@@ -154,8 +169,15 @@ func start_game() -> void:
 	state = State.PLAYING
 	get_tree().paused = false
 	menus.hide_all()
+	var title_camera := get_node_or_null("TitleCamera") as Camera3D
+	if title_camera != null:
+		title_camera.current = false
+		title_camera.queue_free()
+	player.global_transform = level.player_spawn()
+	player.velocity = Vector3.ZERO
 	camera_rig.set_showcase(false)
 	camera_rig.snap_behind_target()
+	camera_rig.camera.current = true
 	camera_rig.input_enabled = true
 	player.controls_enabled = true
 	hud.set_visible_hud(true)
@@ -163,11 +185,11 @@ func start_game() -> void:
 	sound.set_music("sneak")
 	_set_mouse_captured(true)
 
-
 func pause_game() -> void:
 	if state != State.PLAYING:
 		return
 	state = State.PAUSED
+	_clear_time_effect()
 	get_tree().paused = true
 	menus.show_screen("pause")
 	_set_mouse_captured(false)
@@ -185,6 +207,7 @@ func resume_game() -> void:
 
 func restart_game() -> void:
 	skip_title = true
+	_clear_time_effect()
 	get_tree().paused = false
 	get_tree().reload_current_scene()
 
@@ -206,6 +229,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	_update_time_effect()
 	if state != State.PLAYING:
 		return
 	run_time += delta
@@ -217,6 +241,48 @@ func _process(delta: float) -> void:
 	else:
 		_prompt_hold = maxf(0.0, _prompt_hold - delta)
 	hud.set_prompt(_last_prompt if _prompt_hold > 0.0 else "")
+	if not _vault_hint and jewels_stolen >= 2:
+		_vault_hint = true
+		hud.show_banner("The vault is laser-locked. Find the maintenance fuse.", Color(0.68, 0.85, 1.0), 3.3)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		if state == State.PLAYING:
+			pause_game()
+		else:
+			_set_mouse_captured(false)
+
+
+func _exit_tree() -> void:
+	_clear_time_effect()
+
+
+func _start_time_effect(scale: float, duration: float, ending: bool = false) -> void:
+	if _time_effect_end and not ending:
+		return
+	_time_effect_started = Time.get_ticks_usec()
+	_time_effect_duration = duration
+	_time_effect_scale = scale
+	_time_effect_end = ending
+	Engine.time_scale = scale
+
+
+func _update_time_effect() -> void:
+	if _time_effect_started == 0:
+		return
+	var elapsed := float(Time.get_ticks_usec() - _time_effect_started) / 1000000.0
+	if elapsed >= _time_effect_duration:
+		_clear_time_effect()
+	elif _time_effect_end:
+		var t := clampf(elapsed / _time_effect_duration, 0.0, 1.0)
+		Engine.time_scale = lerpf(_time_effect_scale, 1.0, t * t * (3.0 - 2.0 * t))
+
+
+func _clear_time_effect() -> void:
+	_time_effect_started = 0
+	_time_effect_end = false
+	Engine.time_scale = 1.0
 
 
 func _set_mouse_captured(captured: bool) -> void:
@@ -235,15 +301,23 @@ func _on_jewel_stolen(jewel: Jewel) -> void:
 		_trigger_alarm()
 	else:
 		hud.set_objective("Steal the jewels  %d/%d" % [jewels_stolen, jewels_total])
-		hud.show_banner("%s stolen  (%d/%d)" % [jewel.jewel_name, jewels_stolen, jewels_total], jewel.gem_color)
+		if not _first_jewel_hint:
+			_first_jewel_hint = true
+			hud.show_banner("First jewel claimed. Four more before the balcony opens.", jewel.gem_color, 3.0)
+		else:
+			hud.show_banner("%s stolen  (%d/%d)" % [jewel.jewel_name, jewels_stolen, jewels_total], jewel.gem_color)
 
 
 func _trigger_alarm() -> void:
+	if alarm_on:
+		return
 	alarm_on = true
 	level.exit_node().unlock()
 	level.atmosphere().set_alarm(true)
 	for guard: Guard in get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
 		guard.speed_mult = KK.ALARM_SPEED_MULT
+		if guard.state != Guard.State.DOWN:
+			guard.receive_alert(player.global_position)
 	sound.play("exit_unlock")
 	sound.set_music("escape")
 	hud.set_objective("Escape! Reach the glider on the balcony")
@@ -254,6 +328,7 @@ func _on_escaped() -> void:
 	if state != State.PLAYING:
 		return
 	state = State.WON
+	_start_time_effect(0.3, 1.0, true)
 	player.controls_enabled = false
 	camera_rig.input_enabled = false
 	sound.set_music("win")
@@ -269,6 +344,7 @@ func _on_player_died() -> void:
 	if state != State.PLAYING:
 		return
 	state = State.LOST
+	_start_time_effect(0.3, 1.0, true)
 	camera_rig.input_enabled = false
 	sound.set_music("lose")
 	sound.play("lose")
@@ -287,8 +363,9 @@ func _end_screen(screen: String, extra: Dictionary) -> void:
 	data.merge(extra)
 	_set_mouse_captured(false)
 	# Let the death / escape moment play before the screen appears.
-	await get_tree().create_timer(1.4).timeout
+	await get_tree().create_timer(1.4, true, false, true).timeout
 	if is_inside_tree():
+		_clear_time_effect()
 		menus.show_screen(screen, data)
 
 
@@ -325,6 +402,8 @@ func _on_guard_state_changed(guard: Guard, _old: int, new_state: int) -> void:
 		sound.play("guard_huh", guard.global_position)
 	elif new_state == Guard.State.STUNNED:
 		sound.play("card_hit", guard.global_position)
+		camera_rig.shake(0.08)
+		_start_time_effect(0.05, 0.06)
 	_refresh_alert_level()
 
 

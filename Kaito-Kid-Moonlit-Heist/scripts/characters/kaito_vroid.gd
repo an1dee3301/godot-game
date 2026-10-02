@@ -6,7 +6,8 @@ extends RefCounted
 ## card gun. Rest space: metres, +Y up, +Z = his front, +X = his left. Head bone (0, 1.545, 0.006),
 ## eyes y 1.608 at x ±0.023, Neck 1.456, UpperChest 1.305, hair top ~1.81.
 
-const MODEL := "res://assets/characters/vroid/hairsample_male.glb"
+const MODEL := "res://assets/characters/vroid/base_male.glb"   ## Body + vest outfit.
+const HEAD_MODEL := "res://assets/characters/vroid/hairsample_male.glb"   ## Kaito's face and messy hair.
 const WHITE := Color(0.95, 0.955, 0.97)
 const BAND := Color(0.12, 0.26, 0.66)
 const GOLD := Color(0.95, 0.78, 0.36)
@@ -21,8 +22,12 @@ static var _paint_shader: Shader
 
 
 static func build(rig: HumanRig) -> Dictionary:
+	# Swap in Kaito's anime face + messy dark hair from the HairSample model; hide the base head.
+	for mi in rig.skeleton.find_children("*", "MeshInstance3D", true, false):
+		if mi.name == "Face" or String(mi.name).begins_with("Hair"):
+			mi.visible = false
+	rig.transplant_static(HEAD_MODEL, ["Face", "Hair001"], "Head")
 	_paint_outfit(rig)
-	_build_collar(rig)
 	var cape := _build_cape(rig)
 	var head := Node3D.new()
 	head.name = "HeadGear"
@@ -41,7 +46,9 @@ static func _paint_outfit(rig: HumanRig) -> void:
 		var base := mesh.surface_get_material(s) as BaseMaterial3D
 		var name := base.resource_name if base else ""
 		var role := ROLE_SKIN
-		if "Tops" in name:
+		if "Tie" in name:
+			role = 4
+		elif "Tops" in name:
 			role = ROLE_JACKET
 		elif "Bottoms" in name:
 			role = ROLE_TROUSERS
@@ -75,32 +82,22 @@ void fragment() {
 	float spec = 0.35;
 	if (role == 0) {
 		if (region == 6) { col = vec3(0.97) * mix(0.85, 1.0, lum); rough = 0.5; }   // white gloves
+		else if (region == 4 || region == 5) { col = vec3(0.16, 0.32, 0.78) * mix(0.82, 1.02, lum); rough = 0.45; }   // long shirt sleeves
 		else if (region == 2 || (region == 1 && rest.y < 1.47)) { col = vec3(0.13, 0.27, 0.68) * mix(0.8, 1.05, lum); rough = 0.45; }   // shirt collar
 		else { rough = 0.55; spec = 0.25; }
 	} else if (role == 1) {
-		// Hoodie -> tailored white jacket: keep the fold shading, drop the hood at the back.
-		if (rest.z < -0.02 && rest.y > 1.43) { discard; }
-		if (rest.y > 1.415 && abs(rest.x) < 0.11) { discard; }   // hood rim around the neck
-		col = vec3(0.955, 0.96, 0.975) * mix(0.78, 1.04, smoothstep(0.35, 0.95, lum));
-		if (rest.z > 0.0) {
-			float top = 1.45;
-			float v_half = (rest.y > 1.10 && rest.y < top) ? 0.008 + (top - rest.y) * 0.24 : -1.0;
-			float d = abs(rest.x) - v_half;
-			if (v_half > 0.0 && d < 0.0) {
-				// Blue dress shirt with a red tie down the centre.
-				col = vec3(0.13, 0.27, 0.68) * mix(0.75, 1.1, lum);
-				float tie = 0.011 + (top - rest.y) * 0.035;
-				if (abs(rest.x) < tie && rest.y > 1.14 && rest.y < top - 0.005) { col = vec3(0.72, 0.04, 0.08) * mix(0.8, 1.1, lum); rough = 0.35; }
-			} else if (v_half > 0.0 && d < 0.005) {
-				col *= 0.62;   // lapel piping
-			} else if (v_half > 0.0 && d < 0.04 && rest.y > 1.2) {
-				col *= 1.02; rough = 0.32;   // satin lapel
-			}
-			if (length(vec2(rest.x, rest.y - 1.08)) < 0.009 || length(vec2(rest.x, rest.y - 1.035)) < 0.009) {
-				col = vec3(0.86, 0.72, 0.38); rough = 0.25;   // buttons
-			}
+		// Shirt (bright texels) -> royal-blue dress shirt; sweater vest (dark texels) -> white vest.
+		if (lum > 0.55) {
+			col = vec3(0.16, 0.32, 0.78) * mix(0.75, 1.08, lum);
+			rough = 0.45;
+		} else {
+			col = vec3(0.96, 0.965, 0.98) * mix(0.72, 1.04, smoothstep(0.02, 0.35, lum));
+			rough = 0.62;
 		}
 		if (!FRONT_FACING) { col *= 0.45; }
+	} else if (role == 4) {
+		col = vec3(0.75, 0.04, 0.08) * mix(0.75, 1.15, lum);   // red tie
+		rough = 0.35;
 	} else if (role == 2) {
 		col = vec3(0.93, 0.935, 0.95) * mix(0.7, 1.05, smoothstep(0.0, 0.5, lum * 3.0));
 		rough = 0.65;

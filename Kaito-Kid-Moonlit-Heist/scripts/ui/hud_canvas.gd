@@ -3,9 +3,9 @@ extends Control
 ## Draws the HUD in viewport coordinates so canvas_items stretch remains crisp.
 
 const NAVY := Color("0b1230")
-const PAPER := Color("f5f1e5")
-const GOLD := Color("d4af37")
-const CRIMSON := Color("c32d43")
+const PAPER := Color("f4f0e7")
+const GOLD := Color("d2b66f")
+const CRIMSON := Color("dc5963")
 const BLUE := Color("8ec9ee")
 const GEM_COLORS := [Color("3485f9"), Color("ef4455"), Color("654080"), Color("4edc92"), Color("e9f6ff")]
 
@@ -82,18 +82,19 @@ func _draw() -> void:
 	var sw := w / scale_ui
 	var sh := h / scale_ui
 	_draw_vignette(sw, sh)
-	_draw_health(Vector2(36, 34))
-	_draw_objective(Vector2(sw * 0.5, 32))
-	_draw_minimap(Vector2(sw - 141, 143), 104.0)
+	_draw_health(Vector2(43, sh - 58))
+	_draw_objective(Vector2(sw * 0.5, 37))
+	_draw_minimap(Vector2(sw - 110, 111), 72.0)
 	_draw_crosshair(Vector2(sw * 0.5, sh * 0.5))
-	_draw_stealth(Vector2(36, sh - 137))
-	_draw_banner(Vector2(sw * 0.5, sh - 112))
+	_draw_stealth(Vector2(43, sh - 125))
+	_draw_banner(Vector2(sw * 0.5, sh - 116))
 	_draw_dangers(sw, sh)
 	if lightning_flash > 0.01:
 		draw_rect(Rect2(Vector2.ZERO, Vector2(sw, sh)), Color(0.82, 0.92, 1.0, lightning_flash))
 
 
-func _text(value: String, pos: Vector2, font_size: int, color: Color = PAPER, serif: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT) -> void:
+func _text(value: String, pos: Vector2, font_size: int, color: Color = PAPER,
+		serif: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT) -> void:
 	var font: Font = _serif if serif else _sans
 	var text_width: float = font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	var origin := pos
@@ -104,70 +105,86 @@ func _text(value: String, pos: Vector2, font_size: int, color: Color = PAPER, se
 	draw_string(font, origin, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 
-func _panel(rect: Rect2, fill: Color, border: Color = GOLD) -> void:
-	draw_rect(rect, fill)
-	draw_rect(rect, border, false, 1.2)
-
-
 func _draw_vignette(sw: float, sh: float) -> void:
 	var strength := alert_fade * (0.20 + 0.035 * sin(_pulse * 4.5)) + damage_flash * 0.48
 	if strength <= 0.005:
 		return
 	var tint := CRIMSON
-	for i in range(8):
-		var inset := float(i) * 15.0
-		var alpha := strength * (1.0 - float(i) / 8.0) * 0.18
-		draw_rect(Rect2(inset, inset, sw - 2.0 * inset, sh - 2.0 * inset), Color(tint.r, tint.g, tint.b, alpha), false, 15.0)
+	for i in range(6):
+		var inset := float(i) * 11.0
+		var alpha := strength * (1.0 - float(i) / 6.0) * 0.13
+		draw_rect(Rect2(inset, inset, sw - 2.0 * inset, sh - 2.0 * inset), Color(tint.r, tint.g, tint.b, alpha), false, 11.0)
 
 
 func _draw_health(p: Vector2) -> void:
-	_panel(Rect2(p, Vector2(290, 101)), Color(NAVY.r, NAVY.g, NAVY.b, 0.78))
-	_text("KAITO  /  VITALITY", p + Vector2(16, 25), 16, GOLD, true)
-	_text("%03d" % ceili(hp), p + Vector2(273, 27), 21, PAPER, false, HORIZONTAL_ALIGNMENT_RIGHT)
-	var bar := Rect2(p + Vector2(16, 41), Vector2(258, 15))
-	draw_rect(bar, Color(0.22, 0.19, 0.24, 0.9))
-	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(health_ghost / max_hp, 0.0, 1.0), bar.size.y)), Color("e8b3b9"))
-	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(health_display / max_hp, 0.0, 1.0), bar.size.y)), CRIMSON)
-	draw_rect(bar, PAPER, false, 1.0)
-	_text("SMOKE", p + Vector2(16, 82), 12, Color("b9c5d9"))
+	_text("VITALITY", p + Vector2(0, -19), 11, GOLD)
+	_text("%03d" % ceili(hp), p + Vector2(238, -12), 23, PAPER, false, HORIZONTAL_ALIGNMENT_RIGHT)
+	var start := p + Vector2(0, 0)
+	var length := 238.0
+	draw_line(start, start + Vector2(length, 0), Color(PAPER.r, PAPER.g, PAPER.b, 0.25), 2.0, true)
+	draw_line(start, start + Vector2(length * clampf(health_ghost / max_hp, 0.0, 1.0), 0), Color(CRIMSON.r, CRIMSON.g, CRIMSON.b, 0.45), 4.0, true)
+	draw_line(start, start + Vector2(length * clampf(health_display / max_hp, 0.0, 1.0), 0), PAPER if hp > max_hp * 0.3 else CRIMSON, 3.0, true)
+	_text("SMOKE", p + Vector2(0, -48), 10, Color(PAPER.r, PAPER.g, PAPER.b, 0.67))
 	for i in range(KK.PLAYER_MAX_SMOKE):
-		var center := p + Vector2(80 + i * 23, 77)
-		draw_circle(center, 7.0, PAPER if i < smoke else Color("586077"))
-		draw_circle(center + Vector2(0, -8), 2.5, GOLD if i < smoke else Color("586077"))
-	_text("CARD  F / LMB", p + Vector2(273, 82), 11, GOLD, false, HORIZONTAL_ALIGNMENT_RIGHT)
+		var center := p + Vector2(75 + i * 18, -51)
+		var tint := PAPER if i < smoke else Color(PAPER.r, PAPER.g, PAPER.b, 0.24)
+		draw_circle(center, 4.7, tint)
+		draw_circle(center + Vector2(0, -5), 1.5, GOLD if i < smoke else tint)
 
 
 func _draw_objective(p: Vector2) -> void:
-	var box := Rect2(p + Vector2(-236, 0), Vector2(472, 88))
-	_panel(box, Color(NAVY.r, NAVY.g, NAVY.b, 0.78))
-	_text("THE MOONLIGHT MUSEUM", p + Vector2(0, 22), 14, GOLD, true, HORIZONTAL_ALIGNMENT_CENTER)
-	_text(objective, p + Vector2(0, 46), 18, PAPER, true, HORIZONTAL_ALIGNMENT_CENTER)
-	var row_width := float(jewels_total) * 25.0 + 65.0
-	var start_x := p.x - row_width * 0.5 + 10.0
+	_text("M O O N L I G H T   M U S E U M", p + Vector2(0, 0), 11, GOLD, false, HORIZONTAL_ALIGNMENT_CENTER)
+	_text(objective, p + Vector2(0, 25), 16, PAPER, true, HORIZONTAL_ALIGNMENT_CENTER)
+	var row_width := float(jewels_total - 1) * 28.0
+	var start_x := p.x - row_width * 0.5
+	var jewel_nodes := level.jewels()
 	for i in range(jewels_total):
-		var x := start_x + float(i) * 25.0
-		var color: Color = GEM_COLORS[i % GEM_COLORS.size()] if i < jewels else Color("667089")
-		_diamond(Vector2(x, p.y + 69), 7.0, color)
-	_text("%d/%d" % [jewels, jewels_total], Vector2(start_x + float(jewels_total) * 25.0 + 5.0, p.y + 75), 16, GOLD)
+		var x := start_x + float(i) * 28.0
+		var color := Color(PAPER.r, PAPER.g, PAPER.b, 0.18)
+		if i < jewel_nodes.size() and jewel_nodes[i] is Jewel:
+			if jewel_nodes[i].is_stolen:
+				color = jewel_nodes[i].gem_color
+		elif i < jewels:
+			color = GEM_COLORS[i % GEM_COLORS.size()]
+		_diamond(Vector2(x, p.y + 49), 7.0, color)
+	draw_line(p + Vector2(-82, 69), p + Vector2(82, 69), Color(GOLD.r, GOLD.g, GOLD.b, 0.36), 1.0)
 
 
 func _diamond(center: Vector2, radius: float, color: Color) -> void:
-	var vertices := PackedVector2Array([center + Vector2(0, -radius), center + Vector2(radius * 0.75, 0), center + Vector2(0, radius), center + Vector2(-radius * 0.75, 0)])
+	var vertices := PackedVector2Array([
+		center + Vector2(0, -radius), center + Vector2(radius * 0.75, 0),
+		center + Vector2(0, radius), center + Vector2(-radius * 0.75, 0)
+	])
 	draw_colored_polygon(vertices, color)
 	draw_polyline(PackedVector2Array([vertices[0], vertices[1], vertices[2], vertices[3], vertices[0]]), PAPER, 1.1)
 
 
 func _draw_crosshair(p: Vector2) -> void:
 	var cooldown := _card_cooldown_ratio()
-	draw_arc(p, 23.0, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - cooldown), 32, GOLD if cooldown <= 0.01 else Color("8296b5"), 2.0, true)
+	draw_arc(p, 18.0, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - cooldown), 32, GOLD if cooldown <= 0.01 else Color(PAPER.r, PAPER.g, PAPER.b, 0.52), 1.5, true)
 	for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-		draw_line(p + direction * 6.0, p + direction * 13.0, PAPER, 1.5)
-	_diamond(p, 3.0, GOLD)
+		draw_line(p + direction * 5.0, p + direction * 10.0, PAPER, 1.0)
+	draw_circle(p, 1.5, GOLD)
 	if prompt != "":
-		var width := maxf(220.0, _sans.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x + 40.0)
-		var rect := Rect2(p + Vector2(-width * 0.5, 43), Vector2(width, 39))
-		_panel(rect, Color(NAVY.r, NAVY.g, NAVY.b, 0.91))
-		_text(prompt, p + Vector2(0, 69), 17, PAPER, false, HORIZONTAL_ALIGNMENT_CENTER)
+		var verb := _clean_prompt(prompt)
+		var width: float = _sans.get_string_size(verb, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		var left := p.x - (width + 39.0) * 0.5
+		var key_rect := Rect2(Vector2(left, p.y + 42), Vector2(24, 24))
+		draw_rect(key_rect, Color(NAVY.r, NAVY.g, NAVY.b, 0.72))
+		draw_rect(key_rect, Color(GOLD.r, GOLD.g, GOLD.b, 0.65), false, 1.0)
+		_text("E", Vector2(left + 12, p.y + 59), 13, PAPER, false, HORIZONTAL_ALIGNMENT_CENTER)
+		_text(verb, Vector2(left + 35, p.y + 60), 15, PAPER)
+
+
+func _clean_prompt(raw: String) -> String:
+	var value := raw.strip_edges()
+	if value.begins_with("[E]"):
+		value = value.substr(3).strip_edges()
+	if value.to_lower().begins_with("steal the "):
+		return "STEAL  " + value.substr(10)
+	if value.to_lower().begins_with("disable "):
+		return "DISARM  " + value.substr(8)
+	return value.to_upper()
 
 
 func _card_cooldown_ratio() -> float:
@@ -177,40 +194,38 @@ func _card_cooldown_ratio() -> float:
 
 
 func _draw_stealth(p: Vector2) -> void:
-	_panel(Rect2(p, Vector2(290, 105)), Color(NAVY.r, NAVY.g, NAVY.b, 0.78))
 	var visibility := clampf(player.visibility_factor(), 0.0, 1.0)
-	var state := "HIDDEN" if visibility < 0.05 else ("SNEAKING" if player.is_crouching() else ("EXPOSED" if player.is_sprinting() else "MOVING"))
-	var eye := p + Vector2(30, 38)
-	draw_arc(eye, 13.0, PI * 0.13, PI * 0.87, 12, PAPER, 2.0)
-	draw_arc(eye, 13.0, PI * 1.13, PI * 1.87, 12, PAPER, 2.0)
-	draw_circle(eye, 4.0, GOLD)
-	_text(state, p + Vector2(57, 43), 19, GOLD, true)
-	_text("VISIBILITY", p + Vector2(16, 69), 11, Color("b9c5d9"))
-	draw_rect(Rect2(p + Vector2(108, 59), Vector2(164, 9)), Color("34415f"))
-	draw_rect(Rect2(p + Vector2(108, 59), Vector2(164 * visibility, 9)), Color("e1b446") if visibility < 0.6 else CRIMSON)
+	var state := "VEILED" if visibility < 0.05 else ("LOW PROFILE" if player.is_crouching() else ("IN THE OPEN" if player.is_sprinting() else "VISIBLE"))
+	var eye := p + Vector2(13, 0)
+	var opening := lerpf(2.5, 9.0, visibility)
+	draw_arc(eye, 12.0, PI + 0.25, TAU - 0.25, 14, PAPER, 1.5)
+	draw_line(eye + Vector2(-10, 0), eye + Vector2(0, -opening), PAPER, 1.5)
+	draw_line(eye + Vector2(0, -opening), eye + Vector2(10, 0), PAPER, 1.5)
+	draw_circle(eye, 2.7, GOLD)
+	_text(state, p + Vector2(38, 5), 12, PAPER)
 	var total := int(elapsed)
-	_text("%02d:%02d" % [total / 60, total % 60], p + Vector2(272, 93), 17, PAPER, false, HORIZONTAL_ALIGNMENT_RIGHT)
+	_text("%02d:%02d" % [total / 60, total % 60], p + Vector2(238, 5), 13, Color(PAPER.r, PAPER.g, PAPER.b, 0.73), false, HORIZONTAL_ALIGNMENT_RIGHT)
 
 
 func _draw_banner(p: Vector2) -> void:
 	if banner_alpha <= 0.01 or banner == "":
 		return
 	var y := p.y + banner_slide
-	var fill := Color(NAVY.r, NAVY.g, NAVY.b, banner_alpha * 0.90)
-	var border := Color(GOLD.r, GOLD.g, GOLD.b, banner_alpha)
-	_panel(Rect2(Vector2(p.x - 300, y), Vector2(600, 57)), fill, border)
-	_text("✦  " + banner + "  ✦", Vector2(p.x, y + 37), 22, Color(banner_color.r, banner_color.g, banner_color.b, banner_alpha), true, HORIZONTAL_ALIGNMENT_CENTER)
+	draw_line(Vector2(p.x - 90, y), Vector2(p.x + 90, y), Color(GOLD.r, GOLD.g, GOLD.b, banner_alpha * 0.75), 1.0)
+	_text(banner, Vector2(p.x, y + 31), 24, Color(banner_color.r, banner_color.g, banner_color.b, banner_alpha), true, HORIZONTAL_ALIGNMENT_CENTER)
 
 
 func _draw_minimap(center: Vector2, radius: float) -> void:
-	draw_circle(center, radius + 9.0, Color(NAVY.r, NAVY.g, NAVY.b, 0.94))
-	draw_arc(center, radius + 5.0, 0, TAU, 80, GOLD, 2.0, true)
-	draw_circle(center, radius, Color("172645"))
-	for r in [32.0, 65.0, 96.0]:
-		draw_arc(center, r, 0, TAU, 64, Color(0.6, 0.72, 0.84, 0.10), 1.0)
+	for i in range(8, 0, -1):
+		var fade := float(i) / 8.0
+		draw_circle(center, radius + float(i) * 2.0, Color(NAVY.r, NAVY.g, NAVY.b, 0.025 * fade))
+	draw_circle(center, radius, Color(NAVY.r, NAVY.g, NAVY.b, 0.64))
+	draw_arc(center, radius + 2.0, 0, TAU, 64, Color(GOLD.r, GOLD.g, GOLD.b, 0.62), 1.0, true)
+	for r in [radius * 0.45, radius * 0.8]:
+		draw_arc(center, r, 0, TAU, 64, Color(PAPER.r, PAPER.g, PAPER.b, 0.08), 1.0)
 	var yaw := player.camera_rig.get_yaw() if player.camera_rig != null else 0.0
 	var origin := Vector2(player.global_position.x, player.global_position.z)
-	var world_scale := 3.4
+	var world_scale := 2.5
 	for wall in level.minimap_walls():
 		if not wall is Rect2:
 			continue
@@ -220,7 +235,7 @@ func _draw_minimap(center: Vector2, radius: float) -> void:
 		var c := rect.position + rect.size
 		var d := rect.position + Vector2(0, rect.size.y)
 		for edge in [[a, b], [b, c], [c, d], [d, a]]:
-			_map_segment(center, radius - 2.0, _map_point(edge[0], origin, yaw, world_scale), _map_point(edge[1], origin, yaw, world_scale), Color("758aaa"), 2.0)
+			_map_segment(center, radius - 4.0, _map_point(edge[0], origin, yaw, world_scale), _map_point(edge[1], origin, yaw, world_scale), Color("71839f"), 1.2)
 	for icon_node in get_tree().get_nodes_in_group(KK.GROUP_MINIMAP):
 		if not icon_node is Node3D or not icon_node.has_method("minimap_icon"):
 			continue
@@ -228,39 +243,42 @@ func _draw_minimap(center: Vector2, radius: float) -> void:
 		if kind == "jewel" and bool(icon_node.get("is_stolen")):
 			continue
 		var point := _map_point(Vector2(icon_node.global_position.x, icon_node.global_position.z), origin, yaw, world_scale) + center
-		if point.distance_to(center) >= radius - 9.0:
+		if point.distance_to(center) >= radius - 10.0:
 			continue
 		match kind:
 			"jewel":
-				_diamond(point, 6.0, icon_node.get("gem_color") as Color)
+				_diamond(point, 4.5, icon_node.get("gem_color") as Color)
 			"exit":
 				var locked: bool = bool(icon_node.get("locked"))
-				draw_circle(point, 7.0, Color("808999") if locked else GOLD)
-				_text("⇧", point + Vector2(0, 5), 13, NAVY, false, HORIZONTAL_ALIGNMENT_CENTER)
+				draw_circle(point, 4.0, Color("808999") if locked else GOLD)
 			"pickup":
-				draw_circle(point, 4.0, Color("7bdebb"))
+				draw_circle(point, 3.0, Color("7bdebb"))
 			"camera":
-				draw_circle(point, 4.0, Color("8dc9ef"))
+				draw_circle(point, 3.0, Color("8dc9ef"))
 			"fuse":
-				draw_rect(Rect2(point - Vector2(4, 4), Vector2(8, 8)), GOLD)
+				draw_rect(Rect2(point - Vector2(3, 3), Vector2(6, 6)), GOLD)
 	for guard_node in get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
 		if not guard_node is Guard or guard_node.state == Guard.State.DOWN:
 			continue
 		var point := _map_point(Vector2(guard_node.global_position.x, guard_node.global_position.z), origin, yaw, world_scale) + center
 		if point.distance_to(center) >= radius - 8.0:
 			continue
-		var tint := CRIMSON if guard_node.state in [Guard.State.CHASE, Guard.State.ATTACK] else (GOLD if guard_node.state in [Guard.State.SUSPICIOUS, Guard.State.SEARCH] else BLUE)
+		var tint := BLUE
+		if guard_node.state in [Guard.State.CHASE, Guard.State.ATTACK]:
+			tint = CRIMSON
+		elif guard_node.state in [Guard.State.SUSPICIOUS, Guard.State.SEARCH]:
+			tint = GOLD
 		var forward := Vector2(-guard_node.global_basis.z.x, -guard_node.global_basis.z.z).rotated(yaw)
 		if forward.length() > 0.01 and point.distance_to(center) < radius - 24.0:
 			var angle := forward.angle()
-			var cone := PackedVector2Array([point, point + Vector2.from_angle(angle - 0.37) * 17.0, point + Vector2.from_angle(angle + 0.37) * 17.0])
+			var cone := PackedVector2Array([point, point + Vector2.from_angle(angle - 0.37) * 12.0, point + Vector2.from_angle(angle + 0.37) * 12.0])
 			draw_colored_polygon(cone, Color(tint.r, tint.g, tint.b, 0.18))
-		draw_circle(point, 4.0, tint)
-	var arrow := PackedVector2Array([center + Vector2(0, -11), center + Vector2(7, 8), center + Vector2(0, 4), center + Vector2(-7, 8)])
+		draw_circle(point, 2.8, tint)
+	var arrow := PackedVector2Array([center + Vector2(0, -8), center + Vector2(5, 6), center + Vector2(0, 3), center + Vector2(-5, 6)])
 	draw_colored_polygon(arrow, PAPER)
 	draw_polyline(PackedVector2Array([arrow[0], arrow[1], arrow[2], arrow[3], arrow[0]]), GOLD, 1.4)
 	_draw_compass(center, radius, origin, yaw)
-	_text("N", center + Vector2(-4, -radius - 16), 12, GOLD)
+	_text("N", center + Vector2(0, -radius - 9), 10, GOLD, false, HORIZONTAL_ALIGNMENT_CENTER)
 
 
 func _map_point(world: Vector2, origin: Vector2, yaw: float, world_scale: float) -> Vector2:
@@ -321,7 +339,14 @@ func _draw_dangers(sw: float, sh: float) -> void:
 		if not guard_node is Guard:
 			continue
 		var node: Guard = guard_node
-		if node.state not in [Guard.State.SUSPICIOUS, Guard.State.CHASE, Guard.State.ATTACK]:
+		if node.state == Guard.State.DOWN or node.state == Guard.State.STUNNED:
+			continue
+		var danger := clampf(node.awareness, 0.0, 1.0)
+		if node.state in [Guard.State.CHASE, Guard.State.ATTACK]:
+			danger = 1.0
+		elif node.state == Guard.State.SUSPICIOUS:
+			danger = maxf(danger, 0.36)
+		if danger < 0.08:
 			continue
 		var world := node.global_position + Vector3.UP * 1.5
 		var screen := camera.unproject_position(world) / Vector2(size.x / sw, size.y / sh)
@@ -331,9 +356,13 @@ func _draw_dangers(sw: float, sh: float) -> void:
 		if from_center.length() < 0.01:
 			from_center = Vector2.UP
 		var unit := from_center.normalized()
-		var edge := Vector2(clampf(sw * 0.5 + unit.x * sw * 0.45, 25.0, sw - 25.0), clampf(sh * 0.5 + unit.y * sh * 0.43, 25.0, sh - 25.0))
-		if not camera.is_position_behind(world) and screen.x > 35.0 and screen.x < sw - 35.0 and screen.y > 35.0 and screen.y < sh - 35.0:
-			continue
-		var color := CRIMSON if node.state in [Guard.State.CHASE, Guard.State.ATTACK] else GOLD
-		var side := Vector2(-unit.y, unit.x)
-		draw_colored_polygon(PackedVector2Array([edge + unit * 12.0, edge - unit * 8.0 + side * 7.0, edge - unit * 8.0 - side * 7.0]), color)
+		var edge_distance := minf((sw * 0.5 - 37.0) / maxf(absf(unit.x), 0.001), (sh * 0.5 - 37.0) / maxf(absf(unit.y), 0.001))
+		var edge := Vector2(sw * 0.5, sh * 0.5) + unit * edge_distance
+		var angle := unit.angle()
+		var tint := PAPER.lerp(GOLD, clampf(danger * 2.0, 0.0, 1.0))
+		tint = tint.lerp(CRIMSON, clampf((danger - 0.55) / 0.45, 0.0, 1.0))
+		tint.a = 0.88
+		var arc_center := edge - unit * 12.0
+		draw_arc(arc_center, 13.0, angle + PI * 0.58, angle + PI * 1.42, 20, Color(tint.r, tint.g, tint.b, 0.20), 2.0, true)
+		draw_arc(arc_center, 13.0, angle + PI * 0.58, angle + PI * (0.58 + 0.84 * danger), 20, tint, 2.2, true)
+		draw_circle(edge - unit * 1.5, 2.0, tint)

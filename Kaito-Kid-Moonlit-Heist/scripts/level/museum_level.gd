@@ -62,6 +62,9 @@ var _velvet: StandardMaterial3D
 var _dark: StandardMaterial3D
 var _ivory: StandardMaterial3D
 var _glass: StandardMaterial3D
+var _floor_dark: Material
+var _floor_light: Material
+var _paintings: Dictionary = {}
 
 
 ## Build the museum, objects, atmosphere, and synchronous navigation mesh.
@@ -77,6 +80,8 @@ func build() -> void:
 	_glass = _mat(Color(0.37, 0.63, 0.72, 0.24), 0.08)
 	_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_glass.refraction_enabled = true
+	_floor_dark = _marble(Color(0.19, 0.27, 0.34))
+	_floor_light = _marble(Color(0.83, 0.80, 0.71))
 
 	navigation_region = NavigationRegion3D.new()
 	navigation_region.name = "NavigationRegion"
@@ -118,6 +123,7 @@ func _build_architecture() -> void:
 	_solid("Museum floor", Vector3(0, FLOOR_Y, 0), Vector3(70, 0.32, 56), _stone, false)
 	_solid("Balcony floor", Vector3(0, FLOOR_Y, -31.5), Vector3(18, 0.32, 7), _stone, false)
 	_make_marble_tiles()
+	_floor_inlays()
 	# Outside perimeter, with honest window holes and thin collision glass in the gaps.
 	_wall_z(-28, -35, -2.1)
 	_wall_z(-28, 2.1, 35)
@@ -144,6 +150,10 @@ func _build_architecture() -> void:
 	_wall_x(12, -28, -10)
 	_wall_x(17, -28, -22.1)
 	_wall_x(17, -18.5, -13)
+	_portal(Vector3(0, 0, 17), 6.0, false)
+	_portal(Vector3(0, 0, -10), 6.0, false)
+	_portal(Vector3(-13, 0, 0), 5.0, true)
+	_portal(Vector3(13, 0, 0), 5.0, true)
 	# A dogleg hides the fuse box from anyone looking in through the laser doorway.
 	_wall_z(-23.3, 12, 14.25)
 	# Balcony has an actual open doorway and waist-height balustrade.
@@ -171,12 +181,16 @@ func _build_architecture() -> void:
 
 
 func _ceiling(x0: float, x1: float, z0: float, z1: float) -> void:
-	_mesh_box(Vector3((x0+x1)*0.5, CEILING_Y+0.15, (z0+z1)*0.5), Vector3(x1-x0, 0.3, z1-z0), _dark)
+	_mesh_box(Vector3((x0+x1)*0.5, CEILING_Y+0.15, (z0+z1)*0.5), Vector3(x1-x0, 0.3, z1-z0), _ivory)
 	# Coffered bands stop short of the important glass opening.
 	for x in range(int(ceil((x1-x0)/4.0))):
 		var px := x0 + 2.0 + float(x)*4.0
 		if px < x1:
-			_mesh_box(Vector3(px, CEILING_Y-0.06, (z0+z1)*0.5), Vector3(0.12, 0.08, z1-z0), _gold)
+			_mesh_box(Vector3(px, CEILING_Y-0.11, (z0+z1)*0.5), Vector3(0.16, 0.18, z1-z0), _stone)
+	for z in range(int(ceil((z1-z0)/4.0))):
+		var pz := z0 + 2.0 + float(z)*4.0
+		if pz < z1:
+			_mesh_box(Vector3((x0+x1)*0.5, CEILING_Y-0.11, pz), Vector3(x1-x0, 0.18, 0.16), _stone)
 
 
 func _wall_x(x: float, z0: float, z1: float) -> void:
@@ -200,6 +214,22 @@ func _wall_piece(pos: Vector3, size: Vector3) -> void:
 	var trim_size := Vector3(size.x, 0.09, size.z+0.08) if horizontal else Vector3(size.x+0.08, 0.09, size.z)
 	for height in [0.13, 1.45, 6.17, 6.52]:
 		_mesh_box(Vector3(pos.x, float(height), pos.z), trim_size, _gold)
+	# Raised panel moulding gives the lower wall a legible architectural rhythm.
+	var length := size.x if horizontal else size.z
+	var count := int(floor(length / 2.4))
+	for i in count:
+		var offset := -length * 0.5 + (float(i) + 0.5) * length / float(count)
+		var p := Vector3(pos.x + offset, 0.75, pos.z) if horizontal else Vector3(pos.x, 0.75, pos.z + offset)
+		var panel_length := length / float(count) - 0.32
+		var edge := size.z * 0.5 + 0.035 if horizontal else size.x * 0.5 + 0.035
+		for side in [-1.0, 1.0]:
+			var q := p + (Vector3(0, 0, side * edge) if horizontal else Vector3(side * edge, 0, 0))
+			var hbar := Vector3(panel_length, 0.035, 0.035) if horizontal else Vector3(0.035, 0.035, panel_length)
+			var vbar := Vector3(0.035, 0.88, 0.035)
+			_mesh_box(q + Vector3(0, 0.44, 0), hbar, _bronze)
+			_mesh_box(q - Vector3(0, 0.44, 0), hbar, _bronze)
+			_mesh_box(q + (Vector3(panel_length * 0.5, 0, 0) if horizontal else Vector3(0, 0, panel_length * 0.5)), vbar, _bronze)
+			_mesh_box(q - (Vector3(panel_length * 0.5, 0, 0) if horizontal else Vector3(0, 0, panel_length * 0.5)), vbar, _bronze)
 	_walls.append(Rect2(Vector2(pos.x-size.x*0.5, pos.z-size.z*0.5), Vector2(size.x, size.z)))
 
 
@@ -219,33 +249,83 @@ func _outer_x(x: float, z0: float, z1: float, centres: Array, direction: int) ->
 
 
 func _make_marble_tiles() -> void:
+	# Broad ivory slabs with hairline joints, rather than a high contrast checkerboard.
 	var tile_mesh := BoxMesh.new()
-	tile_mesh.size = Vector3(1.95, 0.012, 1.95)
-	for parity in [0, 1]:
-		var multimesh := MultiMesh.new()
-		multimesh.transform_format = MultiMesh.TRANSFORM_3D
-		multimesh.mesh = tile_mesh
-		var locations: Array[Vector3] = []
-		for ix in range(35):
-			for iz in range(28):
-				if (ix+iz)%2 == parity:
-					locations.append(Vector3(-34+ix*2, 0.004, -27+iz*2))
-		multimesh.instance_count = locations.size()
-		for i in locations.size():
-			multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, locations[i]))
-		var instance := MultiMeshInstance3D.new()
-		instance.multimesh = multimesh
-		instance.material_override = _marble(Color(0.56, 0.60, 0.64) if parity == 0 else Color(0.86, 0.82, 0.75))
-		_geo.add_child(instance)
+	tile_mesh.size = Vector3(1.985, 0.012, 1.985)
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = tile_mesh
+	multimesh.instance_count = 35 * 28
+	for ix in range(35):
+		for iz in range(28):
+			multimesh.set_instance_transform(ix * 28 + iz, Transform3D(Basis.IDENTITY, Vector3(-34 + ix * 2, 0.004, -27 + iz * 2)))
+	var instance := MultiMeshInstance3D.new()
+	instance.multimesh = multimesh
+	instance.material_override = _floor_light
+	_geo.add_child(instance)
+
+
+func _floor_inlays() -> void:
+	# Double dark borders organize the wings; the centre remains open for combat and navigation.
+	for rect: Vector4 in [
+		Vector4(-12.3, 12.3, -9.3, 16.3), Vector4(-34.0, -14.0, -26.9, 15.8),
+		Vector4(14.0, 34.0, -26.9, 15.8), Vector4(-11.8, 11.8, 18.1, 27.0)]:
+		for inset: float in [0.0, 0.28]:
+			var x0 := rect.x + inset
+			var x1 := rect.y - inset
+			var z0 := rect.z + inset
+			var z1 := rect.w - inset
+			_mesh_box(Vector3((x0+x1)*0.5, 0.019, z0), Vector3(x1-x0, 0.009, 0.055), _floor_dark)
+			_mesh_box(Vector3((x0+x1)*0.5, 0.019, z1), Vector3(x1-x0, 0.009, 0.055), _floor_dark)
+			_mesh_box(Vector3(x0, 0.019, (z0+z1)*0.5), Vector3(0.055, 0.009, z1-z0), _floor_dark)
+			_mesh_box(Vector3(x1, 0.019, (z0+z1)*0.5), Vector3(0.055, 0.009, z1-z0), _floor_dark)
+	# Eight-point marble compass rose around the fountain, readable from the balcony view.
+	for i in 8:
+		var angle := float(i) * TAU / 8.0
+		var cx := sin(angle) * 4.1
+		var cz := 1.0 + cos(angle) * 4.1
+		var petal := _mesh_box(Vector3(cx, 0.025, cz), Vector3(0.48, 0.012, 1.55), _floor_dark)
+		petal.rotation.y = angle
+	for z in [-23.0, 0.0, 8.0]:
+		_runner(Vector3(-24, 0, z), Vector2(3.2, 6.8))
+		_runner(Vector3(24, 0, z), Vector2(3.2, 6.8))
+	_runner(Vector3(0, 0, 22), Vector2(2.8, 6.0))
+
+
+func _runner(pos: Vector3, size: Vector2) -> void:
+	_mesh_box(pos + Vector3(0, 0.022, 0), Vector3(size.x, 0.015, size.y), _velvet)
+	for side in [-1.0, 1.0]:
+		_mesh_box(pos + Vector3(side * (size.x * 0.5 - 0.18), 0.034, 0), Vector3(0.045, 0.009, size.y - 0.24), _gold)
+		_mesh_box(pos + Vector3(0, 0.034, side * (size.y * 0.5 - 0.18)), Vector3(size.x - 0.24, 0.009, 0.045), _gold)
+
+
+func _portal(pos: Vector3, width: float, across_x: bool) -> void:
+	# A shallow voussoir arcade crowns the existing open passage without changing its collision.
+	var root := Node3D.new()
+	root.position = pos
+	root.rotation.y = PI * 0.5 if across_x else 0.0
+	_geo.add_child(root)
+	for side in [-1.0, 1.0]:
+		var jamb := _box_mesh(Vector3(0.34, 4.9, 0.52), _stone)
+		jamb.position = Vector3(side * (width * 0.5 + 0.21), 2.45, 0)
+		root.add_child(jamb)
+		var impost := _box_mesh(Vector3(0.72, 0.19, 0.66), _gold)
+		impost.position = Vector3(side * (width * 0.5 + 0.21), 4.85, 0)
+		root.add_child(impost)
+	for i in 13:
+		var angle := PI - float(i) * PI / 12.0
+		var arch := _box_mesh(Vector3(0.55, 0.47, 0.55), _stone if i != 6 else _gold)
+		arch.position = Vector3(cos(angle) * width * 0.5, 4.72 + sin(angle) * 1.42, 0)
+		arch.rotation.z = angle - PI * 0.5
+		root.add_child(arch)
 
 
 func _build_decor() -> void:
 	# Four thick atrium pillars and a circular fountain create readable cover.
 	for x in [-9.0, 9.0]:
 		for z in [-6.0, 11.0]:
-			_solid("Atrium pillar", Vector3(x, 3.25, z), Vector3(1.6, 6.5, 1.6), _stone)
-			_mesh_box(Vector3(x, 1.4, z), Vector3(1.88, 0.24, 1.88), _gold)
-			_mesh_box(Vector3(x, 6.25, z), Vector3(1.94, 0.28, 1.94), _gold)
+			_solid("Atrium pillar", Vector3(x, 3.25, z), Vector3(1.6, 6.5, 1.6), null)
+			_classical_column(Vector3(x, 0, z), 0.82)
 	_solid("Fountain basin", Vector3(0, 0.65, 1), Vector3(5.2, 1.3, 5.2), _stone)
 	_mesh_box(Vector3(0, 1.28, 1), Vector3(5.1, 0.12, 5.1), _gold)
 	_mesh_box(Vector3(0, 1.34, 1), Vector3(4.65, 0.04, 4.65), _glass)
@@ -257,13 +337,23 @@ func _build_decor() -> void:
 	_label("MOONLIGHT MUSEUM", Vector3(0, 3.8, 27.73), 0.48, Color(0.95, 0.78, 0.40), 0)
 	# Lobby columns and palms.
 	for x in [-9.3, 9.3]:
-		_solid("Lobby pillar", Vector3(x, 3.2, 19.2), Vector3(1.0, 6.4, 1.0), _stone)
+		_solid("Lobby pillar", Vector3(x, 3.2, 19.2), Vector3(1.0, 6.4, 1.0), null)
+		_classical_column(Vector3(x, 0, 19.2), 0.54)
+	# An upper gallery and stair profile frame the long view toward the collection.
+	for side in [-1.0, 1.0]:
+		_mesh_box(Vector3(side * 11.5, 4.78, 4.2), Vector3(2.6, 0.24, 22.0), _stone)
+		_mesh_box(Vector3(side * 10.25, 5.4, 4.2), Vector3(0.13, 1.1, 22.0), _bronze)
+		for z in range(-5, 15, 2):
+			_mesh_box(Vector3(side * 10.25, 5.36, float(z)), Vector3(0.14, 1.0, 0.14), _gold)
+		for step in 9:
+			var rise := float(step) * 0.34
+			_mesh_box(Vector3(side * 11.25, rise * 0.5, 12.8 - float(step) * 0.58), Vector3(2.3, rise + 0.12, 0.58), _stone)
 	for p in [Vector3(-10,0,25), Vector3(11,0,26), Vector3(-31,0,9), Vector3(31,0,9)]:
 		_palm(p)
 	# Gallery furniture. Painting lights sit above every gilded frame.
 	for z in [-7.0, -1.0, 6.0]:
-		_painting(Vector3(34.75, 3.25, z), PI*0.5, int(z+10))
-		_painting(Vector3(-34.75, 3.25, z), -PI*0.5, int(z+16))
+		_painting(Vector3(34.75, 3.25, z), -PI*0.5, int(z+10))
+		_painting(Vector3(-34.75, 3.25, z), PI*0.5, int(z+16))
 	for x in [20.0, 29.0]:
 		_bench(Vector3(x, 0, -5.0))
 	_bench(Vector3(-25, 0, -5.5))
@@ -283,6 +373,9 @@ func _build_decor() -> void:
 	for x in [-5.0, 5.0]:
 		_solid("Sarcophagus", Vector3(x, 0.55, -13.4), Vector3(1.45, 1.1, 3.0), _bronze)
 		_mesh_box(Vector3(x, 1.13, -13.4), Vector3(1.25, 0.10, 2.8), _gold)
+		_mesh_sphere(Vector3(x, 1.38, -14.25), 0.34, _ivory)
+		for stripe in 4:
+			_mesh_box(Vector3(x, 1.19, -13.7 + float(stripe) * 0.45), Vector3(1.3, 0.025, 0.07), _dark)
 	# Clock gallery, giant dial and twelve jewel-like hour marks.
 	_mesh_cylinder(Vector3(-25, 3.65, -27.70), 3.05, 0.18, _gold, Vector3(PI*0.5, 0, 0))
 	_mesh_cylinder(Vector3(-25, 3.65, -27.56), 2.75, 0.20, _ivory, Vector3(PI*0.5, 0, 0))
@@ -384,8 +477,8 @@ func _build_lighting() -> void:
 		fill.name = "GalleryBounce"
 		fill.position = point
 		fill.light_color = Color(0.69, 0.77, 1.0)
-		fill.light_energy = 0.52
-		fill.omni_range = 13.0
+		fill.light_energy = 0.72
+		fill.omni_range = 15.0
 		fill.shadow_enabled = false
 		add_child(fill)
 
@@ -396,6 +489,9 @@ func _chandelier(pos: Vector3, radius: float) -> void:
 	for i in 6:
 		var a := float(i)*TAU/6.0
 		_mesh_sphere(pos+Vector3(cos(a)*0.67,-0.15,sin(a)*0.67), 0.11, _ivory)
+		_mesh_cylinder(pos+Vector3(cos(a)*0.67,-0.35,sin(a)*0.67), 0.045, 0.38, _gold)
+		_mesh_sphere(pos+Vector3(cos(a)*0.67,-0.58,sin(a)*0.67), 0.13, _ivory)
+	_mesh_cylinder(pos+Vector3(0,0.7,0), 0.045, 0.7, _gold)
 	var light := OmniLight3D.new()
 	light.position = pos+Vector3(0,-0.45,0)
 	light.light_color = Color(1.0, 0.71, 0.39)
@@ -414,6 +510,16 @@ func _sconce(pos: Vector3) -> void:
 	light.light_energy = 1.25
 	light.omni_range = 5.0
 	add_child(light)
+
+
+func _classical_column(pos: Vector3, radius: float) -> void:
+	_mesh_cylinder(pos + Vector3(0, 3.15, 0), radius, 5.65, _stone)
+	for y in [0.16, 0.34, 5.9, 6.1, 6.34]:
+		_mesh_cylinder(pos + Vector3(0, y, 0), radius + 0.13, 0.12, _ivory)
+	for i in 12:
+		var a := float(i) * TAU / 12.0
+		_mesh_cylinder(pos + Vector3(cos(a) * radius * 0.94, 3.16, sin(a) * radius * 0.94), 0.052, 5.35, _ivory)
+	_mesh_box(pos + Vector3(0, 6.43, 0), Vector3(radius * 2.55, 0.18, radius * 2.55), _stone)
 
 
 func _bench(pos: Vector3) -> void:
@@ -469,21 +575,42 @@ func _painting(pos: Vector3, yaw: float, seed_value: int) -> void:
 	root.position = pos
 	root.rotation.y = yaw
 	_geo.add_child(root)
-	var frame := _box_mesh(Vector3(3.0,2.5,0.14), _gold)
-	root.add_child(frame)
-	var canvas := _box_mesh(Vector3(2.66,2.16,0.025), _mat(Color(0.10+0.04*float(seed_value%3),0.16,0.28),0.87))
-	canvas.position.z = 0.09
+	var type_id := posmod(seed_value, 3)
+	if not _paintings.has(seed_value):
+		_paintings[seed_value] = _painted_canvas(seed_value, type_id)
+	var canvas_mat := StandardMaterial3D.new()
+	canvas_mat.albedo_texture = _paintings[seed_value]
+	canvas_mat.roughness = 0.9
+	canvas_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	var backing := _box_mesh(Vector3(2.95, 2.42, 0.11), _wood)
+	root.add_child(backing)
+	var canvas := _box_mesh(Vector3(2.58, 2.06, 0.025), canvas_mat)
+	canvas.position.z = 0.078
 	root.add_child(canvas)
-	var accent := _box_mesh(Vector3(1.55,0.12,0.03), _mat(Color(0.72,0.22+0.04*float(seed_value%4),0.15),0.7))
-	accent.position = Vector3(0.28,-0.25,0.12)
-	accent.rotation.z = 0.47
-	root.add_child(accent)
-	var orb := _sphere_mesh(0.38, _gold)
-	orb.position = Vector3(-0.55,0.34,0.15)
-	root.add_child(orb)
+	for layer in 2:
+		var inset := float(layer) * 0.095
+		var depth := 0.12 + float(layer) * 0.027
+		var width := 2.96 - inset * 2.0
+		var height := 2.43 - inset * 2.0
+		var material := _gold if layer == 0 else _bronze
+		for side in [-1.0, 1.0]:
+			var hbar := _box_mesh(Vector3(width, 0.075, 0.09), material)
+			hbar.position = Vector3(0, side * height * 0.5, depth)
+			root.add_child(hbar)
+			var vbar := _box_mesh(Vector3(0.075, height, 0.09), material)
+			vbar.position = Vector3(side * width * 0.5, 0, depth)
+			root.add_child(vbar)
+	for x in [-1.43, 1.43]:
+		for y in [-1.16, 1.16]:
+			var corner := _sphere_mesh(0.085, _gold)
+			corner.position = Vector3(x, y, 0.19)
+			root.add_child(corner)
 	var picture_light := _box_mesh(Vector3(0.65,0.08,0.18), _gold)
 	picture_light.position = Vector3(0,1.44,0.27)
 	root.add_child(picture_light)
+	var lamp := _box_mesh(Vector3(0.58, 0.055, 0.1), _ivory)
+	lamp.position = Vector3(0, 1.39, 0.33)
+	root.add_child(lamp)
 	var wash := SpotLight3D.new()
 	wash.name = "PictureLight"
 	wash.position = Vector3(0, 1.5, 0.65)
@@ -494,6 +621,47 @@ func _painting(pos: Vector3, yaw: float, seed_value: int) -> void:
 	wash.light_energy = 0.8
 	wash.shadow_enabled = false
 	root.add_child(wash)
+
+
+func _painted_canvas(seed_value: int, type_id: int) -> ImageTexture:
+	var image := Image.create(256, 192, false, Image.FORMAT_RGBA8)
+	var seed_float := float(seed_value)
+	var ink := Color(0.065, 0.095, 0.15)
+	for py in 192:
+		var v := float(py) / 191.0
+		for px in 256:
+			var u := float(px) / 255.0
+			var grain := sin(u * 171.0 + seed_float) * sin(v * 143.0 + seed_float * 2.0) * 0.025
+			var col: Color
+			if type_id == 0:
+				var skyline := 0.52 + sin(u * 6.0 + seed_float) * 0.05
+				var ridge := 0.62 + sin(u * 16.0 + seed_float) * 0.045 + sin(u * 33.0) * 0.018
+				col = Color(0.17, 0.28, 0.39).lerp(Color(0.74, 0.47, 0.30), v * 0.74)
+				if v > skyline:
+					col = Color(0.19, 0.27, 0.29)
+				if v > ridge:
+					col = Color(0.07, 0.13, 0.19)
+				if Vector2(u - 0.72, v - 0.22).length() < 0.067:
+					col = Color(0.95, 0.86, 0.65)
+			elif type_id == 1:
+				col = Color(0.35, 0.21, 0.19).lerp(Color(0.65, 0.49, 0.33), v)
+				var head := pow((u - 0.51) / 0.125, 2.0) + pow((v - 0.37) / 0.19, 2.0)
+				var shoulders := pow((u - 0.51) / 0.31, 2.0) + pow((v - 0.86) / 0.27, 2.0)
+				if head < 1.0:
+					col = Color(0.62, 0.44, 0.32) if v > 0.28 else ink
+				if shoulders < 1.0:
+					col = ink
+			else:
+				col = Color(0.12, 0.21, 0.28).lerp(Color(0.56, 0.36, 0.25), v)
+				var stroke: float = absf(sin((u * 8.0 + v * 3.5 + seed_float) * 2.3))
+				if stroke > 0.78 and abs(v - 0.52 - sin(u * 8.0) * 0.13) < 0.14:
+					col = Color(0.82, 0.60, 0.30)
+				if abs(u - 0.32 - sin(v * 8.0) * 0.09) < 0.045:
+					col = Color(0.69, 0.19, 0.15)
+			col = col.lightened(grain) if grain > 0.0 else col.darkened(-grain)
+			image.set_pixel(px, py, col)
+	image.generate_mipmaps()
+	return ImageTexture.create_from_image(image)
 
 
 func _label(value: String, pos: Vector3, font_size: float, color: Color, yaw: float, emissive: bool = false) -> void:
@@ -612,7 +780,8 @@ func guard_routes() -> Array:
 	return [
 		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([Vector3(19,0,8),Vector3(30,0,8),Vector3(30,0,-8),Vector3(19,0,-8)]), "wait": 1.7},
 		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([Vector3(-19,0,8),Vector3(-30,0,8),Vector3(-30,0,-8),Vector3(-19,0,-8)]), "wait": 1.6},
-		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([Vector3(-8,0,-16),Vector3(-2,0,-16),Vector3(7,0,-16),Vector3(7,0,-25),Vector3(-7,0,-25)]), "wait": 2.2},
+		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([
+			Vector3(-8,0,-16),Vector3(-2,0,-16),Vector3(7,0,-16),Vector3(7,0,-25),Vector3(-7,0,-25)]), "wait": 2.2},
 		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([Vector3(-18,0,-16),Vector3(-30,0,-16),Vector3(-30,0,-24),Vector3(-19,0,-24)]), "wait": 1.9},
 		{"kind": KK.EnemyKind.GUARD, "points": PackedVector3Array([Vector3(20,0,-16),Vector3(32,0,-16),Vector3(32,0,-25),Vector3(21,0,-25)]), "wait": 2.0},
 		{"kind": KK.EnemyKind.INSPECTOR, "points": PackedVector3Array([Vector3(-7,0,6),Vector3(-7,0,-3),Vector3(7,0,-3),Vector3(7,0,6)]), "wait": 1.3},

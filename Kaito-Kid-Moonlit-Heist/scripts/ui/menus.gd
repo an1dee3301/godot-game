@@ -1,6 +1,6 @@
 class_name HeistMenus
 extends CanvasLayer
-## Full-screen title, pause, defeat, and victory screens.
+## Live-scene title and outcome menus with keyboard, gamepad, and mouse access.
 
 signal start_requested
 signal resume_requested
@@ -11,11 +11,12 @@ signal settings_changed(values: Dictionary)
 
 var settings := {"mouse_sensitivity": 1.0, "master_volume": 1.0, "music_volume": 1.0, "sfx_volume": 1.0, "invert_y": false, "fullscreen": false}
 var _current := ""
+var _settings_return := "title"
 var _canvas: HeistMenuCanvas
 var _buttons: Array[Button] = []
+var _widgets: Array[Control] = []
+var _settings_focus: Array[Control] = []
 var _theme: Theme
-var _title_row: HBoxContainer
-var _settings_controls: VBoxContainer
 
 
 func _ready() -> void:
@@ -27,26 +28,33 @@ func _ready() -> void:
 	_canvas.theme = _theme
 	_canvas.visible = false
 	add_child(_canvas)
-	_canvas.resized.connect(_layout_buttons)
+	_canvas.resized.connect(_layout)
 
 
-## Show one of title, pause, game_over, or win, with optional run statistics.
+## Open a menu screen with optional run statistics.
 func show_screen(screen: String, data: Dictionary = {}) -> void:
 	if _canvas == null:
 		_ready()
+	if screen == "settings":
+		_settings_return = "pause" if _current == "pause" else "title"
 	_current = screen
 	_canvas.screen = screen
 	_canvas.data = data
+	_canvas.selected = 0
+	_canvas.reveal = 0.0
 	_canvas.visible = true
-	_canvas.modulate.a = 0.0
-	_canvas.queue_redraw()
-	_rebuild_buttons()
-	create_tween().tween_property(_canvas, "modulate:a", 1.0, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	if not _buttons.is_empty():
+	_rebuild()
+	var tween := create_tween()
+	tween.tween_property(_canvas, "reveal", 1.0, 0.62).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if screen == "settings" and not _settings_focus.is_empty():
+		_settings_focus[0].call_deferred("grab_focus")
+	elif not _buttons.is_empty():
 		_buttons[0].call_deferred("grab_focus")
+	if DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
-## Hide every menu and release keyboard focus.
+## Close all menus and release their keyboard focus.
 func hide_all() -> void:
 	_current = ""
 	if _canvas != null:
@@ -60,12 +68,12 @@ func is_showing(screen: String) -> bool:
 	return _current == screen
 
 
-## Name of the active screen, or an empty string.
+## Name of the active screen, or empty when playing.
 func current_screen() -> String:
 	return _current
 
 
-## Apply saved options before opening the settings screen.
+## Set options loaded from disk without emitting changes.
 func set_settings(values: Dictionary) -> void:
 	for key in settings:
 		if values.has(key):
@@ -76,100 +84,105 @@ func _input(event: InputEvent) -> void:
 	if _current == "" or not event.is_pressed():
 		return
 	if event.is_action_pressed("confirm"):
-		if _current == "title":
-			start_requested.emit()
-		elif _current == "game_over" or _current == "win":
-			restart_requested.emit()
-		elif _current == "pause":
-			resume_requested.emit()
-		elif _current == "settings":
-			show_screen("pause")
+		if _current == "settings":
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused is CheckBox:
+				focused.button_pressed = not focused.button_pressed
+			elif focused is Button:
+				_activate(0)
+		else:
+			_activate(_canvas.selected)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("restart") and _current in ["game_over", "win"]:
 		restart_requested.emit()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("pause") and _current in ["how_to_play", "settings"]:
+		show_screen(_settings_return if _current == "settings" else "title")
+		get_viewport().set_input_as_handled()
 
 
-func _rebuild_buttons() -> void:
-	if _settings_controls != null:
-		_settings_controls.queue_free()
-		_settings_controls = null
-	if _title_row != null:
-		_title_row.queue_free()
-		_title_row = null
-	else:
-		for button in _buttons:
-			button.queue_free()
+func _rebuild() -> void:
+	for widget in _widgets:
+		widget.queue_free()
+	_widgets.clear()
 	_buttons.clear()
+	_settings_focus.clear()
 	var choices: Array[String] = []
 	match _current:
-		"title": choices = ["START  ↵", "QUIT"]
-		"pause": choices = ["RESUME", "SETTINGS", "RESTART", "MAIN MENU", "QUIT"]
+		"title": choices = ["START HEIST", "HOW TO PLAY", "SETTINGS", "QUIT"]
+		"how_to_play": choices = ["START HEIST", "BACK"]
 		"settings": choices = ["BACK"]
-		"game_over": choices = ["RETRY  ↵ / R", "MAIN MENU"]
+		"pause": choices = ["RESUME", "SETTINGS", "RESTART", "MAIN MENU", "QUIT"]
+		"game_over": choices = ["TRY AGAIN", "MAIN MENU"]
 		"win": choices = ["PLAY AGAIN", "MAIN MENU"]
-	var button_parent: Control = _canvas
-	if _current == "title":
-		_title_row = HBoxContainer.new()
-		_title_row.name = "TitleActionsRow"
-		_title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		_title_row.add_theme_constant_override("separation", 75)
-		_canvas.add_child(_title_row)
-		var left_space := Control.new()
-		left_space.custom_minimum_size.x = 315
-		_title_row.add_child(left_space)
-		var column := VBoxContainer.new()
-		column.name = "Actions"
-		column.alignment = BoxContainer.ALIGNMENT_CENTER
-		column.custom_minimum_size.x = 270
-		column.add_theme_constant_override("separation", 10)
-		_title_row.add_child(column)
-		var right_space := Control.new()
-		right_space.custom_minimum_size.x = 315
-		_title_row.add_child(right_space)
-		button_parent = column
-	for i in range(choices.size()):
+	_canvas.choices = choices
+	for i in choices.size():
 		var button := Button.new()
-		button.text = choices[i]
+		button.name = "Action%d" % i
+		button.text = ""
 		button.focus_mode = Control.FOCUS_ALL
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		button.theme = _theme
-		button.name = "Action%d" % i
-		button_parent.add_child(button)
+		_canvas.add_child(button)
+		_widgets.append(button)
 		_buttons.append(button)
 		button.pressed.connect(_activate.bind(i))
+		button.focus_entered.connect(_select.bind(i))
+		button.mouse_entered.connect(_select.bind(i))
 	if _current == "settings":
 		_build_settings()
-	_layout_buttons()
+		_settings_focus.append(_buttons[0])
+		for i in _settings_focus.size():
+			var control := _settings_focus[i]
+			control.focus_neighbor_top = control.get_path_to(_settings_focus[(i - 1 + _settings_focus.size()) % _settings_focus.size()])
+			control.focus_neighbor_bottom = control.get_path_to(_settings_focus[(i + 1) % _settings_focus.size()])
+	_layout()
+
+
+func _select(index: int) -> void:
+	_canvas.selected = index
+	_canvas.queue_redraw()
 
 
 func _build_settings() -> void:
-	_settings_controls = VBoxContainer.new()
-	_settings_controls.name = "SettingsControls"
-	_settings_controls.add_theme_constant_override("separation", 9)
-	_canvas.add_child(_settings_controls)
-	for entry in [["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 2.5], ["master_volume", "MASTER VOLUME", 0.0, 1.0], ["music_volume", "MUSIC VOLUME", 0.0, 1.0], ["sfx_volume", "SFX VOLUME", 0.0, 1.0]]:
-		var row := HBoxContainer.new()
-		_settings_controls.add_child(row)
+	var sliders := [
+		["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 2.5, 344.0],
+		["master_volume", "MASTER", 0.0, 1.0, 475.0],
+		["music_volume", "MUSIC", 0.0, 1.0, 522.0],
+		["sfx_volume", "SFX", 0.0, 1.0, 569.0]
+	]
+	for entry in sliders:
 		var label := Label.new()
 		label.text = entry[1]
-		label.custom_minimum_size.x = 180
-		label.add_theme_color_override("font_color", Color("0b1230"))
-		row.add_child(label)
+		label.add_theme_color_override("font_color", HeistMenuCanvas.MUTED)
+		label.add_theme_font_size_override("font_size", 16)
+		_canvas.add_child(label)
+		_widgets.append(label)
+		label.set_meta("design_pos", Vector2(114, float(entry[4])))
 		var slider := HSlider.new()
-		slider.custom_minimum_size.x = 185
-		slider.min_value = entry[2]
-		slider.max_value = entry[3]
+		slider.name = String(entry[0])
+		slider.focus_mode = Control.FOCUS_ALL
+		slider.min_value = float(entry[2])
+		slider.max_value = float(entry[3])
 		slider.step = 0.05
 		slider.value = float(settings[entry[0]])
-		row.add_child(slider)
+		_canvas.add_child(slider)
+		_widgets.append(slider)
+		_settings_focus.append(slider)
+		slider.set_meta("design_pos", Vector2(360, float(entry[4]) - 4.0))
+		slider.set_meta("design_size", Vector2(350, 25))
 		slider.value_changed.connect(_on_setting_changed.bind(String(entry[0])))
-	for entry in [["invert_y", "INVERT CAMERA Y"], ["fullscreen", "FULLSCREEN"]]:
+	for entry in [["invert_y", "INVERT Y", 390.0], ["fullscreen", "FULLSCREEN", 678.0]]:
 		var toggle := CheckBox.new()
 		toggle.text = entry[1]
+		toggle.focus_mode = Control.FOCUS_ALL
 		toggle.button_pressed = bool(settings[entry[0]])
-		toggle.add_theme_color_override("font_color", Color("0b1230"))
-		_settings_controls.add_child(toggle)
+		toggle.add_theme_color_override("font_color", HeistMenuCanvas.IVORY)
+		toggle.add_theme_font_size_override("font_size", 16)
+		_canvas.add_child(toggle)
+		_widgets.append(toggle)
+		_settings_focus.append(toggle)
+		toggle.set_meta("design_pos", Vector2(114, float(entry[2])))
+		toggle.set_meta("design_size", Vector2(280, 32))
 		toggle.toggled.connect(_on_setting_changed.bind(String(entry[0])))
 
 
@@ -178,52 +191,37 @@ func _on_setting_changed(value: Variant, key: String) -> void:
 	settings_changed.emit(settings.duplicate())
 
 
-func _layout_buttons() -> void:
+func _layout() -> void:
 	if _canvas == null:
 		return
-	var scale_ui := minf(_canvas.size.x / 1600.0, _canvas.size.y / 900.0)
-	var center := _canvas.size * 0.5
-	var x := center.x
-	var y := center.y
-	var width := 268.0 * scale_ui
-	var height := 48.0 * scale_ui
-	var gap := 10.0 * scale_ui
-	if _current == "title":
-		if _title_row != null:
-			_title_row.position = Vector2(center.x - 525.0 * scale_ui, center.y + 141.0 * scale_ui)
-			_title_row.size = Vector2(1050.0, 238.0) * scale_ui
-			_title_row.add_theme_constant_override("separation", roundi(75.0 * scale_ui))
-			var left_space: Control = _title_row.get_child(0)
-			var column: VBoxContainer = _title_row.get_child(1)
-			var right_space: Control = _title_row.get_child(2)
-			left_space.custom_minimum_size.x = 315.0 * scale_ui
-			column.custom_minimum_size.x = 270.0 * scale_ui
-			right_space.custom_minimum_size.x = 315.0 * scale_ui
-			column.add_theme_constant_override("separation", roundi(10.0 * scale_ui))
-	elif _current == "pause":
-		y = center.y + 20.0 * scale_ui
-	elif _current == "settings":
-		y = center.y + 218.0 * scale_ui
-		if _settings_controls != null:
-			_settings_controls.position = Vector2(center.x - 185.0 * scale_ui, center.y - 120.0 * scale_ui)
-			_settings_controls.scale = Vector2.ONE * scale_ui
-	elif _current == "game_over" or _current == "win":
-		y = center.y + 190.0 * scale_ui
-	for i in range(_buttons.size()):
-		var button := _buttons[i]
-		if _current == "title":
-			button.custom_minimum_size = Vector2(width, height)
-		else:
-			button.position = Vector2(x - width * 0.5, y + float(i) * (height + gap))
-			button.size = Vector2(width, height)
-		button.add_theme_font_size_override("font_size", maxi(14, roundi(18.0 * scale_ui)))
+	var s := _canvas.ui_scale()
+	var left := maxf(82.0, (_canvas.size.x / s - 1600.0) * 0.5 + 114.0)
+	for i in _buttons.size():
+		_buttons[i].position = Vector2(left - 22.0, _canvas.menu_y() + float(i) * 47.0 - 2.0) * s
+		_buttons[i].size = Vector2(380.0, 45.0) * s
+	if _current == "settings":
+		for widget in _widgets:
+			if not widget.has_meta("design_pos"):
+				continue
+			var pos: Vector2 = widget.get_meta("design_pos")
+			widget.position = Vector2(left + pos.x - 114.0, pos.y) * s
+			if widget.has_meta("design_size"):
+				var dimensions: Vector2 = widget.get_meta("design_size")
+				widget.size = dimensions * s
 
 
 func _activate(index: int) -> void:
 	match _current:
 		"title":
+			match index:
+				0: start_requested.emit()
+				1: show_screen("how_to_play")
+				2: show_screen("settings")
+				3: quit_requested.emit()
+		"how_to_play":
 			if index == 0: start_requested.emit()
-			else: quit_requested.emit()
+			else: show_screen("title")
+		"settings": show_screen(_settings_return)
 		"pause":
 			match index:
 				0: resume_requested.emit()
@@ -231,8 +229,6 @@ func _activate(index: int) -> void:
 				2: restart_requested.emit()
 				3: menu_requested.emit()
 				4: quit_requested.emit()
-		"settings":
-			show_screen("pause")
 		"game_over", "win":
 			if index == 0: restart_requested.emit()
 			else: menu_requested.emit()
@@ -241,20 +237,13 @@ func _activate(index: int) -> void:
 func _build_theme() -> Theme:
 	var result := Theme.new()
 	var sans := SystemFont.new()
-	sans.font_names = PackedStringArray(["Avenir Next", "Arial", "sans-serif"])
+	sans.font_names = PackedStringArray(["Avenir Next", "Helvetica Neue", "Arial", "sans-serif"])
 	result.default_font = sans
-	result.default_font_size = 18
+	result.default_font_size = 16
+	var empty := StyleBoxEmpty.new()
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var box := StyleBoxFlat.new()
-		box.bg_color = Color("f5f1e5") if state == "normal" else (Color("d4af37") if state in ["hover", "focus"] else Color("e6d28c"))
-		box.border_color = Color("d4af37") if state == "normal" else Color("fff7de")
-		box.set_border_width_all(2)
-		box.set_corner_radius_all(5)
-		box.content_margin_left = 18
-		box.content_margin_right = 18
-		result.set_stylebox(state, "Button", box)
-	result.set_color("font_color", "Button", Color("0b1230"))
-	result.set_color("font_hover_color", "Button", Color("0b1230"))
-	result.set_color("font_pressed_color", "Button", Color("0b1230"))
-	result.set_color("font_focus_color", "Button", Color("0b1230"))
+		result.set_stylebox(state, "Button", empty)
+	result.set_color("font_color", "Button", Color.TRANSPARENT)
+	result.set_color("font_hover_color", "Button", Color.TRANSPARENT)
+	result.set_color("font_focus_color", "Button", Color.TRANSPARENT)
 	return result

@@ -63,6 +63,10 @@ func _build() -> void:
 	var gold := KK.standard_material(Color(0.68, 0.47, 0.19), 0.27, 0.7)
 	_box(self, Vector3(0.63, 0.91, 0.16), Vector3(0, 0, -0.08), steel)
 	_box(self, Vector3(0.55, 0.79, 0.04), Vector3(0, 0, 0.02), navy)
+	_box(self, Vector3(0.49, 0.016, 0.024), Vector3(0, 0.35, 0.052), gold)
+	_box(self, Vector3(0.49, 0.016, 0.024), Vector3(0, -0.34, 0.052), gold)
+	for x in [-0.15, -0.08, -0.01, 0.06]:
+		_box(self, Vector3(0.036, 0.075, 0.015), Vector3(x, -0.28, 0.05), steel)
 	for x in [-0.25, 0.25]:
 		for y in [-0.38, 0.38]:
 			var screw := _sphere(self, 0.025, Vector3(x, y, 0.046), gold)
@@ -78,6 +82,7 @@ func _build() -> void:
 	_lever.position = Vector3(0, -0.07, 0.09)
 	add_child(_lever)
 	_box(_lever, Vector3(0.18, 0.21, 0.08), Vector3.ZERO, steel)
+	_box(_lever, Vector3(0.13, 0.07, 0.012), Vector3(0, 0, 0.05), gold)
 	_box(_lever, Vector3(0.075, 0.4, 0.075), Vector3(0, -0.18, 0.10), gold)
 	_sphere(_lever, 0.09, Vector3(0, -0.39, 0.10), navy)
 	var red := KK.standard_material(Color(1.0, 0.08, 0.06), 0.2)

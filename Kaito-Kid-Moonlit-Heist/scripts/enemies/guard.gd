@@ -32,6 +32,13 @@ var _blind_left := 0.0
 var _stun_left := 0.0
 var _lose_left := 0.0
 var _search_left := 0.0
+var _search_points := PackedVector3Array()
+var _search_index := 0
+var _search_pause := 0.0
+var _visual_confirm := 0.0
+var _next_attack_time := 0.0
+var _yield_left := 0.0
+var _yield_cooldown := 0.0
 var _retarget_left := 0.0
 var _stuck_left := 0.0
 var _last_move_pos := Vector3.ZERO
@@ -103,6 +110,7 @@ func _physics_process(delta: float) -> void:
 	_state_time += delta
 	_blind_left = maxf(0.0, _blind_left - delta)
 	_retarget_left -= delta
+	_yield_cooldown = maxf(0.0, _yield_cooldown - delta)
 	_cone_tick -= delta
 	if not _nav_ready:
 		_nav_ready = NavigationServer3D.map_get_iteration_id(nav_agent.get_navigation_map()) > 0
@@ -132,6 +140,7 @@ func _physics_process(delta: float) -> void:
 			_state_down(delta)
 	if state not in [State.STUNNED, State.DOWN] and _nav_ready:
 		_update_stuck(delta)
+	_update_locomotion_animation()
 	if _cone_tick <= 0.0:
 		_cone_tick = 0.1
 		_update_cone()
@@ -164,8 +173,13 @@ func _state_patrol(delta: float) -> void:
 
 
 func _state_suspicious(delta: float) -> void:
+	_face_point(_investigate_point, delta, 4.0)
+	if _state_time < 0.35:
+		_stop()
+		_play("look_around")
+		return
 	if not _arrived() and not _investigation_scanning:
-		_path_move(float(stats["patrol_speed"]) * 0.72 * speed_mult, delta)
+		_path_move(float(stats["patrol_speed"]) * 0.5 * speed_mult, delta)
 		_play("walk")
 	else:
 		# At the stimulus, search visually for two seconds, then abandon it.
@@ -185,10 +199,13 @@ func _state_chase(delta: float) -> void:
 		var player := KK.get_player(get_tree())
 		if player != null and _retarget_left <= 0.0:
 			_retarget_left = 0.2
-			_set_target(player.global_position)
+			var lead: Vector3 = player.velocity * 0.4
+			lead.y = 0.0
+			_set_target(player.global_position + lead.limit_length(2.0))
 	else:
 		_lose_left -= delta
-		if _lose_left <= 0.0:
+		var player := KK.get_player(get_tree())
+		if _lose_left <= 0.0 and (player == null or global_position.distance_to(player.global_position) > 6.0):
 			# We lost sight for the full grace period: search the last sighting.
 			set_state(State.SEARCH)
 			return
@@ -213,21 +230,35 @@ func _state_attack(delta: float) -> void:
 		var hit := _attack_hit_valid(player)
 		if hit:
 			player.take_damage(float(stats["attack_damage"]), self)
+			var push: Vector3 = player.global_position - global_position
+			push.y = 0.0
+			if push.length_squared() > 0.001:
+				player.velocity += push.normalized() * 2.2
 		attacked.emit(self, hit)
 	if _state_time >= windup + float(stats["attack_cooldown"]):
 		# Even a missed swing must finish its cooldown before pursuit resumes.
+		_next_attack_time = Time.get_ticks_msec() * 0.001 + 0.2
 		set_state(State.CHASE)
 
 
 func _state_search(delta: float) -> void:
 	_search_left -= delta
-	if not _arrived():
+	if _search_pause > 0.0:
+		_search_pause -= delta
+		_stop()
+		_play("look_around")
+		_face_point(_target + Vector3(sin(_state_time * 2.0), 0.0, cos(_state_time * 2.0)), delta, 2.0)
+	elif not _arrived():
 		_path_move(float(stats["patrol_speed"]) * speed_mult, delta)
 		_play("walk")
 	else:
 		_stop()
 		_play("look_around")
-	if _search_left <= 0.0:
+		_search_index += 1
+		_search_pause = 0.8
+		if _search_index < _search_points.size():
+			_set_target(_search_points[_search_index])
+	if _search_left <= 0.0 or (_search_index >= _search_points.size() and _search_pause <= 0.0):
 		# A full search with no reacquisition returns to the route.
 		set_state(State.RETURN)
 
@@ -260,19 +291,31 @@ func _update_perception(delta: float) -> void:
 	if _saw_player:
 		var player := KK.get_player(get_tree())
 		last_known_position = player.global_position
+		if state == State.SUSPICIOUS:
+			_investigate_point = last_known_position
 		var distance := global_position.distance_to(player.global_position)
 		var close_factor := lerpf(2.5, 1.0, clampf((distance - 3.0) / maxf(0.1, float(stats["view_distance"]) - 3.0), 0.0, 1.0))
-		awareness = minf(1.0, awareness + delta * close_factor * player.visibility_factor() / float(stats["detect_time"]))
+		var light_factor := 1.0
+		var toward: Vector3 = player.global_position - global_position
+		toward.y = 0.0
+		if _flashlight != null and toward.length() < 8.0 and -global_basis.z.dot(toward.normalized()) > 0.9:
+			light_factor = 1.2
+		if player.has_method("is_sprinting") and player.is_sprinting():
+			light_factor *= 1.2
+		awareness = minf(1.0, awareness + delta * close_factor * light_factor * player.visibility_factor() / float(stats["detect_time"]))
+		if awareness >= 1.0:
+			_visual_confirm += delta
 	else:
 		awareness = maxf(0.0, awareness - delta * 0.35)
-	if awareness >= 1.0 and state not in [State.CHASE, State.ATTACK, State.STUNNED, State.DOWN]:
+		_visual_confirm = 0.0
+	if awareness >= 1.0 and _visual_confirm >= 0.3 and state not in [State.CHASE, State.ATTACK, State.STUNNED, State.DOWN]:
 		# Full visual confirmation broadcasts the sighting to nearby guards.
 		set_state(State.CHASE)
 	elif awareness >= 0.35 and state in [State.PATROL, State.RETURN]:
 		# Partial sight is investigation, not an immediate pursuit.
 		_investigate_point = last_known_position
 		set_state(State.SUSPICIOUS)
-	elif _saw_player and state == State.SEARCH and awareness >= 0.35:
+	elif _saw_player and state == State.SEARCH and awareness >= 0.7:
 		set_state(State.CHASE)
 
 
@@ -387,14 +430,17 @@ func _enter_state(new_state: int, old_state: int, broadcast: bool) -> void:
 			_set_target(last_known_position)
 			if old_state not in [State.CHASE, State.ATTACK] and broadcast and _player_alive():
 				spotted_player.emit(self)
-				KK.alert_guards(get_tree(), global_position, float(stats["alert_radius"]), last_known_position, self)
+				_broadcast_alert()
 		State.ATTACK:
 			_attack_landed = false
 			_attack_glint.visible = true
 			_play("attack", true)
 		State.SEARCH:
-			_search_left = float(stats["search_time"])
-			_set_target(last_known_position)
+			_build_search_points()
+			_search_left = maxf(float(stats["search_time"]) + 3.0, global_position.distance_to(last_known_position) / maxf(0.1, float(stats["patrol_speed"])) + 7.0)
+			_search_index = 0
+			_search_pause = 0.0
+			_set_target(_search_points[0])
 		State.RETURN:
 			_route_index = _nearest_route_index()
 			_set_target(_route[_route_index] if not _route.is_empty() else global_position)
@@ -404,6 +450,7 @@ func _enter_state(new_state: int, old_state: int, broadcast: bool) -> void:
 			_play("stunned", true)
 		State.DOWN:
 			_stop()
+			set_physics_process(false)
 			_stars.visible = false
 			_sleep_bubbles.visible = true
 			collision_layer = 0
@@ -451,8 +498,58 @@ func _nearest_route_index() -> int:
 	return best
 
 
+func _build_search_points() -> void:
+	_search_points = PackedVector3Array([last_known_position])
+	var map: RID = nav_agent.get_navigation_map()
+	for i in 12:
+		if _search_points.size() >= 4:
+			break
+		var angle := randf() * TAU
+		var radius := randf_range(2.0, 5.0)
+		var probe := last_known_position + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		var point := NavigationServer3D.map_get_closest_point(map, probe)
+		if point.distance_to(probe) > 1.0:
+			continue
+		var distinct := true
+		for previous: Vector3 in _search_points:
+			if previous.distance_to(point) < 1.7:
+				distinct = false
+		if distinct and _path_is_reasonable(_search_points[_search_points.size() - 1], point, 1.8):
+			_search_points.append(point)
+	if _search_points.size() == 1:
+		_search_points.append(last_known_position)
+
+
+func _path_is_reasonable(from: Vector3, to: Vector3, ratio: float) -> bool:
+	if not _nav_ready:
+		return false
+	var path := NavigationServer3D.map_get_path(nav_agent.get_navigation_map(), from, to, true)
+	if path.size() < 2 or path[path.size() - 1].distance_to(to) > 1.0:
+		return false
+	var length := 0.0
+	for i in range(1, path.size()):
+		length += path[i - 1].distance_to(path[i])
+	return length <= maxf(2.0, from.distance_to(to) * ratio)
+
+
+func _broadcast_alert() -> void:
+	var radius := float(stats["alert_radius"])
+	for node in get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
+		if node == self or not node is Guard:
+			continue
+		var other: Guard = node
+		if other.state == State.DOWN or other.global_position.distance_to(global_position) > radius:
+			continue
+		if other._path_is_reasonable(other.global_position, global_position, 1.6):
+			other.receive_alert(last_known_position)
+
+
 func _path_move(speed: float, delta: float) -> void:
 	if not _nav_ready or _arrived():
+		_stop()
+		return
+	if _yield_left > 0.0:
+		_yield_left -= delta
 		_stop()
 		return
 	var next := nav_agent.get_next_path_position()
@@ -461,6 +558,19 @@ func _path_move(speed: float, delta: float) -> void:
 	if direction.length_squared() < 0.01:
 		_stop()
 		return
+	for node in get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
+		if node == self or not node is Guard:
+			continue
+		var other: Guard = node
+		if other.state == State.DOWN or other.global_position.distance_to(global_position) > 1.2:
+			continue
+		var has_priority := get_instance_id() < other.get_instance_id()
+		var blocking := direction.normalized().dot((other.global_position - global_position).normalized()) > 0.65
+		if _yield_cooldown <= 0.0 and not has_priority and blocking:
+			_yield_left = 0.45
+			_yield_cooldown = 2.0
+			_stop()
+			return
 	_desired_velocity = direction.normalized() * speed
 	nav_agent.velocity = _desired_velocity
 	_face_point(next, delta, 9.0)
@@ -503,20 +613,20 @@ func _update_stuck(delta: float) -> void:
 	if _stuck_left >= 2.0:
 		_stuck_left = 0.0
 		_last_move_pos = global_position
-		if state == State.PATROL and not _route.is_empty():
-			_route_index = (_route_index + 1) % _route.size()
-			_set_target(_route[_route_index])
-		else:
-			_set_target(_target + Vector3(0.01, 0.0, 0.01))
+		# Force a fresh route without moving the destination by tiny amounts.
+		nav_agent.target_position = _target
+		_yield_left = 0.25 + float(get_instance_id() % 3) * 0.18
 
 
 func _can_attack_now() -> bool:
 	if not _player_alive():
 		return false
+	if Time.get_ticks_msec() * 0.001 < _next_attack_time:
+		return false
 	var player := KK.get_player(get_tree())
 	if global_position.distance_to(player.global_position) > float(stats["attack_range"]):
 		return false
-	return KK.has_line_of_sight(get_world_3d(), global_position + Vector3.UP * 1.35, player.aim_point())
+	return _clear_strike_to(player.aim_point())
 
 
 func _attack_hit_valid(player: Node3D) -> bool:
@@ -528,7 +638,21 @@ func _attack_hit_valid(player: Node3D) -> bool:
 		return false
 	if -global_transform.basis.z.dot(offset.normalized()) < cos(deg_to_rad(35.0)):
 		return false
-	return KK.has_line_of_sight(get_world_3d(), global_position + Vector3.UP * 1.35, player.aim_point())
+	return _clear_strike_to(player.aim_point())
+
+
+func _clear_strike_to(point: Vector3) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 1.35, point, KK.LAYER_WORLD | KK.LAYER_GLASS)
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+func _update_locomotion_animation() -> void:
+	if anim == null:
+		return
+	if anim.current_animation in ["walk", "run"]:
+		var reference := 1.4 if anim.current_animation == "walk" else 3.4
+		anim.speed_scale = clampf(Vector2(velocity.x, velocity.z).length() / reference, 0.25, 1.7)
 
 
 func _play(name: String, restart := false) -> void:
