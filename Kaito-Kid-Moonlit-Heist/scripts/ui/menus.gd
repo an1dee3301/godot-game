@@ -7,12 +7,15 @@ signal resume_requested
 signal restart_requested
 signal menu_requested
 signal quit_requested
+signal settings_changed(values: Dictionary)
 
+var settings := {"mouse_sensitivity": 1.0, "master_volume": 1.0, "music_volume": 1.0, "sfx_volume": 1.0, "invert_y": false, "fullscreen": false}
 var _current := ""
 var _canvas: HeistMenuCanvas
 var _buttons: Array[Button] = []
 var _theme: Theme
 var _title_row: HBoxContainer
+var _settings_controls: VBoxContainer
 
 
 func _ready() -> void:
@@ -62,6 +65,13 @@ func current_screen() -> String:
 	return _current
 
 
+## Apply saved options before opening the settings screen.
+func set_settings(values: Dictionary) -> void:
+	for key in settings:
+		if values.has(key):
+			settings[key] = values[key]
+
+
 func _input(event: InputEvent) -> void:
 	if _current == "" or not event.is_pressed():
 		return
@@ -72,6 +82,8 @@ func _input(event: InputEvent) -> void:
 			restart_requested.emit()
 		elif _current == "pause":
 			resume_requested.emit()
+		elif _current == "settings":
+			show_screen("pause")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("restart") and _current in ["game_over", "win"]:
 		restart_requested.emit()
@@ -79,6 +91,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _rebuild_buttons() -> void:
+	if _settings_controls != null:
+		_settings_controls.queue_free()
+		_settings_controls = null
 	if _title_row != null:
 		_title_row.queue_free()
 		_title_row = null
@@ -89,7 +104,8 @@ func _rebuild_buttons() -> void:
 	var choices: Array[String] = []
 	match _current:
 		"title": choices = ["START  ↵", "QUIT"]
-		"pause": choices = ["RESUME", "RESTART", "MAIN MENU", "QUIT"]
+		"pause": choices = ["RESUME", "SETTINGS", "RESTART", "MAIN MENU", "QUIT"]
+		"settings": choices = ["BACK"]
 		"game_over": choices = ["RETRY  ↵ / R", "MAIN MENU"]
 		"win": choices = ["PLAY AGAIN", "MAIN MENU"]
 	var button_parent: Control = _canvas
@@ -122,7 +138,44 @@ func _rebuild_buttons() -> void:
 		button_parent.add_child(button)
 		_buttons.append(button)
 		button.pressed.connect(_activate.bind(i))
+	if _current == "settings":
+		_build_settings()
 	_layout_buttons()
+
+
+func _build_settings() -> void:
+	_settings_controls = VBoxContainer.new()
+	_settings_controls.name = "SettingsControls"
+	_settings_controls.add_theme_constant_override("separation", 9)
+	_canvas.add_child(_settings_controls)
+	for entry in [["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 2.5], ["master_volume", "MASTER VOLUME", 0.0, 1.0], ["music_volume", "MUSIC VOLUME", 0.0, 1.0], ["sfx_volume", "SFX VOLUME", 0.0, 1.0]]:
+		var row := HBoxContainer.new()
+		_settings_controls.add_child(row)
+		var label := Label.new()
+		label.text = entry[1]
+		label.custom_minimum_size.x = 180
+		label.add_theme_color_override("font_color", Color("0b1230"))
+		row.add_child(label)
+		var slider := HSlider.new()
+		slider.custom_minimum_size.x = 185
+		slider.min_value = entry[2]
+		slider.max_value = entry[3]
+		slider.step = 0.05
+		slider.value = float(settings[entry[0]])
+		row.add_child(slider)
+		slider.value_changed.connect(_on_setting_changed.bind(String(entry[0])))
+	for entry in [["invert_y", "INVERT CAMERA Y"], ["fullscreen", "FULLSCREEN"]]:
+		var toggle := CheckBox.new()
+		toggle.text = entry[1]
+		toggle.button_pressed = bool(settings[entry[0]])
+		toggle.add_theme_color_override("font_color", Color("0b1230"))
+		_settings_controls.add_child(toggle)
+		toggle.toggled.connect(_on_setting_changed.bind(String(entry[0])))
+
+
+func _on_setting_changed(value: Variant, key: String) -> void:
+	settings[key] = value
+	settings_changed.emit(settings.duplicate())
 
 
 func _layout_buttons() -> void:
@@ -149,6 +202,11 @@ func _layout_buttons() -> void:
 			column.add_theme_constant_override("separation", roundi(10.0 * scale_ui))
 	elif _current == "pause":
 		y = center.y + 20.0 * scale_ui
+	elif _current == "settings":
+		y = center.y + 218.0 * scale_ui
+		if _settings_controls != null:
+			_settings_controls.position = Vector2(center.x - 185.0 * scale_ui, center.y - 120.0 * scale_ui)
+			_settings_controls.scale = Vector2.ONE * scale_ui
 	elif _current == "game_over" or _current == "win":
 		y = center.y + 190.0 * scale_ui
 	for i in range(_buttons.size()):
@@ -169,9 +227,12 @@ func _activate(index: int) -> void:
 		"pause":
 			match index:
 				0: resume_requested.emit()
-				1: restart_requested.emit()
-				2: menu_requested.emit()
-				3: quit_requested.emit()
+				1: show_screen("settings")
+				2: restart_requested.emit()
+				3: menu_requested.emit()
+				4: quit_requested.emit()
+		"settings":
+			show_screen("pause")
 		"game_over", "win":
 			if index == 0: restart_requested.emit()
 			else: menu_requested.emit()

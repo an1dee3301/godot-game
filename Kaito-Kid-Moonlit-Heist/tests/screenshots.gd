@@ -29,6 +29,7 @@ func _run() -> void:
 	await _frames(4)
 	await _shot("03_lightning.png")
 
+	await _guard_closeups()
 	# Stand a few metres behind each guard and look at it.
 	var i := 0
 	for g: Guard in main.get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
@@ -98,6 +99,28 @@ func _costume_shots() -> void:
 	cam.queue_free()
 	main.camera_rig.camera.current = true
 	await _frames(5)
+
+
+## Close-ups of the first guard and the inspector, from the front (models face their -Z).
+func _guard_closeups() -> void:
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	main.add_child(cam)
+	var picked := {}
+	for g: Guard in main.get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
+		if picked.has(g.kind):
+			continue
+		picked[g.kind] = true
+		var fwd := -g.global_basis.z
+		fwd.y = 0.0
+		cam.global_position = g.global_position + fwd.normalized() * 3.4 + Vector3.UP * 1.4
+		cam.look_at(g.global_position + Vector3.UP * 1.0, Vector3.UP)
+		cam.current = true
+		await _frames(3)
+		await _shot("04_closeup_%s.png" % ("inspector" if g.kind == KK.EnemyKind.INSPECTOR else "guard"))
+	cam.queue_free()
+	main.camera_rig.camera.current = true
+	await _frames(3)
 
 
 func _restore() -> void:

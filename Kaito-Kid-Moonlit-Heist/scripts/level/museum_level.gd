@@ -326,8 +326,9 @@ func _build_objects() -> void:
 	var fuse := FuseBox.new()
 	fuse.name = "MaintenanceFuse"
 	add_child(fuse)
-	fuse.position = Vector3(12.25, 1.45, -25.4)
-	fuse.rotation.y = PI*0.5
+	# Mount the breaker on the gallery side of the maintenance wall, within reach.
+	fuse.position = Vector3(11.72, 1.45, -20.0)
+	fuse.rotation.y = -PI*0.5
 	fuse.setup([grid])
 	fuse.disabled.connect(func() -> void: lasers_disabled.emit())
 	for info in [

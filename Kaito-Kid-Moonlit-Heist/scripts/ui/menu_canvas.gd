@@ -44,6 +44,7 @@ func _draw() -> void:
 	match screen:
 		"title": _title(w, h)
 		"pause": _pause(w, h)
+		"settings": _settings(w, h)
 		"game_over": _game_over(w, h)
 		"win": _win(w, h)
 
@@ -181,6 +182,13 @@ func _pause(w: float, h: float) -> void:
 	_text("INTERMISSION", center + Vector2(0, -157), 37, NAVY, true, HORIZONTAL_ALIGNMENT_CENTER)
 	_draw_diamond(center + Vector2(0, -124), 7, GOLD)
 	_text("The moon waits for no one.", center + Vector2(0, -73), 20, Color("445477"), true, HORIZONTAL_ALIGNMENT_CENTER)
+
+
+func _settings(w: float, h: float) -> void:
+	var center := Vector2(w * 0.5, h * 0.5)
+	_card(Rect2(center + Vector2(-250, -230), Vector2(500, 530)))
+	_text("SETTINGS", center + Vector2(0, -170), 37, NAVY, true, HORIZONTAL_ALIGNMENT_CENTER)
+	_draw_diamond(center + Vector2(0, -140), 7, GOLD)
 
 
 func _game_over(w: float, h: float) -> void:

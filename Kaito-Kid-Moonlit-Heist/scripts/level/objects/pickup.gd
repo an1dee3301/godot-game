@@ -49,7 +49,7 @@ func _on_body_entered(body: Node3D) -> void:
 	_consumed = true
 	collected.emit(kind, global_position)
 	var area := get_node("PickupArea") as Area3D
-	area.monitoring = false
+	area.set_deferred("monitoring", false)
 	_burst()
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(_model, "scale", Vector3.ZERO, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)

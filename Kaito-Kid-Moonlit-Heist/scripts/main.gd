@@ -26,6 +26,8 @@ var times_spotted := 0
 var alarm_on := false
 var _chasing := 0
 var _alert_level := 0
+var _prompt_hold := 0.0
+var _last_prompt := ""
 
 
 func _ready() -> void:
@@ -72,6 +74,7 @@ func _ready() -> void:
 	menus = HeistMenus.new()
 	menus.name = "Menus"
 	add_child(menus)
+	_load_settings()
 
 	_connect_signals()
 	hud.set_health(player.hp, player.max_hp)
@@ -133,6 +136,7 @@ func _connect_signals() -> void:
 		get_tree().paused = false
 		get_tree().reload_current_scene())
 	menus.quit_requested.connect(func() -> void: get_tree().quit())
+	menus.settings_changed.connect(_apply_settings)
 
 
 func _enter_title() -> void:
@@ -174,6 +178,7 @@ func resume_game() -> void:
 		return
 	state = State.PLAYING
 	menus.hide_all()
+	hud.set_prompt("")
 	get_tree().paused = false
 	_set_mouse_captured(true)
 
@@ -206,7 +211,12 @@ func _process(delta: float) -> void:
 	run_time += delta
 	hud.set_timer(run_time)
 	var focus := player.get_focus_interactable()
-	hud.set_prompt(focus.get_prompt() if focus else "")
+	if focus:
+		_last_prompt = focus.get_prompt()
+		_prompt_hold = 0.12
+	else:
+		_prompt_hold = maxf(0.0, _prompt_hold - delta)
+	hud.set_prompt(_last_prompt if _prompt_hold > 0.0 else "")
 
 
 func _set_mouse_captured(captured: bool) -> void:
@@ -306,7 +316,7 @@ func _on_guard_knocked_out(guard: Guard) -> void:
 	sound.play("guard_down", guard.global_position)
 
 
-func _on_guard_attacked(guard: Guard, hit: bool) -> void:
+func _on_guard_attacked(guard: Guard, _hit: bool) -> void:
 	sound.play("baton_swing", guard.global_position)
 
 
@@ -356,3 +366,31 @@ func _save_best_time(seconds: float) -> void:
 	cfg.load(KK.SAVE_PATH)
 	cfg.set_value("records", "best_time", seconds)
 	cfg.save(KK.SAVE_PATH)
+
+
+func _load_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(KK.SAVE_PATH) == OK:
+		var values := {}
+		for key in menus.settings:
+			values[key] = cfg.get_value("settings", key, menus.settings[key])
+		menus.set_settings(values)
+	_apply_settings(menus.settings, false)
+
+
+func _apply_settings(values: Dictionary, save: bool = true) -> void:
+	if sound.has_method("set_volume"):
+		for pair in [["Master", "master_volume"], ["Music", "music_volume"], ["SFX", "sfx_volume"]]:
+			sound.set_volume(pair[0], clampf(float(values[pair[1]]), 0.0, 1.0))
+	if "sensitivity" in camera_rig:
+		camera_rig.set("sensitivity", 0.0025 * clampf(float(values["mouse_sensitivity"]), 0.25, 2.5))
+	if "invert_y" in camera_rig:
+		camera_rig.set("invert_y", bool(values["invert_y"]))
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if bool(values["fullscreen"]) else DisplayServer.WINDOW_MODE_WINDOWED)
+	if save:
+		var cfg := ConfigFile.new()
+		cfg.load(KK.SAVE_PATH)
+		for key in values:
+			cfg.set_value("settings", key, values[key])
+		cfg.save(KK.SAVE_PATH)

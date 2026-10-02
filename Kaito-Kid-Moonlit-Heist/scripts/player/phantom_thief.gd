@@ -1,6 +1,6 @@
 class_name PhantomThief
 extends CharacterBody3D
-## Kaito Kid: camera-relative movement, stealth, calling cards, smoke, and an articulated procedural costume.
+## Kaito Kid: camera-relative movement, stealth, cards, smoke, and a skinned human costume.
 
 signal health_changed(hp: float, max_hp: float)
 signal damaged(amount: float)
@@ -24,16 +24,8 @@ var scripted_input := Vector2.ZERO
 
 var _collider: CollisionShape3D
 var _model: Node3D
-var _hips: Node3D
-var _torso: Node3D
-var _head: Node3D
 var _hat: Node3D
-var _left_arm: Node3D
-var _right_arm: Node3D
-var _left_leg: Node3D
-var _right_leg: Node3D
 var _right_hand: Node3D
-var _cape: MeshInstance3D
 var _cape_material: ShaderMaterial
 var _cape_lining_material: ShaderMaterial
 var _crouching := false
@@ -45,7 +37,6 @@ var _fire_time := 0.0
 var _invuln := 0.0
 var _action_time := 0.0
 var _flash_time := 0.0
-var _materials: Array[StandardMaterial3D] = []
 
 
 func _ready() -> void:
@@ -61,68 +52,29 @@ func _ready() -> void:
 	_collider.shape = capsule
 	add_child(_collider)
 	_build_model()
-	_build_animations()
 	anim.play("idle")
 
 
 func _build_model() -> void:
-	var rig: Dictionary = preload("res://scripts/player/kid_model.gd").build(self)
-	_model = rig["model"]
-	_hips = rig["hips"]
-	_torso = rig["torso"]
-	_head = rig["head"]
-	_hat = rig["hat"]
-	_left_arm = rig["left_arm"]
-	_right_arm = rig["right_arm"]
-	_left_leg = rig["left_leg"]
-	_right_leg = rig["right_leg"]
-	_right_hand = rig["right_hand"]
-	_cape = rig["cape"]
-	_cape_material = rig["cape_material"]
-	_cape_lining_material = rig["lining_material"]
-
-
-func _make_animation(name: String, poses: Array[Dictionary], length: float, looped: bool) -> void:
-	var animation := Animation.new()
-	animation.length = length
-	animation.loop_mode = Animation.LOOP_LINEAR if looped else Animation.LOOP_NONE
-	for path in ["Model/Hips:position", "Model/Hips/Torso:rotation", "Model/Hips/Torso/LeftArm:rotation", "Model/Hips/Torso/RightArm:rotation", "Model/Hips/LeftLeg:rotation", "Model/Hips/RightLeg:rotation", "Model/Hips/Torso/Head/Hat:rotation"]:
-		var track := animation.add_track(Animation.TYPE_VALUE)
-		animation.track_set_path(track, NodePath(path))
-		animation.value_track_set_update_mode(track, Animation.UPDATE_CONTINUOUS)
-		for pose: Dictionary in poses:
-			var values: Array = pose["v"]
-			var index := ["Model/Hips:position", "Model/Hips/Torso:rotation", "Model/Hips/Torso/LeftArm:rotation", "Model/Hips/Torso/RightArm:rotation", "Model/Hips/LeftLeg:rotation", "Model/Hips/RightLeg:rotation", "Model/Hips/Torso/Head/Hat:rotation"].find(path)
-			animation.track_insert_key(track, float(pose["t"]), values[index])
-	if name == "death":
-		var hat_track := animation.add_track(Animation.TYPE_VALUE)
-		animation.track_set_path(hat_track, NodePath("Model/Hips/Torso/Head/Hat:position"))
-		animation.track_insert_key(hat_track, 0.0, Vector3(0.0, 0.275, 0.0))
-		animation.track_insert_key(hat_track, 0.5, Vector3(0.22, 0.39, 0.0))
-		animation.track_insert_key(hat_track, 1.0, Vector3(0.64, -0.72, 0.12))
-	var library: AnimationLibrary = anim.get_animation_library("")
-	library.add_animation(name, animation)
-
-
-func _pose(t: float, bob: float = 0.0, lean: float = 0.0, left_arm: float = 0.0, right_arm: float = 0.0, left_leg: float = 0.0, right_leg: float = 0.0, hat: float = 0.0) -> Dictionary:
-	return {"t": t, "v": [Vector3(0.0, 0.94 + bob, 0.0), Vector3(lean, 0.0, 0.0), Vector3(left_arm, 0.0, 0.0), Vector3(right_arm, 0.0, 0.0), Vector3(left_leg, 0.0, 0.0), Vector3(right_leg, 0.0, 0.0), Vector3(hat, 0.0, 0.0)]}
-
-
-func _build_animations() -> void:
-	anim = AnimationPlayer.new()
-	anim.name = "AnimationPlayer"
-	add_child(anim)
-	anim.add_animation_library("", AnimationLibrary.new())
-	_make_animation("idle", [_pose(0.0), _pose(1.0, 0.025), _pose(2.0)], 2.0, true)
-	_make_animation("walk", [_pose(0.0, 0.0, 0.08, -0.5, 0.5, 0.55, -0.55), _pose(0.3, 0.055, 0.08), _pose(0.6, 0.0, 0.08, 0.5, -0.5, -0.55, 0.55), _pose(0.9, 0.055, 0.08), _pose(1.2, 0.0, 0.08, -0.5, 0.5, 0.55, -0.55)], 1.2, true)
-	_make_animation("run", [_pose(0.0, 0.0, 0.27, -0.85, 0.85, 0.82, -0.82), _pose(0.22, 0.09, 0.27), _pose(0.44, 0.0, 0.27, 0.85, -0.85, -0.82, 0.82), _pose(0.66, 0.09, 0.27), _pose(0.88, 0.0, 0.27, -0.85, 0.85, 0.82, -0.82)], 0.88, true)
-	_make_animation("crouch_idle", [_pose(0.0, -0.35, 0.28, 0.15, 0.15, -0.15, -0.15), _pose(1.0, -0.33, 0.28, 0.15, 0.15, -0.15, -0.15), _pose(2.0, -0.35, 0.28, 0.15, 0.15, -0.15, -0.15)], 2.0, true)
-	_make_animation("crouch_walk", [_pose(0.0, -0.35, 0.32, -0.2, 0.2, 0.3, -0.3), _pose(0.45, -0.33, 0.32, 0.2, -0.2, -0.3, 0.3), _pose(0.9, -0.35, 0.32, -0.2, 0.2, 0.3, -0.3)], 0.9, true)
-	_make_animation("jump", [_pose(0.0, 0.0, -0.1, -0.3, -0.3, 0.3, -0.2), _pose(0.3, 0.06, -0.1, -0.5, -0.5, 0.45, -0.35)], 0.3, false)
-	_make_animation("fall", [_pose(0.0, 0.0, 0.13, 0.3, 0.3, -0.2, -0.2), _pose(0.5, 0.0, 0.13, 0.3, 0.3, -0.2, -0.2)], 0.5, true)
-	_make_animation("throw", [_pose(0.0), _pose(0.12, 0.0, 0.12, 0.0, -1.8), _pose(0.3, 0.0, 0.1, 0.0, -0.9), _pose(0.5)], 0.5, false)
-	_make_animation("hurt", [_pose(0.0), _pose(0.15, 0.0, -0.35, -0.5, -0.5), _pose(0.45)], 0.45, false)
-	_make_animation("death", [_pose(0.0), _pose(0.5, -0.48, 1.2, -0.9, 0.8, 0.5, -0.5, 0.5), _pose(1.0, -0.65, 1.5, -1.2, 0.7, 0.4, -0.4, 1.5)], 1.0, false)
+	var rig := HumanRig.new()
+	rig.name = "Model"
+	add_child(rig)
+	rig.build_vroid(KaitoVroid.MODEL, {"idle": "Idle", "walk": "Walk_Formal", "run": "Sprint",
+		"crouch_idle": "Crouch_Idle", "crouch_walk": "Crouch_Fwd",
+		"jump": "Jump_Start", "fall": "Jump", "throw": "Pistol_Shoot",
+		"hurt": "Hit_Chest", "death": "Death01"},
+		["idle", "walk", "run", "crouch_idle", "crouch_walk", "fall"])
+	_model = rig
+	anim = rig.anim
+	var costume: Dictionary = KaitoVroid.build(rig)
+	_hat = costume["hat"]
+	_right_hand = costume["hand"]
+	_cape_material = costume["cape_material"]
+	_cape_lining_material = costume["lining_material"]
+	anim.set_blend_time("idle", "walk", 0.18)
+	anim.set_blend_time("walk", "run", 0.2)
+	anim.set_blend_time("run", "walk", 0.17)
+	anim.set_blend_time("walk", "idle", 0.2)
 
 
 func _physics_process(delta: float) -> void:
@@ -203,6 +155,14 @@ func _physics_process(delta: float) -> void:
 		state = "run" if _sprinting else "walk"
 	if anim.current_animation != state:
 		anim.play(state, 0.18)
+	if state == "walk":
+		anim.speed_scale = clampf(planar_speed / KK.PLAYER_WALK_SPEED, 0.65, 1.35)
+	elif state == "run":
+		anim.speed_scale = clampf(planar_speed / KK.PLAYER_SPRINT_SPEED, 0.72, 1.25)
+	elif state == "crouch_walk":
+		anim.speed_scale = clampf(planar_speed / KK.PLAYER_CROUCH_SPEED, 0.65, 1.2)
+	else:
+		anim.speed_scale = 1.0
 
 
 ## Applies damage with brief immunity, knockback, and a one-shot death signal.
@@ -227,6 +187,7 @@ func take_damage(amount: float, source: Node3D = null) -> void:
 		is_dead = true
 		controls_enabled = false
 		anim.play("death", 0.1)
+		_tumble_hat()
 		died.emit()
 	else:
 		_action_time = 0.4
@@ -271,7 +232,7 @@ func fire_card() -> bool:
 	if not controls_enabled or is_dead or _fire_time > 0.0 or effects_root == null:
 		return false
 	_fire_time = KK.CARD_COOLDOWN
-	var origin := _right_hand.global_position + _right_hand.global_basis * Vector3(0.04, -0.42, -0.2)
+	var origin := _right_hand.global_position + _right_hand.global_basis * Vector3(0.015, 0.0, -0.28)
 	var aim := origin + -global_basis.z * KK.CARD_RANGE
 	if camera_rig:
 		var start := camera_rig.get_aim_origin()
@@ -285,10 +246,28 @@ func fire_card() -> bool:
 	effects_root.add_child(projectile)
 	projectile.launch(origin, (aim - origin).normalized(), self)
 	_muzzle_flash(origin)
+	_show_card_gun()
 	_action_time = 0.38
 	anim.play("throw", 0.07)
 	card_fired.emit()
 	return true
+
+
+func _show_card_gun() -> void:
+	_right_hand.visible = true
+	get_tree().create_timer(0.34).timeout.connect(func() -> void:
+		if is_instance_valid(_right_hand):
+			_right_hand.visible = false
+	)
+
+
+func _tumble_hat() -> void:
+	if effects_root == null:
+		return
+	_hat.reparent(effects_root, true)
+	var tween := create_tween()
+	tween.tween_property(_hat, "global_position", _hat.global_position + Vector3(0.5, -1.0, 0.35), 0.7).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(_hat, "rotation", Vector3(2.5, 0.5, 1.7), 0.7)
 
 
 func _muzzle_flash(origin: Vector3) -> void:

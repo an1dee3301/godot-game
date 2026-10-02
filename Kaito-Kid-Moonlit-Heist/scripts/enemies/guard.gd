@@ -2,12 +2,13 @@ class_name Guard
 extends CharacterBody3D
 ## Museum officer AI. Every state owns its movement and its exit condition.
 
-enum State { PATROL, SUSPICIOUS, CHASE, ATTACK, SEARCH, RETURN, STUNNED, DOWN }
-
 signal state_changed(guard: Guard, old_state: int, new_state: int)
 signal spotted_player(guard: Guard)
 signal knocked_out(guard: Guard)
 signal attacked(guard: Guard, hit: bool)
+
+enum State { PATROL, SUSPICIOUS, CHASE, ATTACK, SEARCH, RETURN, STUNNED, DOWN }
+
 
 var kind: int = KK.EnemyKind.GUARD
 var stats: Dictionary = {}
@@ -42,9 +43,7 @@ var _saw_player := false
 var _attack_landed := false
 var _desired_velocity := Vector3.ZERO
 var _model: Node3D
-var _head: Node3D
-var _left_arm: Node3D
-var _right_arm: Node3D
+var _rig: HumanRig
 var _icon: Label3D
 var _awareness_bar: Label3D
 var _debug_text: Label3D
@@ -57,7 +56,6 @@ var _stars: Node3D
 var _sleep_bubbles: Node3D
 var _icon_text := ""
 var _cone_tick := 0.0
-static var _loft_cache: Dictionary = {}
 
 
 ## Configure a guard after it has entered the scene tree.
@@ -516,7 +514,9 @@ func _can_attack_now() -> bool:
 	if not _player_alive():
 		return false
 	var player := KK.get_player(get_tree())
-	return global_position.distance_to(player.global_position) <= float(stats["attack_range"]) and KK.has_line_of_sight(get_world_3d(), global_position + Vector3.UP * 1.35, player.aim_point())
+	if global_position.distance_to(player.global_position) > float(stats["attack_range"]):
+		return false
+	return KK.has_line_of_sight(get_world_3d(), global_position + Vector3.UP * 1.35, player.aim_point())
 
 
 func _attack_hit_valid(player: Node3D) -> bool:
@@ -533,7 +533,15 @@ func _attack_hit_valid(player: Node3D) -> bool:
 
 func _play(name: String, restart := false) -> void:
 	if anim.current_animation != name or restart:
-		anim.play(name)
+		anim.play(name, 0.17 if not restart else 0.05)
+	if name == "walk":
+		anim.speed_scale = clampf(Vector2(velocity.x, velocity.z).length() / 1.4, 0.35, 1.7)
+	elif name == "run":
+		anim.speed_scale = clampf(Vector2(velocity.x, velocity.z).length() / 3.4, 0.35, 1.65)
+	elif name == "stunned":
+		anim.speed_scale = 0.55
+	else:
+		anim.speed_scale = 1.0
 
 
 func _part(parent: Node3D, part_name: String, mesh: Mesh, material: Material, position: Vector3, scale_value: Vector3 = Vector3.ONE) -> Node3D:
@@ -547,50 +555,6 @@ func _part(parent: Node3D, part_name: String, mesh: Mesh, material: Material, po
 	visual.scale = scale_value
 	pivot.add_child(visual)
 	return pivot
-
-
-func _loft(profile: PackedFloat32Array, sides: int = 16) -> ArrayMesh:
-	# Each ring is (height, x radius, z radius, x centre, z centre).
-	# Varying rings make one continuous anatomical surface rather than stacked primitives.
-	var cache_key: String = str(profile) + "/" + str(sides)
-	if _loft_cache.has(cache_key):
-		return _loft_cache[cache_key] as ArrayMesh
-	var mesh := ArrayMesh.new()
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rings: int = profile.size() / 5
-	for j in rings - 1:
-		for i in sides:
-			var a: float = TAU * float(i) / float(sides)
-			var b: float = TAU * float(i + 1) / float(sides)
-			var p0 := Vector3(profile[j * 5 + 3] + cos(a) * profile[j * 5 + 1], profile[j * 5], profile[j * 5 + 4] + sin(a) * profile[j * 5 + 2])
-			var p1 := Vector3(profile[(j + 1) * 5 + 3] + cos(a) * profile[(j + 1) * 5 + 1], profile[(j + 1) * 5], profile[(j + 1) * 5 + 4] + sin(a) * profile[(j + 1) * 5 + 2])
-			var p2 := Vector3(profile[(j + 1) * 5 + 3] + cos(b) * profile[(j + 1) * 5 + 1], profile[(j + 1) * 5], profile[(j + 1) * 5 + 4] + sin(b) * profile[(j + 1) * 5 + 2])
-			var p3 := Vector3(profile[j * 5 + 3] + cos(b) * profile[j * 5 + 1], profile[j * 5], profile[j * 5 + 4] + sin(b) * profile[j * 5 + 2])
-			if profile[5] > profile[0]:
-				surface.add_vertex(p0)
-				surface.add_vertex(p1)
-				surface.add_vertex(p2)
-				surface.add_vertex(p0)
-				surface.add_vertex(p2)
-				surface.add_vertex(p3)
-			else:
-				surface.add_vertex(p0)
-				surface.add_vertex(p2)
-				surface.add_vertex(p1)
-				surface.add_vertex(p0)
-				surface.add_vertex(p3)
-				surface.add_vertex(p2)
-	# Small end rings close naturally without visible flat box edges.
-	surface.index()
-	surface.generate_normals()
-	surface.commit(mesh)
-	_loft_cache[cache_key] = mesh
-	return mesh
-
-
-func _loft_part(parent: Node3D, part_name: String, profile: PackedFloat32Array, material: Material, position: Vector3 = Vector3.ZERO) -> Node3D:
-	return _part(parent, part_name, _loft(profile), material, position)
 
 
 func _ellipsoid(parent: Node3D, part_name: String, material: Material, position: Vector3, size: Vector3) -> Node3D:
@@ -610,122 +574,46 @@ func _cylinder(parent: Node3D, part_name: String, material: Material, position: 
 
 
 func _build_model() -> void:
+	var inspector: bool = kind == KK.EnemyKind.INSPECTOR
 	_model = Node3D.new()
 	_model.name = "Model"
-	_model.scale = Vector3.ONE * (1.13 if kind == KK.EnemyKind.INSPECTOR else 1.0)
+	_model.scale = Vector3.ONE * (1.08 if inspector else 1.0)
 	add_child(_model)
-	var inspector: bool = kind == KK.EnemyKind.INSPECTOR
-	var cloth := KK.standard_material(Color(0.27, 0.34, 0.52) if not inspector else Color(0.47, 0.34, 0.23), 0.88)
-	var trousers := KK.standard_material(Color(0.11, 0.17, 0.30) if not inspector else Color(0.24, 0.19, 0.15), 0.9)
-	var shirt := KK.standard_material(Color(0.68, 0.75, 0.80) if not inspector else Color(0.80, 0.74, 0.62), 0.9)
-	var leather := KK.standard_material(Color(0.055, 0.065, 0.09) if not inspector else Color(0.16, 0.105, 0.065), 0.68)
-	var skin := KK.standard_material(Color(0.84, 0.62, 0.46), 0.86)
-	var gold := KK.standard_material(Color(0.95, 0.72, 0.26), 0.34, 0.45)
-	var ink := KK.standard_material(Color(0.022, 0.029, 0.045), 0.7)
-	var red := KK.standard_material(Color(0.74, 0.07, 0.085), 0.68)
-	# Torso is a single shoulder/chest/waist/hip loft. A narrower front shirt
-	# panel sits inside the jacket opening and follows the chest taper.
-	_loft_part(_model, "Torso", PackedFloat32Array([
-		0.82, .205, .13, 0, 0, .92, .245, .15, 0, 0,
-		1.10, .225, .145, 0, 0, 1.31, .275, .165, 0, 0,
-		1.53, .315, .17, 0, 0, 1.66, .255, .14, 0, 0,
-		1.70, .10, .10, 0, 0]), cloth)
-	_loft_part(_model, "Shirt", PackedFloat32Array([
-		1.13, .115, .028, 0, -.148, 1.37, .13, .03, 0, -.17,
-		1.59, .125, .027, 0, -.155, 1.68, .06, .02, 0, -.12]), shirt)
-	_cylinder(_model, "Neck", skin, Vector3(0, 1.72, 0), .077, .09, .19)
-	# A shaped face includes the cranium, tapered jaw, nose and ears.
-	_head = _loft_part(_model, "Head", PackedFloat32Array([
-		-.23, .07, .095, 0, -.012, -.17, .135, .13, 0, 0,
-		-.06, .165, .16, 0, 0, .085, .17, .17, 0, 0,
-		.19, .145, .145, 0, .01, .255, .025, .04, 0, .01]), skin, Vector3(0, 1.91, 0))
-	_ellipsoid(_head, "Nose", skin, Vector3(0, -.045, -.174), Vector3(.041, .055, .067))
-	for side in [-1.0, 1.0]:
-		_ellipsoid(_head, "Ear", skin, Vector3(side * .172, -.045, .002), Vector3(.038, .068, .039))
-		_ellipsoid(_head, "EyeWhite", shirt, Vector3(side * .071, .045, -.151), Vector3(.036, .022, .012))
-		_ellipsoid(_head, "Pupil", ink, Vector3(side * .071, .044, -.164), Vector3(.014, .019, .009))
-		var brow := _ellipsoid(_head, "Brow", ink, Vector3(side * .073, .091, -.153), Vector3(.052, .012, .013))
-		brow.rotation.z = side * -.09
-	if inspector:
-		for side in [-1.0, 1.0]:
-			var whisker := _ellipsoid(_head, "Moustache", ink, Vector3(side * .071, -.105, -.164), Vector3(.077, .027, .026))
-			whisker.rotation.z = side * .2
-		# Fedora crown and softly downturned brim.
-		_cylinder(_head, "FedoraCrown", leather, Vector3(0, .285, 0), .145, .19, .21)
-		_cylinder(_head, "FedoraBrim", leather, Vector3(0, .18, -.015), .275, .265, .028)
-		_loft_part(_model, "CoatTail", PackedFloat32Array([
-		.65, .32, .20, 0, .018, .72, .33, .205, 0, .015,
-		.95, .25, .16, 0, 0, 1.10, .23, .15, 0, 0]), cloth)
-		_loft_part(_model, "Tie", PackedFloat32Array([
-		1.12, .015, .009, 0, -.184, 1.40, .047, .012, 0, -.199,
-		1.57, .038, .012, 0, -.19]), red)
-	else:
-		_cylinder(_head, "PeakedCrown", leather, Vector3(0, .278, .017), .15, .192, .185)
-		var peak := _ellipsoid(_head, "CapPeak", leather, Vector3(0, .205, -.152), Vector3(.234, .017, .15))
-		peak.rotation.x = -.1
-		_ellipsoid(_head, "CapBadge", gold, Vector3(0, .292, -.188), Vector3(.047, .059, .015))
-	# Arms and legs use continuously tapered ring sections with an elbow/knee.
-	# Their pivots preserve the existing named animation tracks.
-	for side in [-1.0, 1.0]:
-		var arm_name: String = "LeftArm" if side < 0.0 else "RightArm"
-		var arm := _loft_part(_model, arm_name, PackedFloat32Array([
-		-.55, .058, .06, 0, -.045, -.48, .071, .075, 0, -.035,
-		-.31, .084, .084, 0, -.015, -.25, .082, .083, 0, 0,
-		-.12, .105, .105, 0, .005, .02, .132, .124, 0, 0,
-		.09, .07, .08, 0, 0]), cloth, Vector3(side * .34, 1.56, 0))
-		if side < 0.0:
-			_left_arm = arm
-		else:
-			_right_arm = arm
-		_ellipsoid(arm, "Hand", skin, Vector3(0, -.565, -.047), Vector3(.066, .105, .064))
-		_ellipsoid(arm, "Thumb", skin, Vector3(-side * .07, -.55, -.08), Vector3(.035, .061, .038))
-		var leg_name: String = "LeftLeg" if side < 0.0 else "RightLeg"
-		var leg := _loft_part(_model, leg_name, PackedFloat32Array([
-		-.76, .073, .078, 0, -.008, -.69, .087, .091, 0, -.01,
-		-.48, .097, .105, 0, .004, -.39, .081, .095, 0, .01,
-		-.23, .105, .12, 0, 0, -.06, .137, .134, 0, 0,
-		.055, .075, .075, 0, 0]), trousers, Vector3(side * .137, .85, 0))
-		_loft_part(leg, "Shoe", PackedFloat32Array([
-		-.80, .07, .17, 0, -.065, -.765, .11, .205, 0, -.062,
-		-.68, .105, .175, 0, -.047, -.65, .045, .09, 0, -.012]), leather)
-	# Belt, pouches, lapels and cuffs are rounded tailoring details.
-	_cylinder(_model, "WaistBelt", leather, Vector3(0, .965, 0), .236, .233, .065)
-	_ellipsoid(_model, "Buckle", gold, Vector3(0, .965, -.161), Vector3(.055, .04, .018))
-	for side in [-1.0, 1.0]:
-		_ellipsoid(_model, "BeltPouch", leather, Vector3(side * .208, .95, -.035), Vector3(.065, .077, .095))
-		var lapel := _ellipsoid(_model, "Lapel", shirt if not inspector else leather, Vector3(side * .126, 1.49, -.15), Vector3(.055, .19, .025))
-		lapel.rotation.z = side * .25
+	_rig = HumanRig.new()
+	_rig.name = "HumanRig"
+	_model.add_child(_rig)
+	var aliases := {
+		"idle": "Idle" if inspector else "Idle_Torch",
+		"walk": "Walk", "run": "Jog_Fwd", "attack": "Push" if inspector else "Punch_Cross",
+		"stunned": "Hit_Head", "down": "Death01", "look_around": "Idle_Talking"
+	}
+	_rig.build_vroid(GuardLook.MODEL, aliases, ["idle", "walk", "run", "stunned", "look_around"])
+	anim = _rig.anim
+	GuardLook.build(_rig, inspector, get_instance_id() % 5)
 	if not inspector:
-		var baton := _cylinder(_right_arm, "Baton", leather, Vector3(0, -.69, -.085), .028, .034, .48)
-		baton.rotation.x = -.35
-		_cylinder(_left_arm, "Flashlight", leather, Vector3(0, -.67, -.11), .055, .038, .21)
-		_ellipsoid(_left_arm, "FlashlightLens", gold, Vector3(0, -.78, -.12), Vector3(.048, .018, .048))
+		# The beam is aimed by the guard's body (where it looks), starting near the torch hand.
 		_flashlight = SpotLight3D.new()
 		_flashlight.name = "FlashlightBeam"
-		_flashlight.position = Vector3(0, -.76, -.14)
-		_flashlight.rotation_degrees = Vector3(-72, 0, 0)
-		_flashlight.light_color = Color(1.0, .79, .52)
-		_flashlight.light_energy = 2.5
-		_flashlight.light_volumetric_fog_energy = 1.5
+		_flashlight.position = Vector3(-0.22, 1.32, -0.32)
+		_flashlight.rotation.x = deg_to_rad(-9.0)
+		_flashlight.light_color = Color(0.95, 0.83, 0.65)
+		_flashlight.light_energy = 2.8
+		_flashlight.light_volumetric_fog_energy = 1.7
 		_flashlight.spot_range = minf(10.0, float(stats["view_distance"]))
-		_flashlight.spot_angle = 26.0
+		_flashlight.spot_angle = 25.0
 		_flashlight.shadow_enabled = false
-		_left_arm.add_child(_flashlight)
-	else:
-		var horn := _cylinder(_left_arm, "Megaphone", gold, Vector3(0, -.68, -.13), .15, .055, .30)
-		horn.rotation.x = -PI * .48
-		_cylinder(_left_arm, "MegaphoneRim", leather, Vector3(0, -.69, -.34), .16, .16, .025)
+		_model.add_child(_flashlight)
 	var fill := OmniLight3D.new()
 	fill.name = "SilhouetteFill"
-	fill.position = Vector3(0, 1.28, .4)
-	fill.light_color = Color(.57, .72, 1.0) if not inspector else Color(1.0, .76, .49)
-	fill.light_energy = .32
+	fill.position = Vector3(0, 1.3, -0.5)
+	fill.light_color = Color(0.5, 0.69, 1.0) if not inspector else Color(1.0, 0.75, 0.46)
+	fill.light_energy = 0.32
 	fill.omni_range = 2.1
 	fill.shadow_enabled = false
 	_model.add_child(fill)
 	_attack_glint = OmniLight3D.new()
-	_attack_glint.position = Vector3(.4, 1.5, -.3)
-	_attack_glint.light_color = Color(1.0, .12, .07)
+	_attack_glint.position = Vector3(0.4, 1.5, -0.3)
+	_attack_glint.light_color = Color(1.0, 0.12, 0.07)
 	_attack_glint.light_energy = 2.0
 	_attack_glint.omni_range = 1.3
 	_attack_glint.shadow_enabled = false
@@ -922,55 +810,6 @@ func _update_icon(force := false) -> void:
 			tween.tween_property(_icon, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func _animation(name: String, length: float, loop: bool) -> Animation:
-	var resource := Animation.new()
-	resource.length = length
-	resource.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
-	var library: AnimationLibrary = anim.get_animation_library("")
-	library.add_animation(name, resource)
-	return resource
-
-
-func _key(animation: Animation, path: String, times: PackedFloat32Array, values: Array) -> void:
-	var track := animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(track, NodePath(path))
-	animation.value_track_set_update_mode(track, Animation.UPDATE_CONTINUOUS)
-	for i in times.size():
-		animation.track_insert_key(track, times[i], values[i])
-
-
 func _build_animations() -> void:
-	anim = AnimationPlayer.new()
-	anim.name = "AnimationPlayer"
-	add_child(anim)
-	var library := AnimationLibrary.new()
-	anim.add_animation_library("", library)
-	var idle := _animation("idle", 2.0, true)
-	_key(idle, "Model:rotation", PackedFloat32Array([0.0, 1.0, 2.0]), [Vector3.ZERO, Vector3(0.015, 0, 0), Vector3.ZERO])
-	var walk := _animation("walk", 0.7, true)
-	_key(walk, "Model:position", PackedFloat32Array([0.0, .175, .35, .525, .7]), [Vector3.ZERO, Vector3(0, .025, 0), Vector3.ZERO, Vector3(0, .025, 0), Vector3.ZERO])
-	_key(walk, "Model/LeftArm:rotation", PackedFloat32Array([0.0, 0.35, 0.7]), [Vector3(-0.42, 0, 0), Vector3(0.42, 0, 0), Vector3(-0.42, 0, 0)])
-	_key(walk, "Model/RightArm:rotation", PackedFloat32Array([0.0, 0.35, 0.7]), [Vector3(0.42, 0, 0), Vector3(-0.42, 0, 0), Vector3(0.42, 0, 0)])
-	_key(walk, "Model/LeftLeg:rotation", PackedFloat32Array([0.0, 0.35, 0.7]), [Vector3(0.3, 0, 0), Vector3(-0.3, 0, 0), Vector3(0.3, 0, 0)])
-	_key(walk, "Model/RightLeg:rotation", PackedFloat32Array([0.0, 0.35, 0.7]), [Vector3(-0.3, 0, 0), Vector3(0.3, 0, 0), Vector3(-0.3, 0, 0)])
-	var run := _animation("run", 0.42, true)
-	_key(run, "Model:position", PackedFloat32Array([0.0, .105, .21, .315, .42]), [Vector3.ZERO, Vector3(0, .045, 0), Vector3.ZERO, Vector3(0, .045, 0), Vector3.ZERO])
-	_key(run, "Model/LeftArm:rotation", PackedFloat32Array([0.0, 0.21, 0.42]), [Vector3(-0.85, 0, 0), Vector3(0.85, 0, 0), Vector3(-0.85, 0, 0)])
-	_key(run, "Model/RightArm:rotation", PackedFloat32Array([0.0, 0.21, 0.42]), [Vector3(0.85, 0, 0), Vector3(-0.85, 0, 0), Vector3(0.85, 0, 0)])
-	_key(run, "Model/LeftLeg:rotation", PackedFloat32Array([0.0, 0.21, 0.42]), [Vector3(0.62, 0, 0), Vector3(-0.62, 0, 0), Vector3(0.62, 0, 0)])
-	_key(run, "Model/RightLeg:rotation", PackedFloat32Array([0.0, 0.21, 0.42]), [Vector3(-0.62, 0, 0), Vector3(0.62, 0, 0), Vector3(-0.62, 0, 0)])
-	var attack := _animation("attack", float(stats["attack_windup"]) + 0.35, false)
-	var windup := float(stats["attack_windup"])
-	_key(attack, "Model:rotation", PackedFloat32Array([0.0, windup, windup + .25]), [Vector3.ZERO, Vector3(-.12, 0, -.07), Vector3(.17, 0, .1)])
-	_key(attack, "Model/RightArm:rotation", PackedFloat32Array([0.0, windup * 0.8, windup, windup + 0.25]), [Vector3.ZERO, Vector3(-2.2, 0, 0), Vector3(-2.2, 0, 0), Vector3(1.0, 0, 0)])
-	if kind == KK.EnemyKind.INSPECTOR:
-		_key(attack, "Model:position", PackedFloat32Array([0.0, windup, windup + 0.25]), [Vector3.ZERO, Vector3.ZERO, Vector3(0, 0, -0.28)])
-	var stunned := _animation("stunned", 0.7, true)
-	_key(stunned, "Model:rotation", PackedFloat32Array([0.0, 0.2, 0.45, 0.7]), [Vector3.ZERO, Vector3(0, 0, -0.18), Vector3(0, 0, 0.18), Vector3.ZERO])
-	_key(stunned, "DizzyStars:rotation", PackedFloat32Array([0.0, 0.7]), [Vector3.ZERO, Vector3(0, TAU, 0)])
-	var down := _animation("down", 0.55, false)
-	_key(down, "Model:rotation", PackedFloat32Array([0.0, 0.55]), [Vector3.ZERO, Vector3(1.4, 0, 0)])
-	_key(down, "Model:position", PackedFloat32Array([0.0, 0.55]), [Vector3.ZERO, Vector3(0, -0.65, 0)])
-	var look := _animation("look_around", 2.0, true)
-	_key(look, "Model/Head:rotation", PackedFloat32Array([0.0, 0.5, 1.0, 1.5, 2.0]), [Vector3.ZERO, Vector3(0, -0.7, 0), Vector3.ZERO, Vector3(0, 0.7, 0), Vector3.ZERO])
+	# HumanRig.build registers the contract names directly on the imported player.
 	_play("idle")
