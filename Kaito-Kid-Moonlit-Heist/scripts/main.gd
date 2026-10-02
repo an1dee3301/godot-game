@@ -150,13 +150,11 @@ func _enter_title() -> void:
 	player.controls_enabled = false
 	camera_rig.input_enabled = false
 	camera_rig.set_showcase(false)
-	var exit := level.exit_node()
-	player.global_position = exit.global_position - exit.global_basis.z * 4.0 + exit.global_basis.x * 3.0
-	player.global_rotation.y = exit.global_rotation.y
-	var title_camera: Camera3D = preload("res://scripts/ui/menu_title_camera.gd").new()
+	player.global_position = Vector3(3.0, 0.0, -37.0)
+	player.global_rotation.y = 0.0
+	var title_camera := HeistTitleCamera.new()
 	title_camera.name = "TitleCamera"
-	title_camera.position = exit.global_position + Vector3(-8.0, 3.2, 1.5)
-	title_camera.set("focus", player)
+	title_camera.focus = player
 	add_child(title_camera)
 	title_camera.current = true
 	hud.set_visible_hud(false)
@@ -166,6 +164,8 @@ func _enter_title() -> void:
 
 
 func start_game() -> void:
+	if state == State.PLAYING:
+		return
 	state = State.PLAYING
 	get_tree().paused = false
 	menus.hide_all()
@@ -316,7 +316,7 @@ func _trigger_alarm() -> void:
 	level.atmosphere().set_alarm(true)
 	for guard: Guard in get_tree().get_nodes_in_group(KK.GROUP_GUARDS):
 		guard.speed_mult = KK.ALARM_SPEED_MULT
-		if guard.state != Guard.State.DOWN:
+		if guard.state != Guard.State.DOWN and guard.global_position.distance_to(player.global_position) < 18.0:
 			guard.receive_alert(player.global_position)
 	sound.play("exit_unlock")
 	sound.set_music("escape")

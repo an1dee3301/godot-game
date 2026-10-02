@@ -17,6 +17,9 @@ var _buttons: Array[Button] = []
 var _widgets: Array[Control] = []
 var _settings_focus: Array[Control] = []
 var _theme: Theme
+var _reveal_tween: Tween
+var _transition: ColorRect
+var _transitioning := false
 
 
 func _ready() -> void:
@@ -29,6 +32,29 @@ func _ready() -> void:
 	_canvas.visible = false
 	add_child(_canvas)
 	_canvas.resized.connect(_layout)
+	_transition = ColorRect.new()
+	_transition.name = "SceneTransition"
+	_transition.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_transition.color = Color(0.008, 0.014, 0.033)
+	_transition.modulate.a = 0.0
+	_transition.visible = false
+	_transition.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_transition)
+	var card := VBoxContainer.new()
+	card.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	card.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_theme_constant_override("separation", 17)
+	_transition.add_child(card)
+	for line in ["THE MOONLIGHT MUSEUM", "23:58"]:
+		var label := Label.new()
+		label.text = line
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_override("font", _canvas.title_font() if line == "THE MOONLIGHT MUSEUM" else _theme.default_font)
+		label.add_theme_font_size_override("font_size", 34 if line == "THE MOONLIGHT MUSEUM" else 15)
+		label.add_theme_color_override("font_color", HeistMenuCanvas.IVORY if line == "THE MOONLIGHT MUSEUM" else HeistMenuCanvas.GOLD)
+		card.add_child(label)
+	_transition.resized.connect(func() -> void:
+		card.position = (_transition.size - card.get_combined_minimum_size()) * 0.5)
 
 
 ## Open a menu screen with optional run statistics.
@@ -42,10 +68,14 @@ func show_screen(screen: String, data: Dictionary = {}) -> void:
 	_canvas.data = data
 	_canvas.selected = 0
 	_canvas.reveal = 0.0
+	_canvas.modulate.a = 0.0
 	_canvas.visible = true
 	_rebuild()
-	var tween := create_tween()
-	tween.tween_property(_canvas, "reveal", 1.0, 0.62).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if _reveal_tween != null and _reveal_tween.is_running():
+		_reveal_tween.kill()
+	_reveal_tween = create_tween()
+	_reveal_tween.tween_property(_canvas, "reveal", 1.0, 0.82).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_reveal_tween.parallel().tween_property(_canvas, "modulate:a", 1.0, 0.34).set_trans(Tween.TRANS_SINE)
 	if screen == "settings" and not _settings_focus.is_empty():
 		_settings_focus[0].call_deferred("grab_focus")
 	elif not _buttons.is_empty():
@@ -81,7 +111,7 @@ func set_settings(values: Dictionary) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _current == "" or not event.is_pressed():
+	if _current == "" or _transitioning or not event.is_pressed():
 		return
 	if event.is_action_pressed("confirm"):
 		if _current == "settings":
@@ -211,15 +241,17 @@ func _layout() -> void:
 
 
 func _activate(index: int) -> void:
+	if _transitioning:
+		return
 	match _current:
 		"title":
 			match index:
-				0: start_requested.emit()
+				0: _begin_start()
 				1: show_screen("how_to_play")
 				2: show_screen("settings")
 				3: quit_requested.emit()
 		"how_to_play":
-			if index == 0: start_requested.emit()
+			if index == 0: _begin_start()
 			else: show_screen("title")
 		"settings": show_screen(_settings_return)
 		"pause":
@@ -232,6 +264,26 @@ func _activate(index: int) -> void:
 		"game_over", "win":
 			if index == 0: restart_requested.emit()
 			else: menu_requested.emit()
+
+
+func _begin_start() -> void:
+	if DisplayServer.get_name() == "headless":
+		start_requested.emit()
+		return
+	_transitioning = true
+	_transition.visible = true
+	_transition.modulate.a = 0.0
+	var fade_in := create_tween()
+	fade_in.tween_property(_transition, "modulate:a", 1.0, 0.48).set_trans(Tween.TRANS_SINE)
+	await fade_in.finished
+	await get_tree().create_timer(0.72, true).timeout
+	start_requested.emit()
+	await get_tree().create_timer(0.18, true).timeout
+	var fade_out := create_tween()
+	fade_out.tween_property(_transition, "modulate:a", 0.0, 0.72).set_trans(Tween.TRANS_SINE)
+	await fade_out.finished
+	_transition.visible = false
+	_transitioning = false
 
 
 func _build_theme() -> Theme:

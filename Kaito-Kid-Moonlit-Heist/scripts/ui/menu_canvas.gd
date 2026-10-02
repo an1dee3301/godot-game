@@ -15,6 +15,7 @@ var choices: Array[String] = []
 var _serif: SystemFont
 var _sans: SystemFont
 var _time := 0.0
+var _parallax := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -28,7 +29,14 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	if visible:
+		var pointer := get_viewport().get_mouse_position() / maxf(ui_scale(), 0.01)
+		var centre := size / maxf(ui_scale(), 0.01) * 0.5
+		_parallax = _parallax.lerp((pointer - centre) * Vector2(0.009, 0.006), minf(delta * 3.0, 1.0))
 		queue_redraw()
+
+
+func title_font() -> Font:
+	return _serif
 
 
 func ui_scale() -> float:
@@ -38,7 +46,7 @@ func ui_scale() -> float:
 func menu_y() -> float:
 	match screen:
 		"title": return 531.0
-		"how_to_play": return 717.0
+		"how_to_play": return 743.0
 		"settings": return 765.0
 		"pause": return 453.0
 		_: return 692.0
@@ -82,13 +90,23 @@ func _draw_grade(w: float, h: float) -> void:
 
 func _draw_title(left: float, _h: float) -> void:
 	var alpha := clampf(reveal, 0.0, 1.0)
-	var rise := (1.0 - alpha) * 28.0
-	_text("THE PHANTOM THIEF RETURNS", Vector2(left + 2.0, 224.0 + rise), 16, _fade(GOLD, alpha))
-	_text("KAITO KID", Vector2(left - 3.0, 343.0 + rise), 105, _fade(IVORY, alpha), true)
-	_text("M O O N L I T   H E I S T", Vector2(left + 3.0, 393.0 + rise), 23, _fade(GOLD, alpha), true)
-	draw_line(Vector2(left, 424), Vector2(left + 490.0 * alpha, 424), _fade(GOLD, alpha * 0.68), 1.3)
-	_text("A calling card. Five jewels. One impossible escape.", Vector2(left + 2.0, 469.0), 18, _fade(IVORY, alpha * 0.83), true)
-	_text("PRESS ENTER TO BEGIN", Vector2(left + 2.0, 808.0), 12, _fade(GOLD, 0.54 + sin(_time * 2.0) * 0.18))
+	var rise := (1.0 - smoothstep(0.0, 0.72, alpha)) * 26.0
+	var x := left + _parallax.x
+	var py := _parallax.y
+	_text("THE PHANTOM THIEF RETURNS", Vector2(x + 2.0, 215.0 + rise + py), 15, _fade(GOLD, smoothstep(0.0, 0.48, alpha)))
+	_text("KAITO KID", Vector2(x - 3.0, 337.0 + rise + py), 104, _fade(IVORY, smoothstep(0.1, 0.75, alpha)), true)
+	_text("M O O N L I T   H E I S T", Vector2(x + 3.0, 388.0 + rise + py), 23, _fade(GOLD, smoothstep(0.24, 0.88, alpha)), true)
+	var rule_length := 490.0 * smoothstep(0.22, 0.95, alpha)
+	draw_line(Vector2(x, 419 + py), Vector2(x + rule_length, 419 + py), _fade(GOLD, alpha * 0.75), 1.3)
+	if rule_length > 80.0:
+		var glint := fposmod(_time * 42.0, rule_length + 55.0) - 55.0
+		draw_line(Vector2(x + maxf(0.0, glint), 419 + py),
+			Vector2(x + minf(rule_length, glint + 55.0), 419 + py), _fade(IVORY, alpha * 0.42), 1.3)
+	var quote_color := _fade(IVORY, smoothstep(0.42, 1.0, alpha))
+	_text("At the hour of the full moon, I shall come for the five jewels", Vector2(x + 2.0, 457.0 + py), 16, quote_color, true)
+	_text("of the Moonlight Museum.", Vector2(x + 2.0, 482.0 + py), 16, quote_color, true)
+	_text("— Kaito Kid", Vector2(x + 493.0, 482.0 + py), 16, _fade(GOLD, quote_color.a), true, HORIZONTAL_ALIGNMENT_RIGHT)
+	_text("ENTER  /  SELECT TO BEGIN", Vector2(left + 2.0, 808.0), 12, _fade(GOLD, 0.54 + sin(_time * 2.0) * 0.18))
 
 
 func _draw_how(left: float, _h: float) -> void:
@@ -152,14 +170,14 @@ func _draw_result(left: float, _h: float, won: bool) -> void:
 func _draw_choices(left: float) -> void:
 	var y := menu_y()
 	for i in choices.size():
-		var delay := float(i) * 0.12
+		var delay := float(i) * 0.11
 		var opacity := clampf((reveal - delay) * 2.2, 0.0, 1.0)
 		var active := i == selected
-		var x := left + (13.0 if active else 0.0) + (1.0 - opacity) * 20.0
+		var x := left + (13.0 if active else 0.0) + (1.0 - opacity) * 20.0 + (_parallax.x * 0.35 if screen == "title" else 0.0)
 		var row_y := y + float(i) * 47.0
 		_text(choices[i], Vector2(x, row_y + 28.0), 23 if screen == "title" else 21, _fade(GOLD if active else IVORY, opacity))
 		if active:
-			var length := minf(188.0, 26.0 + fposmod(_time * 330.0, 180.0))
+			var length := 106.0 + sin(_time * 1.6) * 4.0
 			draw_line(Vector2(x, row_y + 36), Vector2(x + length, row_y + 36), _fade(GOLD, opacity), 1.3)
 			draw_circle(Vector2(left - 14, row_y + 21), 2.3, _fade(GOLD, opacity))
 

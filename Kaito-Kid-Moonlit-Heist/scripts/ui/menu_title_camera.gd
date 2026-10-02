@@ -1,21 +1,23 @@
 class_name HeistTitleCamera
 extends Camera3D
-## A slow balcony dolly framing the thief against the skyline.
+## Balcony establishing shot: the thief occupies the right third against the storm.
 
 var focus: Node3D
 var _time := 0.0
-var _base := Vector3.ZERO
+var _base := Vector3(-4.5, 1.8, -32.3)
+var _look := Vector3(7.5, 2.5, -52.0)
 
 
 func _ready() -> void:
-	fov = 55.0
-	_base = global_position
+	fov = 52.0
+	near = 0.08
+	far = 400.0
+	global_position = _base
+	look_at(_look, Vector3.UP)
 	current = true
 
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(focus):
-		return
 	_time += delta
-	global_position = _base + Vector3(sin(_time * 0.11) * 0.75, sin(_time * 0.19) * 0.12, cos(_time * 0.11) * 0.32)
-	look_at(focus.global_position + Vector3(-3.8, 1.6, -5.3), Vector3.UP)
+	global_position = _base + Vector3(sin(_time * 0.12) * 0.32, sin(_time * 0.17) * 0.07, -sin(_time * 0.09) * 0.24)
+	look_at(_look + Vector3(sin(_time * 0.08) * 0.22, 0.0, 0.0), Vector3.UP)
