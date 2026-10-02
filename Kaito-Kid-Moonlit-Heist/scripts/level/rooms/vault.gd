@@ -9,6 +9,17 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	var brass := kit.mat("brass")
 	var gold := kit.mat("gold")
 	var red := kit.mat("velvet_red")
+	var marble := kit.pbr("marble_01", 2.4, Color(0.29, 0.30, 0.34), 0.36)
+	# A lighter polished field lets the existing black-marble perimeter remain a border.
+	_box(kit, room_id, Vector3(26, 0.018, -19), Vector3(21.8, 0.014, 19.8), marble)
+	for x in [16.1, 35.9]:
+		_box(kit, room_id, Vector3(x, 0.031, -19), Vector3(0.07, 0.012, 19.0), brass)
+	for z in [-28.4, -9.6]:
+		_box(kit, room_id, Vector3(26, 0.031, z), Vector3(19.8, 0.012, 0.07), brass)
+	# Steel coffers and a few valuable objects provide scale without occupying the patrol loop.
+	kit.model(room_id, "GothicCabinet_01", Transform3D(Basis.IDENTITY, Vector3(18.0, 0, -28.85)), 2.65)
+	kit.model(room_id, "vintage_cabinet_01", Transform3D(Basis.IDENTITY, Vector3(34.5, 0, -28.9)), 2.45)
+	kit.model(room_id, "steel_frame_shelves_01", Transform3D(Basis.IDENTITY, Vector3(35.8, 0, -16.0)), 2.25)
 	# Deposit bank is one composed wall. The drawer fronts are batched.
 	_box(kit, room_id, Vector3(26, 3.0, -8.65), Vector3(19.4, 4.8, 0.15), iron)
 	var fronts: Array[Transform3D] = []
@@ -44,6 +55,15 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_case(kit, room_id, Vector3(20.1, 0, -17), 3.2, 1.45)
 	_case(kit, room_id, Vector3(20.7, 0, -24.7), 2.9, 1.4)
 	_case(kit, room_id, Vector3(33.0, 0, -26.8), 2.2, 1.3)
+	# The lid reads open from the main aisle; loose gold is contained on the case.
+	kit.model(room_id, "treasure_chest", Transform3D(Basis(Vector3.UP, deg_to_rad(22.0)), Vector3(20.1, 1.31, -17.0)), 0.74, "none")
+	_box(kit, room_id, Vector3(20.1, 1.70, -17.28), Vector3(0.92, 0.055, 0.48), kit.mat("wood_dark"))
+	for i in 11:
+		var a := float(i) * 2.39996
+		var p := Vector3(20.1 + cos(a) * 0.32, 1.39 + float(i % 3) * 0.035, -16.92 + sin(a) * 0.18)
+		kit.prop(room_id, _sphere(0.065), Transform3D(Basis.IDENTITY, p), gold)
+	kit.model(room_id, "metal_tool_chest", Transform3D(Basis.IDENTITY, Vector3(20.7, 1.33, -24.7)), 0.52, "none")
+	kit.model(room_id, "brass_vase_01", Transform3D(Basis.IDENTITY, Vector3(33.0, 1.33, -26.8)), 0.62, "none")
 
 	# Engraved pressure plates are flush with the floor; they are a warning
 	# motif, rather than extra obstacles in the navigation mesh.
@@ -75,10 +95,17 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		if i != 0: # An open north arc keeps the diagonal guard route clear.
 			_segment(kit, room_id, post + Vector3(0, 0.57, 0), (post + next) * 0.5 + Vector3(0, 0.45, 0), red)
 			_segment(kit, room_id, (post + next) * 0.5 + Vector3(0, 0.45, 0), next + Vector3(0, 0.57, 0), red)
-	kit.spot(room_id, Vector3(28, 6.12, -25), Vector3(28, 0.9, -25), Color(0.68, 0.82, 1.0), 4.0, 8.0, 28.0, true)
-	kit.omni(room_id, Vector3(19, 4.5, -17), Color(1.0, 0.76, 0.52), 0.6, 5.5)
-	kit.omni(room_id, Vector3(29, 5.1, -10.5), Color(1.0, 0.75, 0.55), 0.55, 5.0)
-	kit.omni(room_id, Vector3(25.8, 5.6, -27), Color(0.48, 0.65, 1.0), 0.5, 5.0)
+	# One shadowed beam is reserved for the jewel. Every warm pool has a physical fixture.
+	kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, Vector3(28, 4.95, -25)), 1.10, "none")
+	kit.spot(room_id, Vector3(28, 5.22, -25), Vector3(28, 0.9, -25), Color(0.69, 0.84, 1.0), 5.0, 7.2, 34.0, true)
+	for p in [Vector3(20.1, 5.0, -17.0), Vector3(32.9, 5.0, -26.8)]:
+		kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, p), 0.95, "none")
+		kit.omni(room_id, p + Vector3(0, -0.55, 0), Color(1.0, 0.72, 0.43), 1.8, 6.2)
+	for p in [Vector3(18.4, 3.4, -8.66), Vector3(33.5, 3.4, -8.66), Vector3(37.55, 3.4, -25.8)]:
+		var yaw := PI if p.z > -9.0 else -PI * 0.5
+		kit.model(room_id, "industrial_caged_sconce", Transform3D(Basis(Vector3.UP, yaw), p), 0.43, "none")
+		kit.omni(room_id, p + Vector3(0, 0.15, -0.28 if p.z > -9.0 else 0), Color(1.0, 0.70, 0.40), 1.15, 4.8)
+	kit.omni(room_id, Vector3(26, 3.8, -18), Color(0.60, 0.75, 1.0), 0.42, 11.0)
 	var security_red := StandardMaterial3D.new()
 	security_red.albedo_color = Color(0.8, 0.07, 0.09)
 	security_red.emission_enabled = true

@@ -8,8 +8,7 @@ static var _rail_meshes: Dictionary = {}
 
 static func dress(kit: LevelKit, room_id: String) -> void:
 	# Room is x=-12..12, z=-40..-30. Keep |x|<3.5 clear gate to glider.
-	var wet_stone := kit.mat("marble_black")
-	var pale_stone := kit.mat("stone")
+	var wet_stone := kit.pbr("monastery_stone_floor", 2.6, Color(0.34, 0.39, 0.45), 0.46)
 	var brass := kit.mat("brass")
 	# Broad dark slabs read as rain-wet stone; brass joins catch lightning.
 	for x in [-8.7, -2.9, 2.9, 8.7]:
@@ -28,11 +27,16 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_rail(kit, room_id, Vector3(11.45, 0, -35.0), 8.8, false)
 	for x in [-11.4, -2.65, 2.65, 11.4]:
 		_pier(kit, room_id, Vector3(x, 0, -39.45))
-	for x in [-9.2, 9.2]:
-		_lantern(kit, room_id, Vector3(x, 0, -31.35))
-		_planter(kit, room_id, Vector3(x, 0, -36.3))
-	kit.spot(room_id, Vector3(-9.2, 2.95, -31.35), Vector3(-7.8, 0, -34.0), Color(1, 0.72, 0.42), 1.3, 6.0, 48.0)
-	kit.spot(room_id, Vector3(9.2, 2.95, -31.35), Vector3(7.8, 0, -34.0), Color(1, 0.72, 0.42), 1.3, 6.0, 48.0)
+	# Real lamps bracket the vista along the outer balustrade; their short pools
+	# reveal wet joints while the cool storm fill keeps the escape path legible.
+	for x in [-8.8, 8.8]:
+		var lamp := Vector3(x, 0, -38.3)
+		kit.model(room_id, "street_lamp_01", Transform3D(Basis.IDENTITY, lamp), 3.38)
+		kit.omni(room_id, lamp + Vector3(0, 2.95, 0), Color(1.0, 0.72, 0.43), 1.35, 5.7)
+		kit.model(room_id, "planter_box_01", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, 0, -35.2)))
+		kit.model(room_id, "potted_plant_02", Transform3D(Basis.IDENTITY, Vector3(x, 0.42, -35.2)), 0.7, "none")
+	for x in [-6.7, 6.7]:
+		kit.spot(room_id, Vector3(x, 5.4, -30.6), Vector3(x, 0.1, -36.2), Color(0.48, 0.64, 0.94), 0.52, 8.2, 43.0)
 
 
 static func _rail(kit: LevelKit, id: String, p: Vector3, length: float, along_x: bool) -> void:

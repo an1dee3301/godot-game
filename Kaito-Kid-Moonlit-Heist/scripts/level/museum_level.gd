@@ -197,10 +197,14 @@ func _wall_segment(edge: Dictionary, a: float, b: float, bottom: float, top: flo
 		_detail(room_id, _edge_pos(edge, (a + b) * 0.5, 0.55),
 			_edge_size(edge, b - a, 1.1, WALL_T + 0.035), "wood_dark")
 	if not service:
-		for y: float in [0.1, 1.11, minf(top - 0.15, 5.8), top - 0.06]:
+		if bottom < 0.01:
+			_wall_panels(edge, a, b)
+		for y: float in [0.1, 1.12, 2.48, top - 0.36, top - 0.12]:
 			if y > bottom + 0.04 and y < top:
 				_detail(room_id, _edge_pos(edge, (a + b) * 0.5, y),
-					_edge_size(edge, b - a, 0.055, WALL_T + 0.075), "gold")
+					_edge_size(edge, b - a, 0.055 if y < 2.5 else 0.09, WALL_T + (0.11 if y < 2.5 else 0.22)), "wood_dark" if y in [1.12, top - 0.36] else "gold")
+		if top > 4.0 and b - a > 0.5:
+			_wall_dentils(edge, a, b, top - 0.25)
 	_walls.append(Rect2(Vector2(pos.x - size.x * 0.5, pos.z - size.z * 0.5),
 		Vector2(size.x, size.z)))
 
@@ -217,25 +221,28 @@ func _opening_segment(edge: Dictionary, a: float, b: float, opening: Dictionary)
 	var kind: String = opening["kind"]
 	var height: float = _edge_height(edge, (a + b) * 0.5)
 	if kind == "gate" or kind == "laser":
-		_wall_segment(edge, a, b, 4.2 if kind == "gate" else 3.2, height)
+		var lintel := 4.2 if kind == "gate" else 3.2
+		_wall_segment(edge, a, b, lintel, height)
+		for side: float in [a, b]:
+			_detail(edge["room"], _edge_pos(edge, side, lintel * 0.5),
+				_edge_size(edge, 0.14, lintel, WALL_T + 0.2), "marble_white" if kind == "gate" else "iron")
+		_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, lintel),
+			_edge_size(edge, b - a + 0.24, 0.18, WALL_T + 0.2), "marble_white" if kind == "gate" else "iron")
+		_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, lintel + 0.11),
+			_edge_size(edge, b - a + 0.35, 0.04, WALL_T + 0.24), "gold" if kind == "gate" else "brass")
 		return
 	var clear_h := 2.4 if kind == "service" else (MuseumLayout.VENT_H if kind == "vent" else 3.2)
 	if kind == "arch":
-		# Eight upper voussoirs trace a raised round arch; the opening stays broad at shoulder height.
-		var radius: float = (b - a) * 0.5
-		for i in 8:
-			var lo := a + (b - a) * float(i) / 8.0
-			var hi := a + (b - a) * float(i + 1) / 8.0
-			var u := absf(((lo + hi) * 0.5 - (a + b) * 0.5) / radius)
-			var arch_y := 3.2 + sqrt(maxf(0.0, 1.0 - u * u))
-			_wall_segment(edge, lo, hi, arch_y, height)
-			_detail(edge["room"], _edge_pos(edge, (lo + hi) * 0.5, arch_y + 0.07),
-				_edge_size(edge, hi - lo, 0.11, WALL_T + 0.12), "gold")
+		_build_arch(edge, a, b, height)
 		for side: float in [a, b]:
-			_detail(edge["room"], _edge_pos(edge, side, 1.75),
-				_edge_size(edge, 0.18, 3.5, 0.58), "ivory")
-		_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, 4.12),
-			_edge_size(edge, 0.38, 0.36, WALL_T + 0.22), "gold")
+			for side_offset: float in [-0.27, 0.27]:
+				var pier := _edge_pos(edge, side, 0.0)
+				if edge["axis"] == "x": pier.z += side_offset
+				else: pier.x += side_offset
+				_detail(edge["room"], pier + Vector3(0, 1.6, 0), _edge_size(edge, 0.16, 3.2, 0.14), "marble_white")
+				_detail(edge["room"], pier + Vector3(0, 0.18, 0), _edge_size(edge, 0.38, 0.36, 0.4), "marble_white")
+				_detail(edge["room"], pier + Vector3(0, 3.12, 0), _edge_size(edge, 0.42, 0.22, 0.43), "marble_white")
+				_detail(edge["room"], pier + Vector3(0, 3.27, 0), _edge_size(edge, 0.43, 0.05, 0.45), "gold")
 		return
 	_wall_segment(edge, a, b, clear_h, height)
 	if kind == "service":
@@ -256,6 +263,121 @@ func _opening_segment(edge: Dictionary, a: float, b: float, opening: Dictionary)
 				_edge_size(edge, 0.055, clear_h, WALL_T + 0.1), "iron")
 		_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, clear_h),
 			_edge_size(edge, b - a, 0.055, WALL_T + 0.1), "iron")
+		for y: float in [0.06, clear_h - 0.04]:
+			_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, y),
+				_edge_size(edge, b - a, 0.045, WALL_T + 0.14), "brass")
+
+
+func _wall_panels(edge: Dictionary, a: float, b: float) -> void:
+	var length := b - a
+	if length < 0.9:
+		return
+	var count := maxi(1, int(round(length / 2.35)))
+	var bay := length / float(count)
+	for i in count:
+		var along := a + bay * (float(i) + 0.5)
+		for face: float in [-1.0, 1.0]:
+			var center := _edge_pos(edge, along, 0.59)
+			if edge["axis"] == "x": center.z += face * (WALL_T * 0.5 + 0.035)
+			else: center.x += face * (WALL_T * 0.5 + 0.035)
+			_detail(edge["room"], center, _edge_size(edge, bay - 0.20, 0.72, 0.045), "wood_dark")
+			for offset: float in [-0.5, 0.5]:
+				var stile := _edge_pos(edge, along + offset * (bay - 0.31), 0.59)
+				if edge["axis"] == "x": stile.z += face * (WALL_T * 0.5 + 0.071)
+				else: stile.x += face * (WALL_T * 0.5 + 0.071)
+				_detail(edge["room"], stile, _edge_size(edge, 0.045, 0.76, 0.025), "brass")
+			for y: float in [0.21, 0.97]:
+				var rail := _edge_pos(edge, along, y)
+				if edge["axis"] == "x": rail.z += face * (WALL_T * 0.5 + 0.071)
+				else: rail.x += face * (WALL_T * 0.5 + 0.071)
+				_detail(edge["room"], rail, _edge_size(edge, bay - 0.31, 0.04, 0.025), "brass")
+
+
+func _wall_dentils(edge: Dictionary, a: float, b: float, y: float) -> void:
+	var mesh := BoxMesh.new()
+	mesh.size = _edge_size(edge, 0.16, 0.13, 0.18)
+	var transforms: Array[Transform3D] = []
+	var count := int((b - a) / 0.34)
+	for i in count:
+		var along := a + (float(i) + 0.5) * (b - a) / float(count)
+		for face: float in [-1.0, 1.0]:
+			var pos := _edge_pos(edge, along, y)
+			if edge["axis"] == "x": pos.z += face * (WALL_T * 0.5 + 0.08)
+			else: pos.x += face * (WALL_T * 0.5 + 0.08)
+			transforms.append(Transform3D(Basis.IDENTITY, pos))
+	if not transforms.is_empty():
+		_kit.multi(edge["room"], mesh, transforms, _kit.mat("wood_dark"))
+
+
+func _arch_point(edge: Dictionary, along: float, y: float, depth: float) -> Vector3:
+	var p := _edge_pos(edge, along, y)
+	if edge["axis"] == "x": p.z += depth
+	else: p.x += depth
+	return p
+
+
+func _arch_quad(st: SurfaceTool, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3) -> void:
+	st.add_vertex(p0)
+	st.add_vertex(p1)
+	st.add_vertex(p2)
+	st.add_vertex(p0)
+	st.add_vertex(p2)
+	st.add_vertex(p3)
+	st.add_vertex(p3)
+	st.add_vertex(p2)
+	st.add_vertex(p0)
+	st.add_vertex(p2)
+	st.add_vertex(p1)
+	st.add_vertex(p0)
+
+
+func _arch_mesh(edge: Dictionary, a: float, b: float, top: float, band_inner: float, band_outer: float, cap: bool) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var radius := (b - a) * 0.5
+	var center := (a + b) * 0.5
+	var spring := 3.2
+	var steps := 40
+	for i in steps:
+		var theta0 := PI * float(i) / float(steps)
+		var theta1 := PI * float(i + 1) / float(steps)
+		var x0 := center - radius * cos(theta0)
+		var x1 := center - radius * cos(theta1)
+		var y0 := spring + radius * sin(theta0)
+		var y1 := spring + radius * sin(theta1)
+		if cap:
+			for face: float in [-WALL_T * 0.5, WALL_T * 0.5]:
+				_arch_quad(st, _arch_point(edge, x0, y0, face), _arch_point(edge, x1, y1, face),
+					_arch_point(edge, x1, top, face), _arch_point(edge, x0, top, face))
+			_arch_quad(st, _arch_point(edge, x0, y0, -WALL_T * 0.5), _arch_point(edge, x1, y1, -WALL_T * 0.5),
+				_arch_point(edge, x1, y1, WALL_T * 0.5), _arch_point(edge, x0, y0, WALL_T * 0.5))
+		else:
+			var inner0 := radius + band_inner
+			var inner1 := radius + band_outer
+			var in0 := _arch_point(edge, center - inner0 * cos(theta0), spring + inner0 * sin(theta0), 0.0)
+			var in1 := _arch_point(edge, center - inner0 * cos(theta1), spring + inner0 * sin(theta1), 0.0)
+			var out0 := _arch_point(edge, center - inner1 * cos(theta0), spring + inner1 * sin(theta0), 0.0)
+			var out1 := _arch_point(edge, center - inner1 * cos(theta1), spring + inner1 * sin(theta1), 0.0)
+			for face: float in [-WALL_T * 0.5 - 0.055, WALL_T * 0.5 + 0.055]:
+				var shift := Vector3(0, 0, face) if edge["axis"] == "x" else Vector3(face, 0, 0)
+				_arch_quad(st, in0 + shift, in1 + shift, out1 + shift, out0 + shift)
+			var d := WALL_T * 0.5 + 0.055
+			_arch_quad(st, _arch_point(edge, in0.x if edge["axis"] == "x" else in0.z, in0.y, -d),
+				_arch_point(edge, in1.x if edge["axis"] == "x" else in1.z, in1.y, -d),
+				_arch_point(edge, in1.x if edge["axis"] == "x" else in1.z, in1.y, d),
+				_arch_point(edge, in0.x if edge["axis"] == "x" else in0.z, in0.y, d))
+	st.generate_normals()
+	return st.commit()
+
+
+func _build_arch(edge: Dictionary, a: float, b: float, height: float) -> void:
+	var id: String = edge["room"]
+	_kit.prop(id, _arch_mesh(edge, a, b, height, 0.0, 0.0, true), Transform3D.IDENTITY, _kit.mat(_wall_color(id)))
+	_kit.prop(id, _arch_mesh(edge, a, b, height, 0.0, 0.30, false), Transform3D.IDENTITY, _kit.mat("marble_white"))
+	_kit.prop(id, _arch_mesh(edge, a, b, height, 0.30, 0.35, false), Transform3D.IDENTITY, _kit.mat("gold"))
+	# A projected keystone breaks the continuous ring at its crown.
+	_detail(id, _edge_pos(edge, (a + b) * 0.5, 3.2 + (b - a) * 0.5 + 0.18),
+		_edge_size(edge, 0.42, 0.38, WALL_T + 0.22), "marble_white")
 
 
 func _window_segment(edge: Dictionary, a: float, b: float, window: Dictionary) -> void:
@@ -265,6 +387,14 @@ func _window_segment(edge: Dictionary, a: float, b: float, window: Dictionary) -
 	var top := p.y + size.y * 0.5
 	_wall_segment(edge, a, b, 0.0, bottom)
 	_wall_segment(edge, a, b, top, _edge_height(edge, (a + b) * 0.5))
+	for side: float in [a, b]:
+		_detail(edge["room"], _edge_pos(edge, side, p.y),
+			_edge_size(edge, 0.18, size.y + 0.22, WALL_T + 0.16), "marble_white")
+	for y: float in [bottom, top]:
+		_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, y),
+			_edge_size(edge, b - a + 0.20, 0.18, WALL_T + 0.18), "marble_white")
+	_detail(edge["room"], _edge_pos(edge, (a + b) * 0.5, bottom - 0.06),
+		_edge_size(edge, b - a + 0.48, 0.075, WALL_T + 0.35), "gold")
 	# The atmosphere owns visible glazing; a separate invisible collision plane seals the opening.
 	var body := StaticBody3D.new()
 	body.collision_layer = KK.LAYER_GLASS
@@ -296,17 +426,38 @@ func _build_ceilings() -> void:
 				Vector3(r.size.x, 0.16, r.size.y), "plaster_grey" if service else "ceiling")
 		if service:
 			continue
-		# A shallow coffer grid gives the large rooms their six metre scale.
-		var x := r.position.x + 3.0
-		while x < r.end.x - 2.0:
-			_detail(room_id, Vector3(x, h - 0.04, r.get_center().y),
-				Vector3(0.14, 0.22, r.size.y), "wood_dark")
-			x += 4.0
-		var z := r.position.y + 3.0
-		while z < r.end.y - 2.0:
-			_detail(room_id, Vector3(r.get_center().x, h - 0.04, z),
-				Vector3(r.size.x, 0.22, 0.14), "wood_dark")
-			z += 4.0
+		# Four metre bays, with recessed plaster fields framed by substantial timber beams.
+		var nx := maxi(2, int(round(r.size.x / 4.0)))
+		var nz := maxi(2, int(round(r.size.y / 4.0)))
+		var dx := r.size.x / float(nx)
+		var dz := r.size.y / float(nz)
+		for ix in range(nx + 1):
+			var x := r.position.x + float(ix) * dx
+			_detail(room_id, Vector3(x, h - 0.12, r.get_center().y),
+				Vector3(0.26, 0.32, r.size.y), "wood_dark")
+			_detail(room_id, Vector3(x, h - 0.29, r.get_center().y),
+				Vector3(0.32, 0.045, r.size.y), "gold")
+		for iz in range(nz + 1):
+			var z := r.position.y + float(iz) * dz
+			_detail(room_id, Vector3(r.get_center().x, h - 0.12, z),
+				Vector3(r.size.x, 0.32, 0.26), "wood_dark")
+			_detail(room_id, Vector3(r.get_center().x, h - 0.29, z),
+				Vector3(r.size.x, 0.045, 0.32), "gold")
+		for ix in nx:
+			for iz in nz:
+				var c := Vector3(r.position.x + (float(ix) + 0.5) * dx, h - 0.015,
+					r.position.y + (float(iz) + 0.5) * dz)
+				_detail(room_id, c, Vector3(dx - 0.42, 0.04, dz - 0.42), "ceiling")
+		var rosette := SphereMesh.new()
+		rosette.radius = 0.17
+		rosette.height = 0.10
+		var bosses: Array[Transform3D] = []
+		for ix in range(1, nx):
+			for iz in range(1, nz):
+				bosses.append(Transform3D(Basis.IDENTITY, Vector3(r.position.x + float(ix) * dx,
+					h - 0.34, r.position.y + float(iz) * dz)))
+		if not bosses.is_empty():
+			_kit.multi(room_id, rosette, bosses, _kit.mat("brass"))
 
 
 func _atrium_ceiling(r: Rect2, h: float) -> void:
@@ -320,6 +471,7 @@ func _atrium_ceiling(r: Rect2, h: float) -> void:
 		Rect2(p.x + s.x * 0.5, p.z - s.y * 0.5, r.end.x - (p.x + s.x * 0.5), s.y)]:
 		_detail("atrium", Vector3(strip.get_center().x, h + 0.08, strip.get_center().y),
 			Vector3(strip.size.x, 0.16, strip.size.y), "ceiling")
+		_atrium_coffers(strip, h)
 	for x: float in [p.x - s.x * 0.5, p.x + s.x * 0.5]:
 		_detail("atrium", Vector3(x, h, p.z), Vector3(0.28, 0.3, s.y + 0.4), "gold")
 	for z: float in [p.z - s.y * 0.5, p.z + s.y * 0.5]:
@@ -332,6 +484,34 @@ func _atrium_ceiling(r: Rect2, h: float) -> void:
 		var ring_basis := Basis(Vector3.UP, -angle - PI * 0.5)
 		_kit.prop("atrium", ring_mesh, Transform3D(ring_basis, ring_pos), _kit.mat("gold"))
 	_windows.append({"transform": Transform3D(Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP), p), "size": s})
+
+
+func _atrium_coffers(strip: Rect2, h: float) -> void:
+	var nx := maxi(1, int(round(strip.size.x / 3.8)))
+	var nz := maxi(1, int(round(strip.size.y / 3.8)))
+	var dx := strip.size.x / float(nx)
+	var dz := strip.size.y / float(nz)
+	for ix in range(nx + 1):
+		_detail("atrium", Vector3(strip.position.x + float(ix) * dx, h - 0.12, strip.get_center().y),
+			Vector3(0.24, 0.3, strip.size.y), "wood_dark")
+	for iz in range(nz + 1):
+		_detail("atrium", Vector3(strip.get_center().x, h - 0.12, strip.position.y + float(iz) * dz),
+			Vector3(strip.size.x, 0.3, 0.24), "wood_dark")
+	for ix in nx:
+		for iz in nz:
+			_detail("atrium", Vector3(strip.position.x + (float(ix) + 0.5) * dx, h - 0.025,
+				strip.position.y + (float(iz) + 0.5) * dz),
+				Vector3(dx - 0.38, 0.04, dz - 0.38), "ceiling")
+	var boss := SphereMesh.new()
+	boss.radius = 0.16
+	boss.height = 0.09
+	var bosses: Array[Transform3D] = []
+	for ix in range(1, nx):
+		for iz in range(1, nz):
+			bosses.append(Transform3D(Basis.IDENTITY, Vector3(strip.position.x + float(ix) * dx,
+				h - 0.32, strip.position.y + float(iz) * dz)))
+	if not bosses.is_empty():
+		_kit.multi("atrium", boss, bosses, _kit.mat("brass"))
 
 
 func _build_centrepiece() -> void:
@@ -409,15 +589,25 @@ func _build_base_lighting() -> void:
 		var r: Rect2 = MuseumLayout.ROOMS[room_id]["rect"]
 		var h: float = MuseumLayout.ROOMS[room_id]["height"]
 		var service := room_id.contains("service")
-		var spacing := 12.0 if service else 15.0
-		var count := maxi(1, int(ceil(r.size.y / spacing)))
-		for i in count:
-			var z := r.position.y + r.size.y * (float(i) + 0.5) / float(count)
-			var pos := Vector3(r.get_center().x, h - 0.55, z)
-			_kit.omni(room_id, pos, Color(1.0, 0.74, 0.46) if not service else Color(0.8, 0.85, 0.9),
-				0.42 if not service else 0.22, 12.0 if not service else 8.0, false)
-			if service:
-				_detail(room_id, pos, Vector3(0.32, 0.18, 0.32), "iron")
+		if not service:
+			if room_id == "atrium":
+				for x: float in [-5.45, 5.45]:
+					_pendant(room_id, Vector3(x, 0, 6.0), h, "Chandelier_03", 1.8)
+			elif room_id != "foyer" and room_id != "paintings":
+				var count := maxi(1, int(ceil(r.size.y / 11.0)))
+				for i in count:
+					var z := r.position.y + r.size.y * (float(i) + 0.5) / float(count)
+					_pendant(room_id, Vector3(r.get_center().x, 0, z), h, "Chandelier_02", 1.55)
+			# A soft warm wall bounce keeps faces legible between the fixture pools.
+			_kit.omni(room_id, Vector3(r.get_center().x, 2.5, r.get_center().y),
+				Color(0.75, 0.78, 0.9), 0.18, minf(13.0, maxf(r.size.x, r.size.y) * 0.5))
+		else:
+			# Service lamps are built by the room dresser; these are their soft reflected fill.
+			var count := maxi(1, int(ceil(maxf(r.size.x, r.size.y) / 12.0)))
+			for i in count:
+				var fraction := (float(i) + 0.5) / float(count)
+				var pos := Vector3(lerpf(r.position.x + 1.2, r.end.x - 1.2, fraction), h - 0.8, r.get_center().y) if r.size.x > r.size.y else Vector3(r.get_center().x, h - 0.8, lerpf(r.position.y + 1.2, r.end.y - 1.2, fraction))
+				_kit.omni(room_id, pos, Color(0.76, 0.84, 1.0), 0.22, 6.5)
 		if service:
 			for offset: float in [0.45, 0.72]:
 				var pipe_pos := Vector3(r.position.x + offset, h - 0.42, r.get_center().y)
@@ -426,6 +616,15 @@ func _build_base_lighting() -> void:
 					pipe_pos = Vector3(r.get_center().x, h - 0.42, r.position.y + offset)
 					pipe_size = Vector3(r.size.x - 0.5, 0.075, 0.075)
 				_detail(room_id, pipe_pos, pipe_size, "iron")
+
+
+func _pendant(room_id: String, floor_pos: Vector3, ceiling_h: float, asset: String, model_h: float) -> void:
+	var bottom := ceiling_h - model_h - 0.9
+	var p := Vector3(floor_pos.x, bottom, floor_pos.z)
+	_kit.model(room_id, asset, Transform3D(Basis.IDENTITY, p), model_h, "none")
+	_detail(room_id, Vector3(p.x, ceiling_h - 0.45, p.z), Vector3(0.055, 0.9, 0.055), "brass")
+	_detail(room_id, Vector3(p.x, ceiling_h - 0.05, p.z), Vector3(0.36, 0.10, 0.36), "gold")
+	_kit.omni(room_id, p + Vector3(0, model_h * 0.48, 0), Color(1.0, 0.73, 0.44), 1.15, 8.0)
 
 
 func _check_navigation_after_sync() -> void:

@@ -2,6 +2,7 @@ extends RefCounted
 ## A lunar observatory leading to the balcony finale.
 
 static var _meshes: Dictionary = {}
+static var _painting: StandardMaterial3D
 
 
 static func dress(kit: LevelKit, room_id: String) -> void:
@@ -11,12 +12,18 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	var navy := kit.mat("wallpaper_navy")
 	var ivory := kit.mat("ivory")
 	var wood := kit.mat("wood_dark")
+	# A pale marble runner makes the entry-to-balcony axis legible at night.
+	_box_prop(kit, room_id, Vector3(0, 0.018, -19), Vector3(4.0, 0.014, 19.5),
+		kit.pbr("marble_01", 2.4, Color(0.54, 0.55, 0.59), 0.44))
+	for x in [-2.08, 2.08]:
+		_box_prop(kit, room_id, Vector3(x, 0.031, -19), Vector3(0.05, 0.012, 19.6), brass)
 	# A three metre moon suspended in a brass equatorial armature. It sits to
 	# one side so the atrium-to-gate axis remains obvious and walkable.
 	var moon_at := Vector3(-6.2, 3.82, -15.8)
 	kit.cylinder_solid(room_id, Vector3(-6.2, 0, -15.8), 1.8, 0.55, kit.mat("marble_black"), 32)
 	kit.cylinder_solid(room_id, Vector3(-6.2, 0.55, -15.8), 0.19, 1.05, brass, 16)
-	kit.prop(room_id, _sphere(1.75, 48), Transform3D(Basis.IDENTITY, moon_at), ivory)
+	kit.prop(room_id, _sphere(1.75, 48), Transform3D(Basis.IDENTITY, moon_at),
+		kit.pbr("monastery_stone_floor", 1.3, Color(0.82, 0.85, 0.90)))
 	_ring(kit, room_id, moon_at, 1.98, 0.035, Basis(Vector3.RIGHT, deg_to_rad(22.0)), brass)
 	_ring(kit, room_id, moon_at, 1.99, 0.026, Basis(Vector3.FORWARD, deg_to_rad(25.0)), gold)
 	# Sparse recessed craters give the globe scale without a noisy texture.
@@ -56,6 +63,23 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	kit.prop(room_id, _box(Vector3(2.9, 0.12, 1.24)), Transform3D(Basis.IDENTITY, Vector3(8.1, 1.16, -25.2)), brass)
 	kit.solid(room_id, Vector3(4.7, 0, -12.8), Vector3(2.4, 1.1, 0.9), wood)
 	kit.prop(room_id, _box(Vector3(2.5, 0.08, 1.0)), Transform3D(Basis.IDENTITY, Vector3(4.7, 1.12, -12.8)), brass)
+	# Museum cases show the scanned objects at eye level, with sober brass labels.
+	kit.model(room_id, "seadogs_compass", Transform3D(Basis.IDENTITY, Vector3(8.1, 1.25, -25.2)), 0.12, "none")
+	kit.model(room_id, "brass_candleholders", Transform3D(Basis.IDENTITY, Vector3(4.7, 1.17, -12.8)), 0.69, "none")
+	kit.model(room_id, "mantel_clock_01", Transform3D(Basis(Vector3.UP, PI), Vector3(5.45, 1.18, -12.8)), 0.24, "none")
+	kit.label(room_id, "THE NAVIGATOR'S COMPASS", Vector3(8.1, 0.78, -24.56), PI, 19)
+	# Furnished viewing bays stay against the walls, outside the x=+/-9 patrol lanes.
+	for side in [-1.0, 1.0]:
+		for z in [-14.3, -25.8]:
+			var x: float = side * 11.7
+			kit.model(room_id, "Sofa_01", Transform3D(Basis(Vector3.UP, -side * PI * 0.5), Vector3(x, 0, z)), 0.8)
+			_box_prop(kit, room_id, Vector3(side * 13.35, 3.8, z), Vector3(0.07, 3.65, 3.5), kit.mat("plaster"))
+			_wall_painting(kit, room_id, Vector3(side * 13.27, 3.15, z), -side * PI * 0.5)
+			var sconce := Vector3(side * 13.25, 4.9, z)
+			kit.model(room_id, "industrial_caged_sconce", Transform3D(Basis(Vector3.UP, -side * PI * 0.5), sconce), 0.43, "none")
+			kit.omni(room_id, sconce + Vector3(-side * 0.28, 0, 0), Color(1.0, 0.72, 0.43), 1.0, 4.8)
+	for x in [-11.2, 11.2]:
+		kit.model(room_id, "chinese_screen_panels", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, 0, -28.3)), 1.85)
 
 	# North wall: tall existing windows receive moon-facing reveals and cool
 	# shafts. The centre gate is framed like a stage, clear from x=-2..2.
@@ -70,12 +94,19 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		for fold in [-0.19, 0.0, 0.19]:
 			_box_prop(kit, room_id, Vector3(x + fold, 3.57, -29.0), Vector3(0.035, 4.83, 0.035), navy)
 	_box_prop(kit, room_id, Vector3(0, 6.08, -29.39), Vector3(6.25, 0.25, 0.25), gold)
+	_box_prop(kit, room_id, Vector3(0, 0.08, -27.7), Vector3(6.0, 0.12, 1.15), kit.mat("marble_white"))
+	for x in [-2.65, 2.65]:
+		_box_prop(kit, room_id, Vector3(x, 0.16, -27.7), Vector3(0.045, 0.04, 1.2), brass)
 	kit.label(room_id, "AD ASTRA", Vector3(0, 5.47, -29.08), 0.0, 39, Color(0.92, 0.83, 0.57))
-	kit.spot(room_id, Vector3(-4.3, 5.9, -26.8), Vector3(0, 0.15, -29.4), Color(0.72, 0.81, 1.0), 2.0, 8.5, 31.0)
-	kit.spot(room_id, Vector3(4.3, 5.9, -26.8), Vector3(0, 0.15, -29.4), Color(0.72, 0.81, 1.0), 2.0, 8.5, 31.0)
-	kit.spot(room_id, Vector3(-6.2, 6.18, -15.8), moon_at, Color(0.67, 0.77, 1.0), 2.6, 7.0, 37.0, true)
-	kit.omni(room_id, Vector3(8.3, 4.6, -15.2), Color(1.0, 0.73, 0.43), 0.65, 5.0)
-	kit.omni(room_id, Vector3(-8.1, 4.6, -25.5), Color(1.0, 0.73, 0.43), 0.5, 4.2)
+	for x in [-4.3, 4.3]:
+		kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, Vector3(x, 5.25, -26.8)), 0.56, "none")
+		kit.spot(room_id, Vector3(x, 5.4, -26.8), Vector3(0, 0.15, -29.4), Color(0.84, 0.88, 1.0), 2.0, 7.5, 36.0)
+	kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, Vector3(-6.2, 5.35, -15.8)), 0.55, "none")
+	kit.spot(room_id, Vector3(-6.2, 5.55, -15.8), moon_at, Color(0.68, 0.79, 1.0), 3.0, 7.0, 40.0, true)
+	for p in [Vector3(0, 5.04, -14.0), Vector3(0, 5.04, -24.8)]:
+		kit.model(room_id, "Chandelier_01", Transform3D(Basis.IDENTITY, p), 1.42, "none")
+		kit.omni(room_id, p + Vector3(0, 0.36, 0), Color(1.0, 0.72, 0.43), 1.7, 7.5)
+	kit.omni(room_id, Vector3(0, 3.5, -20), Color(0.56, 0.68, 0.95), 0.42, 11.0)
 	kit.label(room_id, "THE HEAVENS IN MOTION", Vector3(0, 5.72, -8.59), PI, 34, Color(0.85, 0.76, 0.53))
 
 
@@ -109,6 +140,42 @@ static func _orrery(kit: LevelKit, room_id: String, pos: Vector3) -> void:
 		kit.prop(room_id, _sphere(0.085 + float(i) * 0.025, 16),
 			Transform3D(Basis.IDENTITY, planet_pos), planet_mat)
 	kit.label(room_id, "CELESTIAL MECHANISM", pos + Vector3(0, 0.62, 1.14), PI, 19)
+
+
+static func _wall_painting(kit: LevelKit, room_id: String, pos: Vector3, yaw: float) -> void:
+	var basis := Basis(Vector3.UP, yaw)
+	kit.model(room_id, "fancy_picture_frame_02", Transform3D(basis, pos - Vector3(0, 0.87, 0)), 1.74, "none")
+	var canvas := QuadMesh.new()
+	canvas.size = Vector2(1.08, 1.27)
+	kit.prop(room_id, canvas, Transform3D(basis, pos + basis.z * 0.055), _painting_material())
+
+
+static func _painting_material() -> StandardMaterial3D:
+	if _painting != null:
+		return _painting
+	# A small authored lunar landscape generated into an ImageTexture keeps the
+	# room self-contained while giving the scanned frames an actual canvas.
+	var image := Image.create(256, 256, false, Image.FORMAT_RGB8)
+	for y in 256:
+		for x in 256:
+			var u := float(x) / 255.0
+			var v := float(y) / 255.0
+			var grain := sin(float(x) * 0.37 + float(y) * 0.13) * 0.018
+			var c := Color(0.09 + 0.12 * v + grain, 0.13 + 0.12 * v + grain, 0.21 + 0.15 * v + grain)
+			var moon_dist := Vector2(u - 0.67, v - 0.30).length()
+			if moon_dist < 0.135:
+				c = Color(0.79, 0.76, 0.64).lerp(Color(0.49, 0.55, 0.60), moon_dist / 0.135 * 0.35)
+			var ridge := 0.63 + 0.065 * sin(u * 12.0) + 0.035 * sin(u * 30.0 + 1.8)
+			if v > ridge:
+				c = Color(0.12 + grain, 0.15 + grain, 0.18 + grain)
+			if v > 0.79 + 0.035 * sin(u * 24.0):
+				c = Color(0.065, 0.083, 0.10)
+			image.set_pixel(x, y, c)
+	_painting = StandardMaterial3D.new()
+	_painting.albedo_texture = ImageTexture.create_from_image(image)
+	_painting.roughness = 0.88
+	_painting.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _painting
 
 
 static func _box_prop(kit: LevelKit, room_id: String, centre: Vector3, size: Vector3, material: Material) -> void:

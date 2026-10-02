@@ -6,6 +6,7 @@ static var _sphere: SphereMesh
 static var _obelisk: ArrayMesh
 static var _coffin: ArrayMesh
 static var _glyph_material: StandardMaterial3D
+static var _painting_material: StandardMaterial3D
 
 
 static func dress(kit: LevelKit, room_id: String) -> void:
@@ -13,38 +14,66 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	var gold := kit.mat("gold")
 	var lapis := kit.mat("lapis")
 	var dark := kit.mat("wood_dark")
-	kit.solid(room_id, Vector3(-26, 0.01, 26), Vector3(19.4, 0.025, 8.8), sand, 0.0, false)
-	for x in [-36.0, -16.0]:
-		for z in [22.0, 30.0]:
+	kit.solid(room_id, Vector3(-26, 0.01, 26), Vector3(22.9, 0.018, 10.9),
+		kit.pbr("large_sandstone_blocks", 1.5, Color(0.87, 0.72, 0.50)), 0.0, false)
+	for x in [-35.9, -16.1]:
+		for z in [21.15, 30.85]:
 			_column(kit, room_id, Vector3(x, 0, z), sand, gold)
+	for x in [-37.72, -14.28]:
+		for y in [0.24, 1.12, 5.62]:
+			kit.solid(room_id, Vector3(x, y, 26), Vector3(0.1, 0.08, 10.0),
+				gold if y == 1.12 else sand, 0.0, false)
 
 	# The actual jewel and its glass case are placed by MuseumLevel at (-33, 27).
 	# A high portal draws the eye to it without obstructing interaction.
-	for x in [-35.4, -30.6]:
-		kit.solid(room_id, Vector3(x, 0, 29.8), Vector3(0.35, 3.5, 0.35), sand, 0.0, false)
-		kit.solid(room_id, Vector3(x, 3.45, 29.8), Vector3(0.55, 0.15, 0.55), gold, 0.0, false)
-	kit.solid(room_id, Vector3(-33, 3.5, 29.8), Vector3(5.1, 0.3, 0.55), gold, 0.0, false)
-	kit.solid(room_id, Vector3(-33, 3.8, 29.8), Vector3(4.6, 0.15, 0.38), lapis, 0.0, false)
-	kit.label(room_id, "THE EMERALD EMPRESS", Vector3(-33, 2.8, 29.48), PI, 35, Color(0.93, 0.75, 0.39))
-	kit.spot(room_id, Vector3(-33, 4.8, 28.8), Vector3(-33, 1.1, 27), Color(1, 0.67, 0.31), 1.4, 6.0, 32.0, true)
+	for x in [-35.35, -30.65]:
+		kit.solid(room_id, Vector3(x, 0.42, 30.7), Vector3(0.35, 3.5, 0.35), sand, 0.0, false)
+		kit.solid(room_id, Vector3(x, 3.92, 30.7), Vector3(0.55, 0.15, 0.55), gold, 0.0, false)
+	kit.solid(room_id, Vector3(-33, 3.92, 30.7), Vector3(5.1, 0.3, 0.55), sand, 0.0, false)
+	kit.solid(room_id, Vector3(-33, 4.22, 30.7), Vector3(4.6, 0.15, 0.38), lapis, 0.0, false)
+	kit.label(room_id, "THE EMERALD EMPRESS", Vector3(-33, 3.32, 30.36), PI, 35, Color(0.93, 0.75, 0.39))
+	kit.solid(room_id, Vector3(-33, 4.08, 29.95), Vector3(0.55, 0.16, 0.25), kit.mat("brass"), 0.0, false)
+	kit.spot(room_id, Vector3(-33, 4.02, 29.83), Vector3(-33, 1.1, 27), Color(1, 0.72, 0.42), 2.0, 5.8, 40.0, true)
 
 	# Landmark obelisk on the east edge, off the guard route.
-	kit.solid(room_id, Vector3(-17.2, 0, 29.0), Vector3(1.8, 0.37, 1.8), dark)
-	kit.solid(room_id, Vector3(-17.2, 0.37, 29.0), Vector3(1.6, 0.13, 1.6), gold, 0.0, false)
-	kit.prop(room_id, _obelisk_mesh(), Transform3D(Basis.IDENTITY, Vector3(-17.2, 0.5, 29.0)), sand, Vector3(1.0, 4.3, 1.0))
-	kit.prop(room_id, _taper(Vector2(0.33, 0.33), Vector2(0.01, 0.01), 0.56), Transform3D(Basis.IDENTITY, Vector3(-17.2, 4.29, 29.0)), gold)
-	kit.spot(room_id, Vector3(-18.5, 5.5, 28), Vector3(-17.2, 2.1, 29), Color(1, 0.62, 0.3), 0.55, 5.0, 35.0)
+	kit.solid(room_id, Vector3(-17.2, 0, 29.0), Vector3(1.48, 0.37, 1.48), dark)
+	kit.solid(room_id, Vector3(-17.2, 0.37, 29.0), Vector3(1.6, 0.10, 1.6), gold, 0.0, false)
+	kit.prop(room_id, _obelisk_mesh(), Transform3D(Basis.IDENTITY, Vector3(-17.2, 0.47, 29.0)), sand, Vector3(0.95, 4.3, 0.95))
+	kit.prop(room_id, _taper(Vector2(0.33, 0.33), Vector2(0.01, 0.01), 0.56), Transform3D(Basis.IDENTITY, Vector3(-17.2, 4.26, 29.0)), gold)
+	for i in 4:
+		var facing := Basis(Vector3.UP, float(i) * PI * 0.5)
+		var glyph := QuadMesh.new()
+		glyph.size = Vector2(0.59, 2.75)
+		kit.prop(room_id, glyph, Transform3D(facing,
+			Vector3(-17.2, 2.06, 29.0) + facing * Vector3(0, 0, 0.39)), _glyphs())
 
 	# Low sphinx and coffins split sight lines. The west and east flanks stay walkable.
-	_sphinx(kit, room_id, Vector3(-23.4, 0, 28.1), sand, lapis, gold)
-	_coffin_case(kit, room_id, Vector3(-28.9, 0, 29.85), lapis, gold, kit.mat("ivory"))
-	_coffin_case(kit, room_id, Vector3(-20.1, 0, 30.0), sand, gold, lapis)
-	_canopic(kit, room_id, Vector3(-16.4, 0, 26.4), dark, kit.mat("papyrus"), gold)
-	for z in [23.7, 27.0]:
+	_coffin_case(kit, room_id, Vector3(-28.65, 0, 29.5), lapis, gold, kit.mat("ivory"))
+	_coffin_case(kit, room_id, Vector3(-20.5, 0, 29.6), sand, gold, lapis)
+	_canopic(kit, room_id, Vector3(-15.45, 0, 26.6), dark, kit.mat("papyrus"), gold)
+	for z in [22.6, 27.0]:
 		_glyph_panel(kit, room_id, Vector3(-14.46, 3.3, z), sand, gold)
-	for p in [Vector3(-36.2, 3.1, 22.8), Vector3(-15.8, 3.1, 23.0)]:
-		kit.prop(room_id, _sphere_mesh(), Transform3D(Basis().scaled(Vector3(0.13, 0.22, 0.13)), p), kit.mat("emissive_warm"))
-		kit.omni(room_id, p, Color(1, 0.54, 0.23), 0.4, 4.0)
+	kit.solid(room_id, Vector3(-34.9, 0, 30.4), Vector3(1.6, 0.82, 0.85), dark)
+	kit.model(room_id, "treasure_chest", Transform3D(Basis(Vector3.UP, -0.22),
+		Vector3(-34.9, 0.83, 30.4)), 0.66, "none")
+	kit.model(room_id, "brass_vase_01", Transform3D(Basis.IDENTITY,
+		Vector3(-18.9, 0.0, 30.9)), 0.88)
+	_painting(kit, room_id)
+	kit.model(room_id, "fancy_picture_frame_02", Transform3D(Basis(Vector3.UP, PI),
+		Vector3(-33.3, 2.7, 31.71)), 1.48, "none")
+	var papyrus := QuadMesh.new()
+	papyrus.size = Vector2(0.92, 1.10)
+	kit.prop(room_id, papyrus, Transform3D(Basis(Vector3.UP, PI),
+		Vector3(-33.3, 3.44, 31.73)), _glyphs())
+	kit.model(room_id, "lantern_chandelier_01", Transform3D(Basis.IDENTITY,
+		Vector3(-25.5, 4.75, 27.7)), 1.05, "none")
+	kit.omni(room_id, Vector3(-25.5, 4.52, 27.7), Color(1.0, 0.72, 0.43), 1.2, 7.4)
+	for p in [Vector3(-37.1, 2.9, 22.4), Vector3(-37.1, 2.9, 29.7),
+			Vector3(-14.9, 2.9, 22.3), Vector3(-14.9, 2.9, 29.7)]:
+		_torch(kit, room_id, p)
+	kit.spot(room_id, Vector3(-26, 4.0, 31.45), Vector3(-26, 0.4, 26.8),
+		Color(0.47, 0.66, 1.0), 1.15, 7.4, 51.0)
+	kit.omni(room_id, Vector3(-26, 3.7, 25.5), Color(0.62, 0.72, 0.89), 0.24, 8.3)
 
 
 static func _column(kit: LevelKit, id: String, p: Vector3, sand: Material, gold: Material) -> void:
@@ -83,23 +112,69 @@ static func _coffin_case(kit: LevelKit, id: String, p: Vector3, shell: Material,
 	kit.solid(id, p, Vector3(1.37, 0.46, 2.43), kit.mat("wood_dark"))
 	kit.solid(id, p + Vector3(0, 0.46, 0), Vector3(1.48, 0.06, 2.54), gold, 0.0, false)
 	kit.prop(id, _coffin_mesh(), Transform3D(Basis.IDENTITY, p + Vector3(0, 0.52, 0)), shell, Vector3(1.16, 0.62, 2.27))
-	kit.prop(id, _sphere_mesh(), Transform3D(Basis().scaled(Vector3(0.35, 0.11, 0.44)), p + Vector3(0, 1.14, -0.57)), face)
+	kit.prop(id, _sphere_mesh(), Transform3D(Basis().scaled(Vector3(0.35, 0.14, 0.36)), p + Vector3(0, 1.14, -0.72)), face)
+	for x in [-0.33, 0.33]:
+		kit.prop(id, _box_mesh(), Transform3D(Basis().scaled(Vector3(0.07, 0.025, 0.69)),
+			p + Vector3(x, 1.08, -0.52)), gold)
 	for z in [-0.22, 0.09, 0.4, 0.71]:
-		kit.prop(id, _box_mesh(), Transform3D(Basis().scaled(Vector3(0.94, 0.024, 0.045)), p + Vector3(0, 1.105, z)), gold)
-	kit.spot(id, p + Vector3(0, 4.1, 0.2), p + Vector3(0, 0.8, 0), Color(1, 0.72, 0.4), 0.46, 4.0, 34.0)
+		kit.prop(id, _box_mesh(), Transform3D(Basis().scaled(Vector3(0.94, 0.024, 0.045)), p + Vector3(0, 1.12, z)), gold)
+	kit.prop(id, _box_mesh(), Transform3D(Basis().scaled(Vector3(1.02, 0.16, 0.045)),
+		p + Vector3(0, 0.3, 1.24)), kit.mat("brass"))
+	kit.prop(id, _box_mesh(), Transform3D(Basis().scaled(Vector3(0.38, 0.13, 0.23)),
+		p + Vector3(0, 4.14, 0.2)), kit.mat("brass"))
+	kit.spot(id, p + Vector3(0, 4.1, 0.2), p + Vector3(0, 0.8, 0), Color(1, 0.72, 0.4), 0.75, 4.5, 43.0)
 
 
 static func _canopic(kit: LevelKit, id: String, p: Vector3, dark: Material, clay: Material, gold: Material) -> void:
-	kit.solid(id, p, Vector3(1.15, 0.94, 2.0), dark)
-	kit.solid(id, p + Vector3(0, 0.94, 0), Vector3(1.3, 0.08, 2.1), gold, 0.0, false)
-	for z in [-0.67, -0.22, 0.22, 0.67]:
-		var jar := CylinderMesh.new()
-		jar.bottom_radius = 0.15
-		jar.top_radius = 0.22
-		jar.height = 0.46
-		jar.radial_segments = 12
-		kit.prop(id, jar, Transform3D(Basis.IDENTITY, p + Vector3(0, 1.29, z)), clay)
-		kit.prop(id, _sphere_mesh(), Transform3D(Basis().scaled(Vector3(0.22, 0.11, 0.22)), p + Vector3(0, 1.55, z)), gold)
+	kit.solid(id, p, Vector3(0.88, 0.94, 2.32), dark)
+	kit.solid(id, p + Vector3(0, 0.94, 0), Vector3(1.03, 0.08, 2.46), gold, 0.0, false)
+	var names := ["antique_ceramic_vase_01", "ceramic_vase_01",
+		"ceramic_vase_02", "brass_vase_01"]
+	for i in 4:
+		kit.model(id, names[i], Transform3D(Basis.IDENTITY,
+			p + Vector3(0, 1.03, -0.84 + float(i) * 0.56)), 0.42, "none")
+
+
+static func _torch(kit: LevelKit, id: String, p: Vector3) -> void:
+	kit.solid(id, p + Vector3(0, -1.28, 0), Vector3(0.42, 0.90, 0.34),
+		kit.mat("sandstone"), 0.0, false)
+	kit.model(id, "brass_candleholders", Transform3D(Basis.IDENTITY,
+		p + Vector3(0, -0.37, 0)), 0.72, "none")
+	kit.prop(id, _sphere_mesh(), Transform3D(Basis().scaled(Vector3(0.095, 0.15, 0.095)),
+		p + Vector3(0, 0.32, 0)), kit.mat("emissive_warm"))
+	var light := kit.omni(id, p + Vector3(0, 0.31, 0),
+		Color(1.0, 0.61, 0.31), 0.72, 4.7)
+	var flicker := light.create_tween().set_loops()
+	flicker.tween_property(light, "light_energy", 0.57, 0.13).set_trans(Tween.TRANS_SINE)
+	flicker.tween_property(light, "light_energy", 0.78, 0.18).set_trans(Tween.TRANS_SINE)
+	flicker.tween_property(light, "light_energy", 0.68, 0.11).set_trans(Tween.TRANS_SINE)
+
+
+static func _painting(kit: LevelKit, id: String) -> void:
+	var p := Vector3(-19.9, 3.33, 31.72)
+	var width := 2.65
+	var height := 1.66
+	var q := QuadMesh.new()
+	q.size = Vector2(width, height)
+	kit.prop(id, q, Transform3D(Basis(Vector3.UP, PI), p), _painting_mat())
+	for side in [-1.0, 1.0]:
+		kit.solid(id, p + Vector3(side * (width * 0.5 + 0.085), -height * 0.5 - 0.17, 0.06),
+			Vector3(0.17, height + 0.34, 0.13), kit.mat("wood_dark"), 0.0, false)
+		kit.solid(id, p + Vector3(0, side * (height * 0.5 + 0.085) - 0.085, 0.06),
+			Vector3(width + 0.34, 0.17, 0.13), kit.mat("gold"), 0.0, false)
+	kit.solid(id, p + Vector3(0, height * 0.5 + 0.24, -0.23),
+		Vector3(0.72, 0.07, 0.16), kit.mat("brass"), 0.0, false)
+	kit.spot(id, p + Vector3(0, height * 0.5 + 0.23, -0.27),
+		p + Vector3(0, 0, -0.08), Color(1, 0.76, 0.48), 0.78, 3.1, 52.0)
+
+
+static func _painting_mat() -> StandardMaterial3D:
+	if _painting_material == null:
+		_painting_material = StandardMaterial3D.new()
+		_painting_material.albedo_texture = load("res://assets/art/egyptian/nile_funeral_barge.png")
+		_painting_material.roughness = 0.85
+		_painting_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _painting_material
 
 
 static func _glyph_panel(kit: LevelKit, id: String, p: Vector3, sand: Material, gold: Material) -> void:
@@ -166,10 +241,16 @@ static func _obelisk_mesh() -> ArrayMesh:
 static func _coffin_mesh() -> ArrayMesh:
 	if _coffin != null:
 		return _coffin
+	# Narrow head and feet, broad shoulders and a raised crown form an
+	# anthropoid lid instead of an eight-sided rectangular coffin.
 	var outline := PackedVector2Array([
-		Vector2(-0.28, -1.08), Vector2(0.28, -1.08), Vector2(0.5, -0.7),
-		Vector2(0.53, 0.48), Vector2(0.3, 1.08), Vector2(-0.3, 1.08),
-		Vector2(-0.53, 0.48), Vector2(-0.5, -0.7),
+		Vector2(-0.19, -1.12), Vector2(0.19, -1.12),
+		Vector2(0.29, -0.98), Vector2(0.31, -0.72),
+		Vector2(0.46, -0.48), Vector2(0.56, -0.27),
+		Vector2(0.49, 0.39), Vector2(0.31, 1.12),
+		Vector2(-0.31, 1.12), Vector2(-0.49, 0.39),
+		Vector2(-0.56, -0.27), Vector2(-0.46, -0.48),
+		Vector2(-0.31, -0.72), Vector2(-0.29, -0.98),
 	])
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -177,8 +258,10 @@ static func _coffin_mesh() -> ArrayMesh:
 		var j := (i + 1) % outline.size()
 		var a := Vector3(outline[i].x, 0, outline[i].y)
 		var b := Vector3(outline[j].x, 0, outline[j].y)
-		_quad(st, a, b, b + Vector3(0, 0.61, 0), a + Vector3(0, 0.61, 0))
-		_tri(st, Vector3(0, 0.62, 0), a + Vector3(0, 0.61, 0), b + Vector3(0, 0.61, 0))
+		var ah := 0.43 + 0.08 * (1.0 - absf(outline[i].x) / 0.56)
+		var bh := 0.43 + 0.08 * (1.0 - absf(outline[j].x) / 0.56)
+		_quad(st, a, b, b + Vector3(0, bh, 0), a + Vector3(0, ah, 0))
+		_tri(st, Vector3(0, 0.59, 0), a + Vector3(0, ah, 0), b + Vector3(0, bh, 0))
 	st.generate_normals()
 	_coffin = st.commit()
 	return _coffin
@@ -203,7 +286,6 @@ static func _taper(bottom: Vector2, top: Vector2, h: float) -> ArrayMesh:
 
 static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
 	_tri(st, a, b, c)
-	_tri(st, a, c, d)
 	_tri(st, a, c, d)
 
 

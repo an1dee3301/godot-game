@@ -1,176 +1,100 @@
 extends RefCounted
-## Navy sculpture hall: a moonlit court of classical marble, with a readable jewel dais and cover.
+## A sculpture court with a clear jewel approach and a readable patrol loop.
 
-static var _bust_torso: ArrayMesh
-static var _plinth_profile: ArrayMesh
-static var _plinth_ring: ArrayMesh
-static var _reclining_limb: ArrayMesh
+const WARM := Color(1.0, 0.72, 0.43)
+const MOON := Color(0.58, 0.73, 1.0)
 
 
 static func dress(kit: LevelKit, room_id: String) -> void:
 	var marble := kit.mat("marble_white")
-	var dark := kit.mat("marble_black")
-	var gold := kit.mat("gold")
-	var stone := kit.mat("stone")
-	var velvet := kit.mat("velvet_blue")
-	# The guard walks the perimeter: x=-34/-18 and z=-4/16. The displays sit
-	# inside that loop, leaving the three full-height entries and north vent free.
-	for x in [-31.0, -21.0]:
-		for z in [3.0, 11.0]:
-			_make_plinth(kit, room_id, Vector3(x, 0, z), marble, gold)
-			_make_bust(kit, room_id, Vector3(x, 1.22, z), marble, stone, x < -26.0)
-	# Jewel plinth is placed by MuseumLevel. Low tiered stonework frames it
-	# without hiding the case or narrowing the path from the eastern arch.
-	kit.solid(room_id, Vector3(-26, 0, 6), Vector3(3.4, 0.20, 3.4), dark, 0.0, false)
-	kit.solid(room_id, Vector3(-26, 0, 3.97), Vector3(3.0, 0.10, 0.53), marble, 0.0, false)
-	kit.solid(room_id, Vector3(-26, 0, 8.03), Vector3(3.0, 0.10, 0.53), marble, 0.0, false)
-	kit.solid(room_id, Vector3(-28.03, 0, 6), Vector3(0.53, 0.10, 3.0), marble, 0.0, false)
-	kit.solid(room_id, Vector3(-23.97, 0, 6), Vector3(0.53, 0.10, 3.0), marble, 0.0, false)
-	# A narrow gold seam sets the jewel apart from the pale figures.
-	for x in [-27.76, -24.24]:
-		kit.solid(room_id, Vector3(x, 0.205, 6), Vector3(0.035, 0.018, 3.5), gold, 0.0, false)
-	for z in [4.24, 7.76]:
-		kit.solid(room_id, Vector3(-26, 0.205, z), Vector3(3.5, 0.018, 0.035), gold, 0.0, false)
-	# Landmark seen across the jewel from the atrium: a reclining marble figure
-	# on a single broad sarcophagus, with a curved body and limbs rather than boxes.
-	_make_reclining(kit, room_id, Vector3(-26, 0, -0.6), marble, dark, gold)
-	# Two benches are useful, low sight-line breaks. Their open ends let the
-	# player move between the statue, the jewel and the southern doorway.
-	_make_bench(kit, room_id, Vector3(-26, 0, 13.5), marble, velvet, gold)
-	_make_bench(kit, room_id, Vector3(-26, 0, -6.2), marble, velvet, gold)
-	# The vent at x=-20.4 on the north wall stays open. A nearby sculpture
-	# makes it less obvious on entry without impeding a crouched approach.
-	kit.cylinder_solid(room_id, Vector3(-23.4, 0, -5.5), 0.62, 1.08, dark, 24)
-	var vent_profile: Array[Vector2] = [
-		Vector2(0.32, 0), Vector2(0.44, 0.12), Vector2(0.34, 0.26),
-		Vector2(0.17, 0.46), Vector2(0.14, 0.70), Vector2(0.24, 0.86), Vector2(0.0, 0.91),
-	]
-	kit.prop(room_id, _lathe(vent_profile, 20),
-		Transform3D(Basis.IDENTITY, Vector3(-23.4, 1.08, -5.5)), marble)
-	# Cool spill from the north window and restrained amber museum spots.
-	kit.spot(room_id, Vector3(-26, 5.9, -8.0), Vector3(-26, 1.3, -1.0), Color(0.53, 0.69, 1.0), 1.45, 12.0, 49.0)
-	kit.spot(room_id, Vector3(-25.0, 5.9, 8.0), Vector3(-26, 1.0, 6.0), Color(1.0, 0.73, 0.43), 1.5, 8.0, 38.0, true)
-	kit.spot(room_id, Vector3(-33.1, 5.7, 5.0), Vector3(-31.0, 1.9, 7.0), Color(1.0, 0.82, 0.57), 0.8, 8.0, 48.0)
-	kit.spot(room_id, Vector3(-19.2, 5.7, 6.0), Vector3(-21.0, 1.9, 7.0), Color(1.0, 0.82, 0.57), 0.8, 8.0, 48.0)
-	kit.label(room_id, "THE SCARLET LADY", Vector3(-26, 0.39, 8.67), 0.0, 30, Color(0.77, 0.61, 0.36))
+	var black := kit.mat("marble_black")
+	var brass := kit.mat("brass")
+	var plaster := kit.mat("plaster")
+
+	# Bust pedestals are crouch cover inside the x=-34/-18, z=-4/16 patrol.
+	for spec in [
+		[Vector3(-31.0, 0, 3.1), 0.68, -0.45],
+		[Vector3(-21.0, 0, 3.1), 0.74, 0.50],
+		[Vector3(-21.0, 0, -0.8), 0.72, 0.75],
+	]:
+		var p: Vector3 = spec[0]
+		_pedestal(kit, room_id, p, Vector3(1.35, 1.10, 1.35), marble, black, brass)
+		kit.model(room_id, "marble_bust_01", Transform3D(Basis(Vector3.UP, spec[2]), p + Vector3.UP * 1.15), spec[1], "none")
+		_accent(kit, room_id, p + Vector3(0, 1.5, 0), p + Vector3(-0.8, 5.92, -0.7), 0.95, 32.0)
+
+	# Landmark visible beyond the jewel from the atrium.
+	var gothic := Vector3(-26.0, 0, -0.9)
+	_pedestal(kit, room_id, gothic, Vector3(2.65, 0.82, 2.65), black, marble, brass)
+	kit.model(room_id, "gothic_statue", Transform3D(Basis(Vector3.UP, 0.55), gothic + Vector3.UP * 0.88), 2.02)
+	_accent(kit, room_id, gothic + Vector3(0, 2.0, 0), gothic + Vector3(1.5, 5.92, -0.6), 1.75, 37.0)
+
+	# Different heights and finishes keep the larger pieces distinct.
+	var horse := Vector3(-31.0, 0, 10.8)
+	_pedestal(kit, room_id, horse, Vector3(2.1, 0.62, 1.7), black, marble, brass)
+	kit.model(room_id, "horse_statue_01", Transform3D(Basis(Vector3.UP, 0.45), horse + Vector3.UP * 0.68), 1.4)
+	_accent(kit, room_id, horse + Vector3(0, 1.5, 0), horse + Vector3(-0.5, 5.92, 0.4), 1.15, 35.0)
+	var whale := Vector3(-21.0, 0, 11.0)
+	_pedestal(kit, room_id, whale, Vector3(2.15, 0.68, 2.15), marble, black, brass)
+	kit.model(room_id, "bronze_whale_statue", Transform3D(Basis(Vector3.UP, -0.75), whale + Vector3.UP * 0.74), 1.12)
+	_accent(kit, room_id, whale + Vector3(0, 1.35, 0), whale + Vector3(0.7, 5.92, -0.4), 1.1, 34.0)
+
+	# The jewel case itself is built by MuseumLevel.
+	kit.solid(room_id, Vector3(-26, 0, 6), Vector3(3.4, 0.16, 3.4), black, 0.0, false)
+	for x in [-27.77, -24.23]:
+		kit.solid(room_id, Vector3(x, 0.17, 6), Vector3(0.045, 0.025, 3.5), brass, 0.0, false)
+	for z in [4.23, 7.77]:
+		kit.solid(room_id, Vector3(-26, 0.17, z), Vector3(3.5, 0.025, 0.045), brass, 0.0, false)
+	kit.label(room_id, "THE SCARLET LADY", Vector3(-26, 0.37, 8.65), 0.0, 30, Color(0.83, 0.68, 0.43))
+	_accent(kit, room_id, Vector3(-26, 1.1, 6), Vector3(-26.5, 5.92, 6.8), 1.35, 34.0)
+
+	# Low seats leave the south arch and the patrol lane open.
+	for z in [-6.1, 13.5]:
+		kit.model(room_id, "painted_wooden_bench", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-26, 0, z)))
+
+	# Wall reliefs and mirrors sit at eye height, away from every opening.
+	_wall_relief(kit, room_id, Vector3(-37.68, 0, -1.1), "horse_head", 0.72, PI * 0.5, plaster, marble, brass)
+	_wall_relief(kit, room_id, Vector3(-37.68, 0, 14.1), "lion_head", 0.76, PI * 0.5, plaster, marble, brass)
+	_wall_relief(kit, room_id, Vector3(-14.32, 0, -1.2), "lion_head", 0.72, -PI * 0.5, plaster, marble, brass)
+	_wall_relief(kit, room_id, Vector3(-14.32, 0, 13.4), "horse_head", 0.72, -PI * 0.5, plaster, marble, brass)
+	kit.model(room_id, "ornate_mirror_01", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-37.56, 1.55, 4.2)), 1.35, "none")
+	kit.model(room_id, "ornate_mirror_01", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-14.44, 1.55, 9.8)), 1.35, "none")
+
+	# Visible chandeliers source the warm pools. Only the first casts shadows.
+	for z in [2.6, 12.1]:
+		kit.model(room_id, "Chandelier_02", Transform3D(Basis.IDENTITY, Vector3(-26, 4.96, z)), 0.85, "none")
+		kit.omni(room_id, Vector3(-26, 5.07, z), WARM, 1.65, 6.1, z < 4.0)
+	# Moon spill enters via the west service door and its outer window.
+	kit.spot(room_id, Vector3(-37.35, 4.7, 9.0), Vector3(-31.0, 0.15, 7.0), MOON, 1.9, 9.8, 43.0)
+	kit.omni(room_id, Vector3(-30.5, 3.8, 5.5), Color(0.58, 0.69, 0.91), 0.32, 7.0)
 
 
-static func _make_plinth(kit: LevelKit, id: String, p: Vector3, marble: Material, gold: Material) -> void:
-	kit.cylinder_solid(id, p, 0.65, 1.17, marble, 32)
-	if _plinth_profile == null:
-		var profile: Array[Vector2] = [
-			Vector2(0.0, 0), Vector2(0.83, 0), Vector2(0.87, 0.10),
-			Vector2(0.73, 0.18), Vector2(0.65, 0.93), Vector2(0.75, 1.06),
-			Vector2(0.86, 1.13), Vector2(0.86, 1.20), Vector2(0.0, 1.20),
-		]
-		_plinth_profile = _lathe(profile, 32)
-		_plinth_ring = _ring(0.76, 0.79, 0.035, 32)
-	kit.prop(id, _plinth_profile, Transform3D(Basis.IDENTITY, p), marble)
-	kit.prop(id, _plinth_ring, Transform3D(Basis.IDENTITY, p + Vector3(0, 1.08, 0)), gold)
+static func _pedestal(kit: LevelKit, id: String, p: Vector3, size: Vector3, body: Material, cap: Material, trim: Material) -> void:
+	kit.solid(id, p, size, body)
+	kit.solid(id, p + Vector3(0, size.y - 0.06, 0), Vector3(size.x + 0.18, 0.12, size.z + 0.18), cap, 0.0, false)
+	kit.solid(id, p + Vector3(0, 0.11, 0), Vector3(size.x + 0.12, 0.035, size.z + 0.12), trim, 0.0, false)
+	kit.solid(id, p + Vector3(0, size.y - 0.16, 0), Vector3(size.x + 0.13, 0.028, size.z + 0.13), trim, 0.0, false)
 
 
-static func _make_bust(kit: LevelKit, id: String, p: Vector3, marble: Material, stone: Material, turned: bool) -> void:
-	if _bust_torso == null:
-		var profile: Array[Vector2] = [
-			Vector2(0.0, 0), Vector2(0.52, 0), Vector2(0.65, 0.12),
-			Vector2(0.61, 0.29), Vector2(0.32, 0.57), Vector2(0.19, 0.77),
-			Vector2(0.17, 0.92), Vector2(0.0, 0.92),
-		]
-		_bust_torso = _lathe(profile, 24)
-	var basis := Basis(Vector3.UP, PI if turned else 0.0)
-	kit.prop(id, _bust_torso, Transform3D(basis, p), marble)
-	var head := SphereMesh.new()
-	head.radius = 0.28
-	head.height = 0.56
-	kit.prop(id, head, Transform3D(basis.scaled(Vector3(0.89, 1.15, 0.80)), p + Vector3(0, 1.13, 0)), marble)
-	# Low swept hair cap and a projecting nose give the silhouette a face.
-	var hair := SphereMesh.new()
-	hair.radius = 0.30
-	hair.height = 0.38
-	kit.prop(id, hair, Transform3D(basis.scaled(Vector3(1.0, 0.65, 0.88)), p + Vector3(0, 1.32, 0)), stone)
-	var nose := SphereMesh.new()
-	nose.radius = 0.075
-	nose.height = 0.17
-	kit.prop(id, nose, Transform3D(basis, p + Vector3(0, 1.10, -0.24 if not turned else 0.24)), marble)
+static func _wall_relief(kit: LevelKit, id: String, p: Vector3, asset: String, height: float, yaw: float, panel: Material, ledge: Material, trim: Material) -> void:
+	var inward := Vector3(1, 0, 0) if yaw > 0.0 else Vector3(-1, 0, 0)
+	var wall_pos := p + inward * 0.12
+	kit.solid(id, wall_pos + Vector3(0, 1.52, 0), Vector3(0.12, 1.7, 1.25), panel, 0.0, false)
+	kit.solid(id, wall_pos + Vector3(0, 1.47, 0) + inward * 0.12, Vector3(0.36, 0.09, 1.42), ledge, 0.0, false)
+	kit.solid(id, wall_pos + Vector3(0, 2.39, 0), Vector3(0.16, 0.045, 1.39), trim, 0.0, false)
+	kit.model(id, asset, Transform3D(Basis(Vector3.UP, yaw), wall_pos + inward * 0.22 + Vector3.UP * 1.57), height, "none")
+	kit.label(id, "STUDY IN STONE", wall_pos + inward * 0.29 + Vector3.UP * 1.18, yaw, 18, Color(0.88, 0.75, 0.52))
+	kit.solid(id, wall_pos + inward * 0.22 + Vector3.UP * 2.48, Vector3(0.24, 0.06, 0.48), trim, 0.0, false)
+	kit.spot(id, wall_pos + inward * 0.4 + Vector3.UP * 2.45, wall_pos + inward * 0.3 + Vector3.UP * 1.91, WARM, 0.62, 2.2, 43.0)
 
 
-static func _make_reclining(kit: LevelKit, id: String, p: Vector3, marble: Material, dark: Material, gold: Material) -> void:
-	kit.solid(id, p, Vector3(5.4, 0.93, 1.9), dark)
-	kit.solid(id, p + Vector3(0, 0.93, 0), Vector3(5.57, 0.13, 2.04), marble, 0.0, false)
-	kit.solid(id, p + Vector3(0, 0.82, 0), Vector3(5.5, 0.035, 1.98), gold, 0.0, false)
-	var torso := CapsuleMesh.new()
-	torso.radius = 0.47
-	torso.height = 2.30
-	kit.prop(id, torso, Transform3D(Basis(Vector3.FORWARD, PI * 0.5), p + Vector3(-0.25, 1.55, 0)), marble)
-	var head := SphereMesh.new()
-	head.radius = 0.39
-	head.height = 0.78
-	kit.prop(id, head, Transform3D(Basis.IDENTITY, p + Vector3(-1.65, 1.67, 0.05)), marble)
-	var hair := SphereMesh.new()
-	hair.radius = 0.40
-	hair.height = 0.38
-	kit.prop(id, hair, Transform3D(Basis.IDENTITY, p + Vector3(-1.72, 1.92, 0.08)), dark)
-	var limb := _limb()
-	# Bent legs and an arm supporting the head make the horizontal silhouette legible.
-	kit.prop(id, limb, Transform3D(Basis(Vector3.FORWARD, -PI * 0.5),
-		p + Vector3(0.55, 1.35, -0.25)), marble)
-	kit.prop(id, limb, Transform3D(Basis(Vector3.FORWARD, -PI * 0.5),
-		p + Vector3(0.55, 1.28, 0.33)), marble)
-	kit.prop(id, limb, Transform3D(Basis(Vector3.FORWARD, PI * 0.5).scaled(Vector3(0.55, 0.68, 0.65)),
-		p + Vector3(-1.15, 1.66, -0.45)), marble)
-
-
-static func _make_bench(kit: LevelKit, id: String, p: Vector3, marble: Material, velvet: Material, gold: Material) -> void:
-	kit.solid(id, p, Vector3(2.25, 0.45, 0.72), marble, 0.0, false)
-	kit.solid(id, p + Vector3(0, 0.45, 0), Vector3(2.13, 0.07, 0.62), velvet, 0.0, false)
-	for x in [-0.94, 0.94]:
-		kit.solid(id, p + Vector3(x, 0.35, 0), Vector3(0.055, 0.035, 0.74), gold, 0.0, false)
-
-
-static func _limb() -> ArrayMesh:
-	if _reclining_limb == null:
-		var profile: Array[Vector2] = [
-			Vector2(0.0, 0), Vector2(0.22, 0.04), Vector2(0.27, 0.32),
-			Vector2(0.21, 0.78), Vector2(0.26, 1.14), Vector2(0.14, 1.57), Vector2(0.0, 1.68),
-		]
-		_reclining_limb = _lathe(profile, 16)
-	return _reclining_limb
-
-
-static func _ring(inner: float, outer: float, height: float, segments: int) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in segments:
-		var a := TAU * float(i) / float(segments)
-		var b := TAU * float(i + 1) / float(segments)
-		var p0 := Vector3(cos(a) * inner, 0, sin(a) * inner)
-		var p1 := Vector3(cos(a) * outer, 0, sin(a) * outer)
-		var p2 := Vector3(cos(b) * outer, height, sin(b) * outer)
-		var p3 := Vector3(cos(b) * inner, height, sin(b) * inner)
-		_tri(st, p0, p2, p1)
-		_tri(st, p0, p3, p2)
-	st.generate_normals()
-	return st.commit()
-
-
-static func _lathe(profile: Array[Vector2], segments: int) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for j in profile.size() - 1:
-		for i in segments:
-			var a := TAU * float(i) / float(segments)
-			var b := TAU * float(i + 1) / float(segments)
-			var p0 := Vector3(cos(a) * profile[j].x, profile[j].y, sin(a) * profile[j].x)
-			var p1 := Vector3(cos(b) * profile[j].x, profile[j].y, sin(b) * profile[j].x)
-			var p2 := Vector3(cos(b) * profile[j + 1].x, profile[j + 1].y, sin(b) * profile[j + 1].x)
-			var p3 := Vector3(cos(a) * profile[j + 1].x, profile[j + 1].y, sin(a) * profile[j + 1].x)
-			_tri(st, p0, p2, p1)
-			_tri(st, p0, p3, p2)
-	st.generate_normals()
-	return st.commit()
-
-
-static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
-	st.add_vertex(a)
-	st.add_vertex(b)
-	st.add_vertex(c)
+static func _accent(kit: LevelKit, id: String, target: Vector3, fixture: Vector3, energy: float, angle: float) -> void:
+	var socket := CylinderMesh.new()
+	socket.top_radius = 0.12
+	socket.bottom_radius = 0.14
+	socket.height = 0.17
+	kit.prop(id, socket, Transform3D(Basis.IDENTITY, fixture), kit.mat("brass"))
+	var lens := SphereMesh.new()
+	lens.radius = 0.085
+	lens.height = 0.09
+	kit.prop(id, lens, Transform3D(Basis.IDENTITY, fixture + Vector3.DOWN * 0.12), kit.mat("emissive_warm"))
+	kit.spot(id, fixture + Vector3.DOWN * 0.13, target, WARM, energy, 6.3, angle)

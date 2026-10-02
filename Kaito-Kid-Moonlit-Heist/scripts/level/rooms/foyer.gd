@@ -13,10 +13,13 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_banner(kit, room_id)
 	_desk(kit, room_id)
 	_statue(kit, room_id)
-	for x in [-6.6, 6.6]:
-		_bench(kit, room_id, Vector3(x, 0, 29.0))
-	for x in [-8.0, 8.0]:
-		_palm(kit, room_id, Vector3(x, 0, 21.6))
+	kit.model(room_id, "Sofa_01", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-7.2, 0, 29.4)), 0.87)
+	kit.model(room_id, "ArmChair_01", Transform3D(Basis(Vector3.UP, -PI * 0.25), Vector3(-5.0, 0, 29.5)))
+	kit.model(room_id, "Ottoman_01", Transform3D(Basis.IDENTITY, Vector3(-6.2, 0, 27.8)), 0.44)
+	_box(kit, room_id, Vector3(-7.15, 0.018, 28.8), Vector3(3.5, 0.018, 3.5), kit.mat("carpet_blue"))
+	for x in [-4.05, 4.05]:
+		kit.model(room_id, "potted_plant_01", Transform3D(Basis.IDENTITY, Vector3(x, 0, 21.3)), 1.65)
+	_wall_art(kit, room_id)
 	# A short, open brass queue guides the eye to ticketing without enclosing the spawn.
 	for z in [25.5, 27.6]:
 		for x in [3.35, 5.05]:
@@ -25,9 +28,11 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 			_sphere(kit, room_id, Vector3(x, 0.89, z), 0.09, kit.mat("gold"))
 		for x in [3.65, 4.2, 4.75]:
 			_sphere(kit, room_id, Vector3(x, 0.67 - 0.1 * (1.0 - absf(x - 4.2) / 0.55), z), 0.055, kit.mat("velvet_red"))
-	kit.omni(room_id, Vector3(-6.0, 4.7, 26.0), Color(1.0, 0.77, 0.49), 0.85, 6.0)
-	kit.omni(room_id, Vector3(6.0, 4.7, 26.0), Color(1.0, 0.77, 0.49), 0.85, 6.0)
-	kit.spot(room_id, Vector3(-7.3, 4.8, 24.5), Vector3(-7.9, 1.8, 25.0), Color(1.0, 0.82, 0.57), 1.4, 5.2, 43.0, true)
+	kit.model(room_id, "Chandelier_01", Transform3D(Basis.IDENTITY, Vector3(0, 4.7, 25.0)), 1.35, "none")
+	_cylinder(kit, room_id, Vector3(0, 6.28, 25.0), 0.025, 0.48, kit.mat("brass"))
+	kit.omni(room_id, Vector3(0, 4.9, 25.0), Color(1.0, 0.73, 0.44), 1.7, 9.0, true)
+	for x in [-6.0, 6.0]:
+		kit.spot(room_id, Vector3(x, 4.2, 31.0), Vector3(x * 0.7, 0.25, 26.8), Color(0.48, 0.62, 0.94), 0.42, 7.0, 48.0)
 
 
 static func _medallion(kit: LevelKit, id: String) -> void:
@@ -48,20 +53,22 @@ static func _banner(kit: LevelKit, id: String) -> void:
 		_box(kit, id, Vector3(0, y, 31.33), Vector3(8.0, 0.055, 0.08), kit.mat("gold"))
 	kit.label(id, "MOONLIGHT MUSEUM", Vector3(0, 5.33, 31.28), PI, 51, Color(0.98, 0.82, 0.48))
 	kit.label(id, "FIVE JEWELS  ·  ONE ENCORE", Vector3(0, 4.95, 31.27), PI, 27, Color(0.95, 0.9, 0.77))
-	kit.spot(id, Vector3(0, 6.3, 28.9), Vector3(0, 5.1, 31.3), Color(1, 0.78, 0.46), 1.8, 6.0, 48.0)
+	_box(kit, id, Vector3(0, 5.91, 31.2), Vector3(1.3, 0.07, 0.14), kit.mat("brass"))
+	_box(kit, id, Vector3(0, 5.86, 31.2), Vector3(1.1, 0.018, 0.11), kit.mat("emissive_warm"))
+	kit.spot(id, Vector3(0, 5.85, 31.0), Vector3(0, 5.1, 31.3), Color(1, 0.78, 0.46), 1.25, 3.5, 48.0)
 
 
 static func _desk(kit: LevelKit, id: String) -> void:
-	var p := Vector3(7.05, 0, 26.1)
-	kit.solid(id, p, Vector3(3.7, 1.08, 1.22), kit.mat("wood_dark"))
-	_box(kit, id, p + Vector3(0, 1.11, 0), Vector3(3.9, 0.12, 1.42), kit.mat("marble_black"))
-	_box(kit, id, p + Vector3(0, 1.18, 0), Vector3(3.78, 0.025, 1.33), kit.mat("brass"))
-	for x in [-1.22, 0.0, 1.22]:
-		_box(kit, id, p + Vector3(x, 0.55, -0.63), Vector3(1.06, 0.72, 0.04), kit.mat("wood_light"))
-		_box(kit, id, p + Vector3(x, 0.55, -0.66), Vector3(0.87, 0.53, 0.025), kit.mat("wood_dark"))
-		_box(kit, id, p + Vector3(x, 0.55, -0.68), Vector3(0.62, 0.025, 0.025), kit.mat("gold"))
+	# Two scanned consoles make the ticket counter; the rose pickup at (7, 23) stays clear.
+	for x in [6.16, 7.84]:
+		kit.model(id, "ClassicConsole_01", Transform3D(Basis(Vector3.UP, PI), Vector3(x, 0, 26.1)))
+	_box(kit, id, Vector3(7, 0.98, 26.1), Vector3(3.4, 0.065, 0.7), kit.mat("marble_black"))
+	_box(kit, id, Vector3(7, 1.02, 26.1), Vector3(3.44, 0.02, 0.74), kit.mat("brass"))
+	for x in [5.88, 8.12]:
+		kit.model(id, "brass_candleholders", Transform3D(Basis.IDENTITY, Vector3(x, 1.04, 26.1)), 0.5, "none")
+		kit.omni(id, Vector3(x, 1.48, 26.1), Color(1, 0.68, 0.37), 0.58, 2.5)
+	kit.model(id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(7, 1.04, 26.1)), 0.24, "none")
 	kit.label(id, "ADMISSION", Vector3(7.05, 2.0, 29.5), PI, 30, Color(0.95, 0.78, 0.42))
-	kit.spot(id, Vector3(7.0, 5.7, 27.0), p + Vector3(0, 0.7, 0), Color(1, 0.77, 0.48), 1.25, 5.5, 40.0)
 
 
 static func _statue(kit: LevelKit, id: String) -> void:
@@ -70,19 +77,34 @@ static func _statue(kit: LevelKit, id: String) -> void:
 	for z in [23.47, 26.53]:
 		_box(kit, id, Vector3(-9.29, 2.5, z), Vector3(0.13, 4.15, 0.10), kit.mat("gold"))
 	_box(kit, id, Vector3(-9.28, 4.62, 25.0), Vector3(0.14, 0.13, 3.2), kit.mat("gold"))
-	kit.cylinder_solid(id, p, 0.60, 1.05, kit.mat("marble_white"))
-	_cylinder(kit, id, p + Vector3(0, 1.10, 0), 0.68, 0.11, kit.mat("gold"))
-	var body := CapsuleMesh.new()
-	body.radius = 0.34
-	body.height = 1.24
-	kit.prop(id, body, Transform3D(Basis.IDENTITY, p + Vector3(0, 1.88, 0)), kit.mat("ivory"))
-	_sphere(kit, id, p + Vector3(0, 2.67, 0), 0.24, kit.mat("ivory"))
-	# Two swept wings give the niche a readable silhouette from the entrance.
-	for side in [-1.0, 1.0]:
-		for i in 4:
-			var a := Vector3(side * 0.26, 2.27 - i * 0.13, 0)
-			var b := Vector3(side * (0.67 + i * 0.09), 2.86 - i * 0.23, 0.05)
-			_segment(kit, id, p + a, p + b, 0.065 - i * 0.009, kit.mat("gold"))
+	kit.cylinder_solid(id, p, 0.55, 1.12, kit.mat("marble_black"))
+	_cylinder(kit, id, p + Vector3(0, 1.16, 0), 0.6, 0.08, kit.mat("marble_white"))
+	kit.model(id, "marble_bust_01", Transform3D(Basis(Vector3.UP, PI * 0.5), p + Vector3(0, 1.21, 0)), 0.96, "none")
+	kit.label(id, "THE FOUNDER", Vector3(-9.16, 1.5, 25), PI * 0.5, 25, Color(0.92, 0.78, 0.5))
+
+
+static func _wall_art(kit: LevelKit, id: String) -> void:
+	# The large scanned frame holds a real painted canvas at eye level on the west wall.
+	var facing := Basis(Vector3.UP, PI * 0.5)
+	var centre := Vector3(-9.32, 2.86, 29.3)
+	_box(kit, id, Vector3(-9.51, 2.86, 29.3), Vector3(0.035, 2.35, 3.15), kit.mat("wood_dark"))
+	kit.model(id, "fancy_picture_frame_01", Transform3D(facing, centre), 2.18, "none")
+	var canvas := QuadMesh.new()
+	canvas.size = Vector2(2.27, 1.52)
+	var paint := StandardMaterial3D.new()
+	paint.albedo_texture = load("res://assets/art/foyer_moonlit_museum.png")
+	paint.roughness = 0.88
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	kit.prop(id, canvas, Transform3D(facing, centre + Vector3(0.065, 0, 0)), paint)
+	_box(kit, id, Vector3(-8.97, 4.20, 29.3), Vector3(0.13, 0.07, 1.0), kit.mat("brass"))
+	_box(kit, id, Vector3(-8.96, 4.15, 29.3), Vector3(0.10, 0.018, 0.85), kit.mat("emissive_warm"))
+	kit.spot(id, Vector3(-8.95, 4.12, 29.3), centre, Color(1, 0.74, 0.46), 1.1, 4.2, 51.0)
+	# Mirror opposite the bust, away from the east service door at z=28..30.
+	kit.model(id, "ornate_mirror_01", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(9.46, 2.8, 23.7)), 1.86, "none")
+	_box(kit, id, Vector3(9.02, 4.0, 23.7), Vector3(0.13, 0.07, 0.85), kit.mat("brass"))
+	_box(kit, id, Vector3(9.02, 3.95, 23.7), Vector3(0.10, 0.018, 0.7), kit.mat("emissive_warm"))
+	kit.spot(id, Vector3(9.0, 3.92, 23.7), Vector3(9.42, 2.8, 23.7), Color(1, 0.74, 0.46), 0.8, 3.8, 50.0)
+	kit.model(id, "fancy_picture_frame_02", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(9.46, 2.8, 25.9)), 1.58, "none")
 
 
 static func _bench(kit: LevelKit, id: String, p: Vector3) -> void:
