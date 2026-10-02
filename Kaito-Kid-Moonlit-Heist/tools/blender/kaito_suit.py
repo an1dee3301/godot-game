@@ -66,22 +66,66 @@ for v in tv:
     target = loc + n * (0.022 if v.co.z > 0.9 else 0.03)
     v.co = v.co.lerp(target, 0.72)
 
+# Fit only the arm-weighted jacket sleeves. Fade the adjustment into the
+# shoulder so the jacket body and its seam keep their tailored shape.
+arm_groups = {g.index for g in body.vertex_groups
+              if "UpperArm" in g.name or "LowerArm" in g.name}
+lower_arm_groups = {g.index for g in body.vertex_groups if "LowerArm" in g.name}
+for v in tv:
+    weights = v[deform] if deform is not None else {}
+    arm_weight = sum(weights.get(group, 0.0) for group in arm_groups)
+    if arm_weight <= 0.45: continue
+    blend = max(0.0, min(1.0, (arm_weight - 0.45) / 0.35))
+    blend = blend * blend * (3.0 - 2.0 * blend)
+    lower_weight = sum(weights.get(group, 0.0) for group in lower_arm_groups)
+    # Compress the ribbed wrist band to a short, clean sleeve edge.
+    if lower_weight > 0.5 and v.co.z < 1.315:
+        v.co.z += 0.018 * min(1.0, (1.315 - v.co.z) / 0.04) * blend
+    loc, n, i, d = bvh.find_nearest(v.co)
+    if loc is not None:
+        v.co = v.co.lerp(loc + n * 0.0135, 0.85 * blend)
+
 # 5) Lapels: fold a strip outward along each side of the V opening.
 bm.edges.ensure_lookup_table()
 v_edges = [e for e in bm.edges if e.is_boundary and all(v in tv for v in e.verts)
            and all(v.co.y > 0.0 and 1.1 < v.co.z < 1.43 for v in e.verts)]
-res = bmesh.ops.extrude_edge_only(bm, edges=v_edges)
-lap_v = [g for g in res["geom"] if isinstance(g, bmesh.types.BMVert)]
+# Sample only the jacket, before adding the folded faces to the mesh.
 jf = [f for f in bm.faces if f.material_index == TOPS]
 jv = list({v for f in jf for v in f.verts}); jidx = {v: i for i, v in enumerate(jv)}
 jbvh = BVHTree.FromPolygons([v.co.copy() for v in jv], [[jidx[v] for v in f.verts] for f in jf])
+res = bmesh.ops.extrude_edge_only(bm, edges=v_edges)
+lap_v = [g for g in res["geom"] if isinstance(g, bmesh.types.BMVert)]
+# Keep the fold attached to its original edge, including its skin weights.
 for v in lap_v:
+    source = next((e.other_vert(v) for e in v.link_edges
+                   if e.other_vert(v) in tv), None)
+    if source is not None and deform is not None:
+        for bone, weight in source[deform].items():
+            v[deform][bone] = weight
+
+# Relax only the free edge's height. The cut edge has uneven vertical spacing;
+# carrying that spacing straight across the fold makes thin, pointed triangles.
+lap_z = {}
+for side in (-1, 1):
+    chain = sorted((v for v in lap_v if v.co.x * side > 0), key=lambda v: v.co.z)
+    if len(chain) < 3: continue
+    heights = [v.co.z for v in chain]
+    for _ in range(2):
+        heights = [heights[0]] + [0.6 * heights[i] + 0.2 * (heights[i-1] + heights[i+1])
+                                    for i in range(1, len(chain)-1)] + [heights[-1]]
+    lap_z.update(zip(chain, heights))
+
+for v in lap_v:
+    z = lap_z.get(v, v.co.z)
     side = 1.0 if v.co.x > 0 else -1.0
-    w = 0.03 + (v.co.z - 1.1) * 0.2
-    if 1.335 < v.co.z < 1.375: w *= 0.3          # notch between lapel and collar
-    p = v.co + Vector((side * w, 0.0, 0.0))
+    # A continuous width curve with a single, deliberate notch at collar height.
+    notch = max(0.0, 1.0 - abs(z - 1.35) / 0.035)
+    width = 0.03 + (z - 1.1) * 0.2 - 0.052 * notch * notch
+    x = side * (v_half(z) + width)
+    p = Vector((x, v.co.y, z))
     loc, n, i, d = jbvh.find_nearest(p)
-    v.co = (loc + n * 0.007) if loc is not None else p
+    # Use the jacket only for depth: nearest-point X/Z jumps cause edge spikes.
+    v.co = Vector((x, (loc.y if loc is not None else p.y) + 0.007, z))
 for f in [g for g in res["geom"] if isinstance(g, bmesh.types.BMFace)]:
     f.material_index = TOPS
     for l in f.loops: l[uvl].uv = clean_uv
