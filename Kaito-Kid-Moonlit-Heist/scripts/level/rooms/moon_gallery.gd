@@ -3,6 +3,7 @@ extends RefCounted
 
 static var _meshes: Dictionary = {}
 static var _painting: StandardMaterial3D
+static var _chart: StandardMaterial3D
 
 
 static func dress(kit: LevelKit, room_id: String) -> void:
@@ -57,8 +58,16 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 
 	# Observatory instruments are offset from the central route and the
 	# inspector's z=-22 sweep. Their bases double as crouch-height cover.
-	_telescope(kit, room_id, Vector3(8.0, 0, -15.3))
+	_telescope(kit, room_id, Vector3(5.6, 0, -16.2))
 	_orrery(kit, room_id, Vector3(-8.0, 0, -26.1))
+	# Secondary islands give each side of the marble axis a sequence of cover
+	# and exhibits without closing the balcony or the inspector's z=-22 lane.
+	_globe(kit, room_id, Vector3(-5.0, 0, -25.6), 0.58)
+	_globe(kit, room_id, Vector3(5.1, 0, -26.2), 0.43)
+	kit.model(room_id, "painted_wooden_bench", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-5.1, 0, -11.3)), 0.89)
+	kit.model(room_id, "painted_wooden_bench", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(5.0, 0, -19.0)), 0.89)
+	for p in [Vector3(-6.0, 0.024, -25.5), Vector3(5.5, 0.024, -16.0), Vector3(5.0, 0.024, -26.1)]:
+		kit.prop(room_id, _cylinder(1.8, 0.012, 48), Transform3D(Basis.IDENTITY, p), kit.mat("carpet_blue"))
 	kit.solid(room_id, Vector3(8.1, 0, -25.2), Vector3(2.8, 1.13, 1.15), navy)
 	kit.prop(room_id, _box(Vector3(2.9, 0.12, 1.24)), Transform3D(Basis.IDENTITY, Vector3(8.1, 1.16, -25.2)), brass)
 	kit.solid(room_id, Vector3(4.7, 0, -12.8), Vector3(2.4, 1.1, 0.9), wood)
@@ -73,11 +82,18 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		for z in [-14.3, -25.8]:
 			var x: float = side * 11.7
 			kit.model(room_id, "Sofa_01", Transform3D(Basis(Vector3.UP, -side * PI * 0.5), Vector3(x, 0, z)), 0.8)
-			_box_prop(kit, room_id, Vector3(side * 13.35, 3.8, z), Vector3(0.07, 3.65, 3.5), kit.mat("plaster"))
-			_wall_painting(kit, room_id, Vector3(side * 13.27, 3.15, z), -side * PI * 0.5)
+			_box_prop(kit, room_id, Vector3(side * 13.35, 3.8, z), Vector3(0.07, 3.65, 3.8), kit.mat("plaster"))
+			_wall_painting(kit, room_id, Vector3(side * 13.27, 3.25, z), -side * PI * 0.5)
 			var sconce := Vector3(side * 13.25, 4.9, z)
 			kit.model(room_id, "industrial_caged_sconce", Transform3D(Basis(Vector3.UP, -side * PI * 0.5), sconce), 0.43, "none")
-			kit.omni(room_id, sconce + Vector3(-side * 0.28, 0, 0), Color(1.0, 0.72, 0.43), 1.0, 4.8)
+			kit.omni(room_id, sconce + Vector3(-side * 0.28, 0, 0), Color(1.0, 0.77, 0.55), 1.7, 5.3)
+			# A discreet brass picture light below the sconce is aimed at the canvas.
+			_picture_light(kit, room_id, Vector3(side * 13.05, 4.62, z), Vector3(side * 13.0, 3.1, z))
+		_star_chart(kit, room_id, Vector3(side * 13.27, 3.24, -20.0), -side * PI * 0.5)
+		_picture_light(kit, room_id, Vector3(side * 13.05, 4.57, -20.0), Vector3(side * 13.0, 3.0, -20.0))
+		# Smaller south-wall canvases complete the eye-level rhythm at the entry.
+		_star_chart(kit, room_id, Vector3(side * 9.0, 3.0, -8.48), PI)
+		_picture_light(kit, room_id, Vector3(side * 9.0, 4.48, -8.73), Vector3(side * 9.0, 3.0, -8.7))
 	for x in [-11.2, 11.2]:
 		kit.model(room_id, "chinese_screen_panels", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, 0, -28.3)), 1.85)
 
@@ -87,7 +103,7 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		_box_prop(kit, room_id, Vector3(x - 1.45, 3.25, -29.42), Vector3(0.1, 4.55, 0.13), ivory)
 		_box_prop(kit, room_id, Vector3(x + 1.45, 3.25, -29.42), Vector3(0.1, 4.55, 0.13), ivory)
 		_box_prop(kit, room_id, Vector3(x, 5.56, -29.42), Vector3(3.0, 0.11, 0.13), gold)
-		kit.spot(room_id, Vector3(x, 5.85, -29.2), Vector3(x * 0.82, 0.15, -22.0), Color(0.53, 0.67, 1.0), 1.5, 10.0, 31.0)
+		kit.spot(room_id, Vector3(x, 5.85, -29.2), Vector3(x * 0.82, 0.15, -22.0), Color(0.59, 0.72, 1.0), 2.5, 10.0, 35.0)
 	for x in [-3.03, 3.03]:
 		_box_prop(kit, room_id, Vector3(x, 3.3, -29.42), Vector3(0.28, 5.75, 0.23), brass)
 		_box_prop(kit, room_id, Vector3(x, 3.55, -29.12), Vector3(0.55, 4.9, 0.2), blue)
@@ -105,8 +121,11 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	kit.spot(room_id, Vector3(-6.2, 5.55, -15.8), moon_at, Color(0.68, 0.79, 1.0), 3.0, 7.0, 40.0, true)
 	for p in [Vector3(0, 5.04, -14.0), Vector3(0, 5.04, -24.8)]:
 		kit.model(room_id, "Chandelier_01", Transform3D(Basis.IDENTITY, p), 1.42, "none")
-		kit.omni(room_id, p + Vector3(0, 0.36, 0), Color(1.0, 0.72, 0.43), 1.7, 7.5)
-	kit.omni(room_id, Vector3(0, 3.5, -20), Color(0.56, 0.68, 0.95), 0.42, 11.0)
+		kit.omni(room_id, p + Vector3(0, -0.18, 0), Color(1.0, 0.79, 0.58), 3.1, 8.4)
+	for p in [Vector3(5.6, 5.95, -16.2), Vector3(-8.0, 5.95, -26.1), Vector3(5.1, 5.95, -26.2)]:
+		kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, p), 0.48, "none")
+		kit.spot(room_id, p + Vector3(0, -0.43, 0), Vector3(p.x, 1.0, p.z), Color(1.0, 0.82, 0.61), 2.3, 7.0, 31.0)
+	kit.omni(room_id, Vector3(0, 3.5, -20), Color(0.64, 0.75, 1.0), 0.65, 10.0)
 	kit.label(room_id, "THE HEAVENS IN MOTION", Vector3(0, 5.72, -8.59), PI, 34, Color(0.85, 0.76, 0.53))
 
 
@@ -144,10 +163,58 @@ static func _orrery(kit: LevelKit, room_id: String, pos: Vector3) -> void:
 
 static func _wall_painting(kit: LevelKit, room_id: String, pos: Vector3, yaw: float) -> void:
 	var basis := Basis(Vector3.UP, yaw)
-	kit.model(room_id, "fancy_picture_frame_02", Transform3D(basis, pos - Vector3(0, 0.87, 0)), 1.74, "none")
+	kit.model(room_id, "fancy_picture_frame_02", Transform3D(basis, pos - Vector3(0, 1.19, 0)), 2.38, "none")
 	var canvas := QuadMesh.new()
-	canvas.size = Vector2(1.08, 1.27)
+	canvas.size = Vector2(1.48, 1.76)
 	kit.prop(room_id, canvas, Transform3D(basis, pos + basis.z * 0.055), _painting_material())
+
+
+static func _star_chart(kit: LevelKit, room_id: String, pos: Vector3, yaw: float) -> void:
+	var basis := Basis(Vector3.UP, yaw)
+	kit.model(room_id, "fancy_picture_frame_02", Transform3D(basis, pos - Vector3(0, 1.11, 0)), 2.22, "none")
+	var canvas := QuadMesh.new()
+	canvas.size = Vector2(1.38, 1.64)
+	kit.prop(room_id, canvas, Transform3D(basis, pos + basis.z * 0.055), _chart_material())
+
+
+static func _picture_light(kit: LevelKit, room_id: String, pos: Vector3, target: Vector3) -> void:
+	kit.prop(room_id, _cylinder(0.035, 0.94, 12), Transform3D(Basis(Vector3.FORWARD, PI * 0.5), pos), kit.mat("brass"))
+	kit.spot(room_id, pos, target, Color(1.0, 0.82, 0.62), 1.9, 3.7, 43.0)
+
+
+static func _globe(kit: LevelKit, room_id: String, pos: Vector3, radius: float) -> void:
+	var brass := kit.mat("brass")
+	kit.cylinder_solid(room_id, pos, 0.66, 0.82, kit.mat("marble_black"), 24)
+	kit.prop(room_id, _cylinder(0.72, 0.085, 32), Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.86, 0)), brass)
+	var centre := pos + Vector3(0, 1.58, 0)
+	kit.prop(room_id, _sphere(radius, 32), Transform3D(Basis.IDENTITY, centre), kit.pbr("monastery_stone_floor", 0.8, Color(0.68, 0.79, 0.91)))
+	_ring(kit, room_id, centre, radius + 0.085, 0.025, Basis(Vector3.RIGHT, 0.38), brass)
+	kit.model(room_id, "seadogs_compass", Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.93, 0.48)), 0.10, "none")
+
+
+static func _chart_material() -> StandardMaterial3D:
+	if _chart != null:
+		return _chart
+	var img := Image.create(256, 256, false, Image.FORMAT_RGB8)
+	for y in 256:
+		for x in 256:
+			var uv := Vector2(float(x) / 255.0, float(y) / 255.0)
+			var grain := sin(float(x) * 0.31 + float(y) * 0.17) * 0.012
+			var color := Color(0.065 + grain, 0.115 + grain, 0.19 + grain)
+			var r := (uv - Vector2(0.5, 0.5)).length()
+			if absf(r - 0.36) < 0.003 or absf(r - 0.24) < 0.002:
+				color = Color(0.51, 0.45, 0.29)
+			for i in 17:
+				var star := Vector2(fposmod(sin(float(i) * 9.23) * 14.17, 0.85) + 0.075,
+					fposmod(cos(float(i) * 6.71) * 11.31, 0.85) + 0.075)
+				if uv.distance_to(star) < (0.009 if i % 3 == 0 else 0.005):
+					color = Color(0.94, 0.83, 0.57)
+			img.set_pixel(x, y, color)
+	_chart = StandardMaterial3D.new()
+	_chart.albedo_texture = ImageTexture.create_from_image(img)
+	_chart.roughness = 0.9
+	_chart.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _chart
 
 
 static func _painting_material() -> StandardMaterial3D:

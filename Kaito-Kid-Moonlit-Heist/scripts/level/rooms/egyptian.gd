@@ -14,6 +14,8 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	var gold := kit.mat("gold")
 	var lapis := kit.mat("lapis")
 	var dark := kit.mat("wood_dark")
+	var ivory := kit.mat("marble_white")
+	var brass := kit.mat("brass")
 	kit.solid(room_id, Vector3(-26, 0.01, 26), Vector3(22.9, 0.018, 10.9),
 		kit.pbr("large_sandstone_blocks", 1.5, Color(0.87, 0.72, 0.50)), 0.0, false)
 	for x in [-35.9, -16.1]:
@@ -23,6 +25,12 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 		for y in [0.24, 1.12, 5.62]:
 			kit.solid(room_id, Vector3(x, y, 26), Vector3(0.1, 0.08, 10.0),
 				gold if y == 1.12 else sand, 0.0, false)
+	# A woven field groups the objects and avoids an unbroken strip of dark floor.
+	for x in [-32.0, -25.0, -18.0]:
+		kit.solid(room_id, Vector3(x, 0.035, 27.8), Vector3(5.2, 0.025, 6.2),
+			kit.pbr("velour_velvet", 1.1, Color(0.43, 0.27, 0.13)), 0.0, false)
+		for z in [24.68, 30.92]:
+			kit.solid(room_id, Vector3(x, 0.065, z), Vector3(5.25, 0.015, 0.06), gold, 0.0, false)
 
 	# The actual jewel and its glass case are placed by MuseumLevel at (-33, 27).
 	# A high portal draws the eye to it without obstructing interaction.
@@ -51,6 +59,20 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_coffin_case(kit, room_id, Vector3(-28.65, 0, 29.5), lapis, gold, kit.mat("ivory"))
 	_coffin_case(kit, room_id, Vector3(-20.5, 0, 29.6), sand, gold, lapis)
 	_canopic(kit, room_id, Vector3(-15.45, 0, 26.6), dark, kit.mat("papyrus"), gold)
+	# Shallow north-wall tables sit above the patrol line and carry individual finds.
+	for spec in [
+		[Vector3(-31.5, 0, 21.35), "antique_ceramic_vase_01", 0.48],
+		[Vector3(-19.5, 0, 21.35), "ceramic_vase_02", 0.45],
+	]:
+		var p: Vector3 = spec[0]
+		_display_table(kit, room_id, p, sand, ivory, gold)
+		kit.model(room_id, spec[1], Transform3D(Basis.IDENTITY, p + Vector3.UP * 0.9), spec[2], "none")
+	# A central register of small artefacts fills the gap between the two coffins.
+	var table_pos := Vector3(-24.55, 0, 29.6)
+	_display_table(kit, room_id, table_pos, sand, ivory, gold)
+	for i in 3:
+		kit.model(room_id, ["ceramic_vase_01", "brass_vase_03", "antique_ceramic_vase_01"][i],
+			Transform3D(Basis.IDENTITY, table_pos + Vector3(-0.66 + i * 0.66, 0.9, 0)), 0.38, "none")
 	for z in [22.6, 27.0]:
 		_glyph_panel(kit, room_id, Vector3(-14.46, 3.3, z), sand, gold)
 	kit.solid(room_id, Vector3(-34.9, 0, 30.4), Vector3(1.6, 0.82, 0.85), dark)
@@ -59,21 +81,51 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	kit.model(room_id, "brass_vase_01", Transform3D(Basis.IDENTITY,
 		Vector3(-18.9, 0.0, 30.9)), 0.88)
 	_painting(kit, room_id)
+	for x in [-34.5, -31.0, -21.0, -17.0]:
+		_wall_stele(kit, room_id, Vector3(x, 2.95, 20.33), sand, gold, brass)
 	kit.model(room_id, "fancy_picture_frame_02", Transform3D(Basis(Vector3.UP, PI),
 		Vector3(-33.3, 2.7, 31.71)), 1.48, "none")
 	var papyrus := QuadMesh.new()
 	papyrus.size = Vector2(0.92, 1.10)
 	kit.prop(room_id, papyrus, Transform3D(Basis(Vector3.UP, PI),
 		Vector3(-33.3, 3.44, 31.73)), _glyphs())
+	kit.solid(room_id, Vector3(-33.3, 3.73, 31.4), Vector3(0.55, 0.07, 0.16), brass, 0.0, false)
+	kit.spot(room_id, Vector3(-33.3, 3.7, 31.35), Vector3(-33.3, 3.0, 31.7),
+		Color(1, 0.75, 0.47), 0.65, 2.2, 48.0)
 	kit.model(room_id, "lantern_chandelier_01", Transform3D(Basis.IDENTITY,
 		Vector3(-25.5, 4.75, 27.7)), 1.05, "none")
-	kit.omni(room_id, Vector3(-25.5, 4.52, 27.7), Color(1.0, 0.72, 0.43), 1.2, 7.4)
+	kit.omni(room_id, Vector3(-25.5, 4.52, 27.7), Color(1.0, 0.72, 0.43), 2.1, 8.0)
+	for x in [-33.1, -18.2]:
+		kit.model(room_id, "lantern_chandelier_01", Transform3D(Basis.IDENTITY,
+			Vector3(x, 4.95, 26.9)), 0.88, "none")
+		kit.omni(room_id, Vector3(x, 4.68, 26.9), Color(1.0, 0.75, 0.48), 1.35, 6.6)
 	for p in [Vector3(-37.1, 2.9, 22.4), Vector3(-37.1, 2.9, 29.7),
 			Vector3(-14.9, 2.9, 22.3), Vector3(-14.9, 2.9, 29.7)]:
 		_torch(kit, room_id, p)
 	kit.spot(room_id, Vector3(-26, 4.0, 31.45), Vector3(-26, 0.4, 26.8),
 		Color(0.47, 0.66, 1.0), 1.15, 7.4, 51.0)
-	kit.omni(room_id, Vector3(-26, 3.7, 25.5), Color(0.62, 0.72, 0.89), 0.24, 8.3)
+	kit.omni(room_id, Vector3(-26, 3.7, 25.5), Color(0.62, 0.72, 0.89), 0.45, 8.3)
+
+
+static func _display_table(kit: LevelKit, id: String, p: Vector3, sand: Material, ivory: Material, gold: Material) -> void:
+	kit.solid(id, p, Vector3(2.35, 0.72, 0.92), sand)
+	kit.solid(id, p + Vector3(0, 0.04, 0), Vector3(2.46, 0.12, 1.03), gold, 0.0, false)
+	kit.solid(id, p + Vector3(0, 0.69, 0), Vector3(2.58, 0.13, 1.12), ivory, 0.0, false)
+	kit.solid(id, p + Vector3(0, 0.84, 0), Vector3(2.38, 0.025, 0.96), gold, 0.0, false)
+	for x in [-0.96, 0.96]:
+		kit.solid(id, p + Vector3(x, 0.14, 0.48), Vector3(0.11, 0.46, 0.06), gold, 0.0, false)
+
+
+static func _wall_stele(kit: LevelKit, id: String, p: Vector3, sand: Material, gold: Material, brass: Material) -> void:
+	var panel := QuadMesh.new()
+	panel.size = Vector2(1.55, 2.05)
+	kit.prop(id, panel, Transform3D(Basis.IDENTITY, p + Vector3(0, 0, 0.02)), _glyphs())
+	for side in [-1.0, 1.0]:
+		kit.solid(id, p + Vector3(side * 0.83, 0, 0.06), Vector3(0.11, 2.25, 0.13), sand, 0.0, false)
+		kit.solid(id, p + Vector3(0, side * 1.09, 0.06), Vector3(1.77, 0.1, 0.13), gold, 0.0, false)
+	kit.solid(id, p + Vector3(0, 1.24, 0.3), Vector3(0.54, 0.075, 0.2), brass, 0.0, false)
+	kit.spot(id, p + Vector3(0, 1.2, 0.35), p + Vector3(0, -0.25, 0),
+		Color(1, 0.74, 0.45), 0.7, 3.0, 46.0)
 
 
 static func _column(kit: LevelKit, id: String, p: Vector3, sand: Material, gold: Material) -> void:

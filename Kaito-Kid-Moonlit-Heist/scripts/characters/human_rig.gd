@@ -133,6 +133,81 @@ func transplant_static(source_path: String, mesh_names: Array, bone := "Head") -
 	return out
 
 
+## Copies skinned surfaces (matched by material-name fragments, e.g. ["Tops", "Tie"]) from another VRoid
+## model's "Body" mesh onto this rig's skeleton as a deforming garment. Bones the target lacks (spring
+## bones on ties etc.) are remapped to their nearest ancestor that exists. `inflate` pushes the garment
+## out along its normals (metres) so it sits over the body underneath.
+func transplant_skinned(source_path: String, surface_fragments: Array, inflate := 0.0, drop_bone_fragments: Array = []) -> MeshInstance3D:
+	var src := (load(source_path) as PackedScene).instantiate()
+	var src_skel := src.find_children("GeneralSkeleton", "Skeleton3D", true, false)[0] as Skeleton3D
+	var src_body := src_skel.find_children("Body", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	var src_skin := src_body.skin
+	var skin := Skin.new()
+	for b in src_skin.get_bind_count():
+		var bone_name := String(src_skin.get_bind_name(b))
+		var src_idx := src_skel.find_bone(bone_name) if not bone_name.is_empty() else src_skin.get_bind_bone(b)
+		bone_name = src_skel.get_bone_name(src_idx)
+		var pose := src_skin.get_bind_pose(b)
+		var idx := src_idx
+		while skeleton.find_bone(src_skel.get_bone_name(idx)) < 0 and src_skel.get_bone_parent(idx) >= 0:
+			var parent := src_skel.get_bone_parent(idx)
+			# Keep the vertex where it was: parent_rest * new_pose == bone_rest * pose.
+			pose = src_skel.get_bone_global_rest(parent).affine_inverse() * src_skel.get_bone_global_rest(idx) * pose
+			idx = parent
+		skin.add_named_bind(src_skel.get_bone_name(idx), pose)
+	var mesh := ArrayMesh.new()
+	for s in src_body.mesh.get_surface_count():
+		var mat := src_body.mesh.surface_get_material(s)
+		var mat_name := mat.resource_name if mat else ""
+		var keep := false
+		for frag in surface_fragments:
+			if String(frag) in mat_name:
+				keep = true
+		if not keep:
+			continue
+		var arrays := src_body.mesh.surface_get_arrays(s)
+		if not drop_bone_fragments.is_empty():
+			# Drop triangles whose vertices are all dominated by a dropped bone (e.g. sleeves).
+			var bones_arr: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+			var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+			var nverts: int = (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+			var per := bones_arr.size() / maxi(nverts, 1)
+			var dropped := PackedByteArray()
+			dropped.resize(nverts)
+			for v in nverts:
+				var best := 0
+				for j in per:
+					if weights[v * per + j] > weights[v * per + best]:
+						best = j
+				var bname := String(src_skin.get_bind_name(bones_arr[v * per + best]))
+				for frag in drop_bone_fragments:
+					if String(frag) in bname:
+						dropped[v] = 1
+			var idx_in: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			var idx_out := PackedInt32Array()
+			for t in range(0, idx_in.size(), 3):
+				if dropped[idx_in[t]] and dropped[idx_in[t + 1]] and dropped[idx_in[t + 2]]:
+					continue
+				idx_out.append_array([idx_in[t], idx_in[t + 1], idx_in[t + 2]])
+			arrays[Mesh.ARRAY_INDEX] = idx_out
+		if inflate != 0.0:
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			for v in verts.size():
+				verts[v] += normals[v] * inflate
+			arrays[Mesh.ARRAY_VERTEX] = verts
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, src_body.mesh.surface_get_format(s))
+		mesh.surface_set_material(mesh.get_surface_count() - 1, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "Transplant_" + "_".join(surface_fragments)
+	mi.mesh = mesh
+	mi.skin = skin
+	skeleton.add_child(mi)
+	mi.skeleton = mi.get_path_to(skeleton)
+	src.free()
+	return mi
+
+
 func build(aliases: Dictionary, loops: Array = [], shape: Dictionary = SHAPE_HERO) -> void:
 	_shape = shape
 	var scene := (load(MODEL_SCENE) as PackedScene).instantiate()

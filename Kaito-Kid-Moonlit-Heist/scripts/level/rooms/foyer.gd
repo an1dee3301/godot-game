@@ -13,9 +13,14 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_banner(kit, room_id)
 	_desk(kit, room_id)
 	_statue(kit, room_id)
+	_cloak_counter(kit, room_id)
+	_posters(kit, room_id)
 	kit.model(room_id, "Sofa_01", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-7.2, 0, 29.4)), 0.87)
 	kit.model(room_id, "ArmChair_01", Transform3D(Basis(Vector3.UP, -PI * 0.25), Vector3(-5.0, 0, 29.5)))
 	kit.model(room_id, "Ottoman_01", Transform3D(Basis.IDENTITY, Vector3(-6.2, 0, 27.8)), 0.44)
+	kit.model(room_id, "ArmChair_01", Transform3D(Basis(Vector3.UP, PI * 0.35), Vector3(-4.35, 0, 27.4)))
+	kit.model(room_id, "ClassicConsole_01", Transform3D(Basis.IDENTITY, Vector3(-6.0, 0, 30.9)), 0.95)
+	kit.model(room_id, "brass_vase_01", Transform3D(Basis.IDENTITY, Vector3(-6.0, 0.96, 30.9)), 0.50, "none")
 	_box(kit, room_id, Vector3(-7.15, 0.018, 28.8), Vector3(3.5, 0.018, 3.5), kit.mat("carpet_blue"))
 	for x in [-4.05, 4.05]:
 		kit.model(room_id, "potted_plant_01", Transform3D(Basis.IDENTITY, Vector3(x, 0, 21.3)), 1.65)
@@ -33,6 +38,11 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	kit.omni(room_id, Vector3(0, 4.9, 25.0), Color(1.0, 0.73, 0.44), 1.7, 9.0, true)
 	for x in [-6.0, 6.0]:
 		kit.spot(room_id, Vector3(x, 4.2, 31.0), Vector3(x * 0.7, 0.25, 26.8), Color(0.48, 0.62, 0.94), 0.42, 7.0, 48.0)
+	for z in [22.6, 26.0]:
+		_sconce(kit, room_id, Vector3(-9.35, 3.3, z), PI * 0.5)
+	_sconce(kit, room_id, Vector3(9.35, 3.3, 24.2), -PI * 0.5)
+	# Soft reflected chandelier light keeps the entrance legible from the spawn.
+	kit.omni(room_id, Vector3(0, 4.1, 29.0), Color(0.90, 0.78, 0.64), 0.55, 6.0)
 
 
 static func _medallion(kit: LevelKit, id: String) -> void:
@@ -69,6 +79,45 @@ static func _desk(kit: LevelKit, id: String) -> void:
 		kit.omni(id, Vector3(x, 1.48, 26.1), Color(1, 0.68, 0.37), 0.58, 2.5)
 	kit.model(id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(7, 1.04, 26.1)), 0.24, "none")
 	kit.label(id, "ADMISSION", Vector3(7.05, 2.0, 29.5), PI, 30, Color(0.95, 0.78, 0.42))
+
+
+static func _cloak_counter(kit: LevelKit, id: String) -> void:
+	# The cloak service faces the foyer arch; its case is low enough for a sightline.
+	var p := Vector3(-6.45, 0, 22.6)
+	for x in [-7.22, -5.68]:
+		kit.model(id, "ClassicConsole_01", Transform3D(Basis(Vector3.UP, PI), Vector3(x, 0, p.z)), 0.95)
+	_box(kit, id, p + Vector3(0, 0.98, 0), Vector3(3.2, 0.08, 0.72), kit.mat("marble_black"))
+	_box(kit, id, p + Vector3(0, 1.03, 0), Vector3(3.27, 0.025, 0.77), kit.mat("brass"))
+	kit.model(id, "mantel_clock_01", Transform3D(Basis.IDENTITY, p + Vector3(0, 1.05, 0)), 0.25, "none")
+	kit.label(id, "CLOAK ROOM", Vector3(-6.45, 2.0, 20.55), 0.0, 30, Color(0.97, 0.83, 0.58))
+	kit.spot(id, Vector3(-6.4, 4.9, 22.1), p + Vector3(0, 0.85, 0), Color(1.0, 0.79, 0.54), 1.3, 5.8, 48.0)
+
+
+static func _posters(kit: LevelKit, id: String) -> void:
+	# Freestanding exhibition boards flank, rather than block, the spawn axis.
+	for x in [-3.7, 3.7]:
+		var p := Vector3(x, 0, 30.0)
+		kit.cylinder_solid(id, p, 0.34, 0.13, kit.mat("marble_black"))
+		_cylinder(kit, id, p + Vector3(0, 0.18, 0), 0.25, 0.10, kit.mat("brass"))
+		kit.solid(id, p + Vector3(0, 0.26, 0), Vector3(0.10, 1.48, 0.10), kit.mat("wood_dark"))
+		var board := BoxMesh.new()
+		board.size = Vector3(1.12, 1.52, 0.07)
+		kit.prop(id, board, Transform3D(Basis(), p + Vector3(0, 1.69, 0)), kit.mat("wallpaper_navy"))
+		var edging := BoxMesh.new()
+		edging.size = Vector3(1.18, 1.59, 0.055)
+		kit.prop(id, edging, Transform3D(Basis(), p + Vector3(0, 1.69, 0.055)), kit.mat("brass"))
+		kit.prop(id, board, Transform3D(Basis(), p + Vector3(0, 1.69, 0.09)), kit.mat("wallpaper_navy"))
+		kit.label(id, "THE\nMOONLIT\nCOLLECTION", p + Vector3(0, 1.91, 0.135), 0.0, 34, Color(0.95, 0.82, 0.55))
+		kit.spot(id, p + Vector3(0, 3.5, 0.9), p + Vector3(0, 1.7, 0), Color(1.0, 0.77, 0.5), 0.8, 3.8, 42.0)
+	# A pair of low seats gives the ticket side its own waiting group.
+	kit.model(id, "painted_wooden_bench", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(4.8, 0, 21.7)), 0.89)
+	kit.model(id, "potted_plant_02", Transform3D(Basis.IDENTITY, Vector3(5.7, 0, 30.6)), 0.73)
+
+
+static func _sconce(kit: LevelKit, id: String, pos: Vector3, yaw: float) -> void:
+	var facing := Basis(Vector3.UP, yaw)
+	kit.model(id, "industrial_caged_sconce", Transform3D(facing, pos), 0.43, "none")
+	kit.omni(id, pos + facing * Vector3(0, 0, 0.34), Color(1.0, 0.72, 0.43), 0.9, 4.2)
 
 
 static func _statue(kit: LevelKit, id: String) -> void:

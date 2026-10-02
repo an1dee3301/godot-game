@@ -6,7 +6,8 @@ extends RefCounted
 ## card gun. Rest space: metres, +Y up, +Z = his front, +X = his left. Head bone (0, 1.545, 0.006),
 ## eyes y 1.608 at x ±0.023, Neck 1.456, UpperChest 1.305, hair top ~1.81.
 
-const MODEL := "res://assets/characters/vroid/base_male.glb"   ## Body + vest outfit.
+const MODEL := "res://assets/characters/vroid/hairsample_male.glb"   ## Kaito: face, hair, long-sleeved top -> jacket.
+const SHIRT_MODEL := "res://assets/characters/vroid/base_male.glb"   ## Source of the shirt + tie worn under the jacket.
 const HEAD_MODEL := "res://assets/characters/vroid/hairsample_male.glb"   ## Kaito's face and messy hair.
 const WHITE := Color(0.95, 0.955, 0.97)
 const BAND := Color(0.12, 0.26, 0.66)
@@ -22,12 +23,12 @@ static var _paint_shader: Shader
 
 
 static func build(rig: HumanRig) -> Dictionary:
-	# Swap in Kaito's anime face + messy dark hair from the HairSample model; hide the base head.
-	for mi in rig.skeleton.find_children("*", "MeshInstance3D", true, false):
-		if mi.name == "Face" or String(mi.name).begins_with("Hair"):
-			mi.visible = false
-	rig.transplant_static(HEAD_MODEL, ["Face", "Hair001"], "Head")
+	# Shirt + tie under the jacket: real skinned garments transplanted from Base_Male.
+	var shirt := rig.transplant_skinned(SHIRT_MODEL, ["Tops"], -0.022, ["Arm", "Shoulder"])
+	var tie := rig.transplant_skinned(SHIRT_MODEL, ["Tie"], 0.002)
 	_paint_outfit(rig)
+	_paint_shirt(shirt)
+	_paint_shirt(tie)
 	var cape := _build_cape(rig)
 	var head := Node3D.new()
 	head.name = "HeadGear"
@@ -62,6 +63,18 @@ static func _paint_outfit(rig: HumanRig) -> void:
 		rig.body.set_surface_override_material(s, m)
 
 
+## The transplanted shirt: shirt + vest texels both become the royal-blue dress shirt; tie stays red.
+static func _paint_shirt(shirt: MeshInstance3D) -> void:
+	for s in shirt.mesh.get_surface_count():
+		var base := shirt.mesh.surface_get_material(s) as BaseMaterial3D
+		var m := ShaderMaterial.new()
+		m.shader = _shader()
+		m.set_shader_parameter("role", 4 if base and "Tie" in base.resource_name else 5)
+		if base and base.albedo_texture:
+			m.set_shader_parameter("tex", base.albedo_texture)
+		shirt.set_surface_override_material(s, m)
+
+
 static func _shader() -> Shader:
 	if _paint_shader:
 		return _paint_shader
@@ -86,15 +99,24 @@ void fragment() {
 		else if (region == 2 || (region == 1 && rest.y < 1.47)) { col = vec3(0.13, 0.27, 0.68) * mix(0.8, 1.05, lum); rough = 0.45; }   // shirt collar
 		else { rough = 0.55; spec = 0.25; }
 	} else if (role == 1) {
-		// Shirt (bright texels) -> royal-blue dress shirt; sweater vest (dark texels) -> white vest.
-		if (lum > 0.55) {
-			col = vec3(0.16, 0.32, 0.78) * mix(0.75, 1.08, lum);
-			rough = 0.45;
-		} else {
-			col = vec3(0.96, 0.965, 0.98) * mix(0.72, 1.04, smoothstep(0.02, 0.35, lum));
-			rough = 0.62;
+		// Long-sleeved top -> white tailored jacket. Remove the hood, open the front.
+		if (rest.y > 1.42 && (rest.z < 0.02 || abs(rest.x) < 0.125)) { discard; }   // hood + hood rim
+		float open_w = -1.0;
+		if (rest.z > 0.0 && rest.y > 1.06) {
+			open_w = 0.014 + (1.45 - rest.y) * 0.235;   // open V to the button; buttoned closed below
+			if (abs(rest.x) < open_w) { discard; }
 		}
-		if (!FRONT_FACING) { col *= 0.45; }
+		float pocket = (rest.z > 0.03 && rest.y > 0.88 && rest.y < 1.13 && abs(rest.x) < 0.18) ? 1.0 : 0.0;   // hide the pouch pocket
+		float shade = mix(smoothstep(0.35, 0.95, lum), 0.8, pocket);
+		col = vec3(0.955, 0.96, 0.975) * mix(0.8, 1.04, shade);
+		float d = abs(rest.x) - open_w;
+		if (open_w > 0.0 && d < 0.006) { col *= 0.7; }                                        // piping on the cut edge
+		else if (open_w > 0.0 && d < 0.045 && rest.y > 1.18) { col *= 1.03; rough = 0.3; }      // satin lapel
+		if (rest.z > 0.0 && rest.y < 1.12 && rest.y > 1.06 && d > 0.012 && d < 0.03 && rest.x > 0.0) { col = vec3(0.86, 0.72, 0.38); rough = 0.25; }   // button
+		if (!FRONT_FACING) { col *= 0.5; }
+	} else if (role == 5) {
+		col = vec3(0.16, 0.32, 0.78) * mix(0.7, 1.08, smoothstep(0.0, 0.8, lum));   // blue dress shirt
+		rough = 0.45;
 	} else if (role == 4) {
 		col = vec3(0.75, 0.04, 0.08) * mix(0.75, 1.15, lum);   // red tie
 		rough = 0.35;

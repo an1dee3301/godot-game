@@ -55,6 +55,20 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_case(kit, room_id, Vector3(20.1, 0, -17), 3.2, 1.45)
 	_case(kit, room_id, Vector3(20.7, 0, -24.7), 2.9, 1.4)
 	_case(kit, room_id, Vector3(33.0, 0, -26.8), 2.2, 1.3)
+	# Two islands break the otherwise empty central floor into readable routes.
+	# The east patrol and the diagonal approach to the jewel remain open.
+	_case(kit, room_id, Vector3(26.0, 0, -16.8), 3.4, 1.55)
+	_case(kit, room_id, Vector3(26.0, 0, -20.0), 3.0, 1.45)
+	kit.model(room_id, "treasure_chest", Transform3D(Basis(Vector3.UP, 0.2), Vector3(26.0, 1.33, -16.8)), 0.72, "none")
+	kit.model(room_id, "brass_vase_01", Transform3D(Basis.IDENTITY, Vector3(26.0, 1.33, -20.0)), 0.67, "none")
+	# Scanned steel shelves give the west side of the laser entrance weight.
+	for z in [-12.1, -26.7]:
+		kit.model(room_id, "steel_frame_shelves_01", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(16.45, 0, z)), 2.35)
+	# A low, stepped gold reserve and individual ingots make the secure cases legible.
+	_gold_stack(kit, room_id, Vector3(26.95, 1.36, -16.75))
+	_gold_stack(kit, room_id, Vector3(32.35, 1.36, -26.8))
+	for z in [-26.8, -23.4, -12.6]:
+		_deposit_column(kit, room_id, Vector3(37.54, 2.65, z))
 	# The lid reads open from the main aisle; loose gold is contained on the case.
 	kit.model(room_id, "treasure_chest", Transform3D(Basis(Vector3.UP, deg_to_rad(22.0)), Vector3(20.1, 1.31, -17.0)), 0.74, "none")
 	_box(kit, room_id, Vector3(20.1, 1.70, -17.28), Vector3(0.92, 0.055, 0.48), kit.mat("wood_dark"))
@@ -98,14 +112,16 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	# One shadowed beam is reserved for the jewel. Every warm pool has a physical fixture.
 	kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, Vector3(28, 4.95, -25)), 1.10, "none")
 	kit.spot(room_id, Vector3(28, 5.22, -25), Vector3(28, 0.9, -25), Color(0.69, 0.84, 1.0), 5.0, 7.2, 34.0, true)
-	for p in [Vector3(20.1, 5.0, -17.0), Vector3(32.9, 5.0, -26.8)]:
+	for p in [Vector3(20.1, 5.0, -17.0), Vector3(26.0, 5.0, -18.4), Vector3(32.9, 5.0, -26.8)]:
 		kit.model(room_id, "hanging_industrial_lamp", Transform3D(Basis.IDENTITY, p), 0.95, "none")
-		kit.omni(room_id, p + Vector3(0, -0.55, 0), Color(1.0, 0.72, 0.43), 1.8, 6.2)
+		kit.omni(room_id, p + Vector3(0, -0.55, 0), Color(1.0, 0.78, 0.55), 2.6, 7.0)
 	for p in [Vector3(18.4, 3.4, -8.66), Vector3(33.5, 3.4, -8.66), Vector3(37.55, 3.4, -25.8)]:
 		var yaw := PI if p.z > -9.0 else -PI * 0.5
 		kit.model(room_id, "industrial_caged_sconce", Transform3D(Basis(Vector3.UP, yaw), p), 0.43, "none")
-		kit.omni(room_id, p + Vector3(0, 0.15, -0.28 if p.z > -9.0 else 0), Color(1.0, 0.70, 0.40), 1.15, 4.8)
-	kit.omni(room_id, Vector3(26, 3.8, -18), Color(0.60, 0.75, 1.0), 0.42, 11.0)
+		kit.omni(room_id, p + Vector3(0, 0.15, -0.28 if p.z > -9.0 else 0), Color(1.0, 0.76, 0.52), 1.8, 5.3)
+	# The high window throws a cool patch across the floor, balancing the amber cases.
+	kit.spot(room_id, Vector3(26, 5.15, -29.18), Vector3(27.2, 0.1, -23.2), Color(0.59, 0.74, 1.0), 2.2, 9.0, 35.0)
+	kit.omni(room_id, Vector3(26, 3.8, -18), Color(0.68, 0.78, 1.0), 0.62, 10.0)
 	var security_red := StandardMaterial3D.new()
 	security_red.albedo_color = Color(0.8, 0.07, 0.09)
 	security_red.emission_enabled = true
@@ -122,8 +138,33 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 
 static func _case(kit: LevelKit, room_id: String, pos: Vector3, width: float, depth: float) -> void:
 	kit.solid(room_id, pos, Vector3(width, 1.12, depth), kit.mat("iron"))
+	_box(kit, room_id, pos + Vector3(0, 0.08, 0), Vector3(width + 0.12, 0.12, depth + 0.12), kit.mat("marble_black"))
 	_box(kit, room_id, pos + Vector3(0, 1.16, 0), Vector3(width + 0.08, 0.08, depth + 0.08), kit.mat("brass"))
 	_box(kit, room_id, pos + Vector3(0, 1.26, 0), Vector3(width - 0.16, 0.10, depth - 0.16), kit.mat("glass"))
+	for dx in [-1.0, 1.0]:
+		for dz in [-1.0, 1.0]:
+			kit.prop(room_id, _cylinder(0.045, 0.22, 12), Transform3D(Basis.IDENTITY,
+				pos + Vector3(dx * (width * 0.5 - 0.12), 1.34, dz * (depth * 0.5 - 0.12))), kit.mat("gold"))
+
+
+static func _gold_stack(kit: LevelKit, room_id: String, pos: Vector3) -> void:
+	var bars: Array[Transform3D] = []
+	for layer in 3:
+		for index in 4 - layer:
+			bars.append(Transform3D(Basis.IDENTITY, pos + Vector3((float(index) - (3.0 - layer) * 0.5) * 0.29,
+				float(layer) * 0.105, 0)))
+	kit.multi(room_id, _box_mesh(Vector3(0.25, 0.085, 0.48)), bars, kit.mat("gold"))
+
+
+static func _deposit_column(kit: LevelKit, room_id: String, pos: Vector3) -> void:
+	var iron := kit.mat("iron")
+	var brass := kit.mat("brass")
+	_box(kit, room_id, pos, Vector3(0.18, 3.5, 2.5), iron)
+	for row in 4:
+		for col in 2:
+			var p := Vector3(pos.x - 0.12, 1.36 + row * 0.82, pos.z - 0.56 + col * 1.12)
+			_box(kit, room_id, p, Vector3(0.08, 0.68, 0.98), brass)
+			kit.prop(room_id, _sphere(0.055), Transform3D(Basis.IDENTITY, p + Vector3(-0.065, 0, 0)), iron)
 
 
 static func _box(kit: LevelKit, room_id: String, centre: Vector3, size: Vector3, material: Material) -> void:

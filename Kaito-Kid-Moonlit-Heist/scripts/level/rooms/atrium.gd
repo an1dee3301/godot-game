@@ -15,14 +15,18 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_chandelier(kit, room_id, centre)
 	_banners(kit, room_id)
 	_furniture(kit, room_id)
+	_exhibit_islands(kit, room_id)
 	_wall_art(kit, room_id)
 	# Cool skylight and small perimeter bounce preserve the stealth light pools.
-	kit.spot(room_id, centre + Vector3(0.8, 8.75, 0), centre + Vector3(0, 1.0, 0), Color(0.65, 0.77, 1.0), 1.5, 11.0, 44.0)
+	kit.spot(room_id, centre + Vector3(0.8, 8.75, 0), centre + Vector3(0, 1.0, 0), Color(0.65, 0.77, 1.0), 2.0, 12.0, 52.0)
 	for x in [-10.0, 10.0]:
 		kit.omni(room_id, Vector3(x, 3.0, 7.8), Color(0.74, 0.82, 1.0), 0.27, 5.5)
 	for z in [-5.3, 15.8]:
 		for x in [-8.9, 8.9]:
 			_pendant(kit, room_id, Vector3(x, 4.8, z), 0.0 if z < 0.0 else PI)
+	for x in [-12.8, 12.8]:
+		for z in [-3.5, 5.8, 15.7]:
+			_sconce(kit, room_id, Vector3(x, 3.15, z), -PI * 0.5 if x > 0.0 else PI * 0.5)
 
 
 static func _fountain(kit: LevelKit, room_id: String, centre: Vector3) -> void:
@@ -144,6 +148,42 @@ static func _furniture(kit: LevelKit, room_id: String) -> void:
 		var p := Vector3(x, 0, 0.1)
 		kit.model(room_id, "ClassicConsole_01", Transform3D(Basis.IDENTITY, p), 0.95)
 		kit.model(room_id, "antique_ceramic_vase_01", Transform3D(Basis.IDENTITY, p + Vector3.UP * 0.95), 0.44, "none")
+
+
+static func _exhibit_islands(kit: LevelKit, room_id: String) -> void:
+	# Four exhibits frame the fountain without interrupting the Inspector's x=+/-9 lane.
+	for x in [-5.45, 5.45]:
+		for z in [-3.3, 11.7]:
+			var p := Vector3(x, 0, z)
+			_cylinder(kit, room_id, p + Vector3(0, 0.10, 0), 1.18, 1.25, 0.20, kit.mat("marble_black"))
+			_cylinder(kit, room_id, p + Vector3(0, 0.22, 0), 1.08, 1.12, 0.05, kit.mat("brass"))
+			kit.cylinder_solid(room_id, p + Vector3(0, 0.24, 0), 0.52, 1.12, kit.mat("marble_white"))
+			_cylinder(kit, room_id, p + Vector3(0, 1.39, 0), 0.61, 0.58, 0.09, kit.mat("marble_black"))
+			if z < 0.0:
+				kit.model(room_id, "marble_bust_01", Transform3D(Basis(Vector3.UP, -signf(x) * 0.45), p + Vector3(0, 1.44, 0)), 1.12, "none")
+			else:
+				kit.model(room_id, "bronze_whale_statue", Transform3D(Basis(Vector3.UP, -signf(x) * 0.5), p + Vector3(0, 1.44, 0)), 1.02, "none")
+			kit.spot(room_id, p + Vector3(0.7, 5.0, 0.8), p + Vector3(0, 1.3, 0), Color(1.0, 0.79, 0.55), 1.2, 6.2, 38.0)
+	# Low seating and planting make cover and occupy the broad spaces beside the basin.
+	for x in [-6.2, 6.2]:
+		for z in [4.0, 8.5]:
+			kit.model(room_id, "painted_wooden_bench", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, 0, z)), 0.89)
+	for x in [-10.7, 10.7]:
+		for z in [3.0, 11.4]:
+			kit.model(room_id, "planter_box_01", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, 0, z)), 0.62)
+	# Information kiosk near the southern wall, clear of the foyer arch.
+	var kiosk := Vector3(0, 0, 17.7)
+	_cylinder(kit, room_id, kiosk + Vector3(0, 0.08, 0), 0.62, 0.65, 0.16, kit.mat("marble_black"))
+	kit.cylinder_solid(room_id, kiosk + Vector3(0, 0.16, 0), 0.49, 1.12, kit.mat("wood_dark"))
+	_cylinder(kit, room_id, kiosk + Vector3(0, 1.32, 0), 0.60, 0.57, 0.08, kit.mat("brass"))
+	kit.label(room_id, "GALLERIES", kiosk + Vector3(0, 1.13, -0.79), 0.0, 29, Color(0.95, 0.83, 0.58))
+	kit.model(room_id, "book_encyclopedia_set_01", Transform3D(Basis.IDENTITY, kiosk + Vector3(0, 1.36, 0)), 0.25, "none")
+
+
+static func _sconce(kit: LevelKit, room_id: String, pos: Vector3, yaw: float) -> void:
+	var facing := Basis(Vector3.UP, yaw)
+	kit.model(room_id, "industrial_caged_sconce", Transform3D(facing, pos), 0.43, "none")
+	kit.omni(room_id, pos + facing * Vector3(0, 0, 0.34), Color(1.0, 0.72, 0.43), 1.0, 4.6)
 
 
 static func _wall_art(kit: LevelKit, room_id: String) -> void:

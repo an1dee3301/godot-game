@@ -37,6 +37,7 @@ var _jump_buffer := 0.0
 var _air_time := 0.0
 var _landing_time := 0.0
 var _jump_start_time := 0.0
+var _jumping := false
 var _step_time := 0.0
 var _fire_time := 0.0
 var _gun_hide_time := 0.0
@@ -49,7 +50,10 @@ func _ready() -> void:
 	add_to_group(KK.GROUP_PLAYER)
 	collision_layer = KK.LAYER_PLAYER
 	collision_mask = KK.LAYER_WORLD | KK.LAYER_GLASS | KK.LAYER_ENEMY
-	floor_snap_length = 0.18
+	floor_snap_length = 0.42
+	floor_max_angle = deg_to_rad(48.0)
+	floor_block_on_wall = false
+	safe_margin = 0.03
 	_collider = CollisionShape3D.new()
 	_collider.position.y = 0.9
 	var capsule := CapsuleShape3D.new()
@@ -61,7 +65,7 @@ func _ready() -> void:
 	var stand_shape := capsule.duplicate() as CapsuleShape3D
 	stand_shape.height = 1.74
 	_stand_check.shape = stand_shape
-	_stand_check.position.y = 0.91
+	_stand_check.position.y = 0.9
 	_stand_check.target_position = Vector3.ZERO
 	_stand_check.collision_mask = collision_mask
 	_stand_check.add_exception(self)
@@ -105,6 +109,12 @@ func _build_model() -> void:
 	anim.set_blend_time("walk", "run", 0.2)
 	anim.set_blend_time("run", "walk", 0.17)
 	anim.set_blend_time("walk", "idle", 0.2)
+	for from_name: String in ["idle", "walk", "run", "crouch_idle", "crouch_walk", "land"]:
+		anim.set_blend_time(from_name, "jump", 0.08)
+	anim.set_blend_time("jump", "fall", 0.1)
+	for to_name: String in ["idle", "walk", "run", "crouch_idle", "crouch_walk"]:
+		anim.set_blend_time("fall", to_name, 0.12)
+		anim.set_blend_time("land", to_name, 0.1)
 
 
 func _physics_process(delta: float) -> void:
@@ -123,21 +133,22 @@ func _physics_process(delta: float) -> void:
 	else:
 		_model.visible = true
 	var was_grounded := is_on_floor()
-	_coyote = 0.12 if was_grounded else maxf(0.0, _coyote - delta)
+	_coyote = 0.12 if was_grounded and not _jumping else maxf(0.0, _coyote - delta)
 	var input := Vector2.ZERO
 	if controls_enabled and not is_dead:
 		input = scripted_input if use_scripted_input else Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 		input = input.limit_length()
-		var wants_crouch := Input.is_action_pressed("crouch") and not use_scripted_input
+		var wants_crouch := Input.is_action_pressed("crouch")
 		_crouching = wants_crouch or (_crouching and not _can_stand())
-		_sprinting = not _crouching and input.length() > 0.15 and Input.is_action_pressed("sprint") and not use_scripted_input
-		if Input.is_action_just_pressed("jump"):
+		if _jumping:
+			_crouching = false
+		_sprinting = not _crouching and input.length() > 0.15 and Input.is_action_pressed("sprint")
+		if Input.is_action_just_pressed("jump") and _action_time <= 0.0:
 			_jump_buffer = 0.14
-		if _jump_buffer > 0.0 and _coyote > 0.0 and not _crouching:
-			velocity.y = KK.PLAYER_JUMP_VELOCITY
-			_coyote = 0.0
-			_jump_buffer = 0.0
-			_jump_start_time = 0.16
+		if _jump_buffer > 0.0 and _crouching and _can_stand():
+			_crouching = false
+		if _jump_buffer > 0.0 and _coyote > 0.0 and not _crouching and _action_time <= 0.0:
+			_start_jump()
 		if Input.is_action_just_pressed("fire"):
 			fire_card()
 		if Input.is_action_just_pressed("smoke"):
@@ -147,8 +158,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		_crouching = false
 		_sprinting = false
+		_jump_buffer = 0.0
 	var capsule := _collider.shape as CapsuleShape3D
-	capsule.height = lerpf(capsule.height, 1.2 if _crouching else 1.8, minf(1.0, delta * 12.0))
+	# The 1.05 m crawl openings need a capsule shorter than their lintel.
+	capsule.height = 0.94 if _crouching else 1.8
 	_collider.position.y = capsule.height * 0.5
 	var yaw := camera_rig.get_yaw() if camera_rig else rotation.y
 	var direction := (Basis(Vector3.UP, yaw) * Vector3(input.x, 0.0, -input.y)).normalized()
@@ -167,25 +180,32 @@ func _physics_process(delta: float) -> void:
 	if _shot_anim.is_playing() and camera_rig:
 		aim_twist = clampf(wrapf(camera_rig.get_yaw() - rotation.y, -PI, PI), -0.45, 0.45)
 	_model.rotation.y = lerp_angle(_model.rotation.y, aim_twist, 1.0 - exp(-15.0 * delta))
-	if not is_on_floor():
-		velocity.y -= 14.0 * delta
+	if not was_grounded:
+		velocity.y -= 11.0 * delta
 		_air_time += delta
-	else:
+	elif not _jumping:
 		velocity.y = minf(velocity.y, 0.0)
+	if was_grounded and not _jumping and direction.length() > 0.1:
+		_try_step(direction * speed * delta)
 	move_and_slide()
 	if not was_grounded and is_on_floor():
-		_landing_time = 0.19
-		if camera_rig:
+		_landing_time = 0.14 if _air_time > 0.18 else 0.0
+		if camera_rig and _air_time > 0.25:
 			camera_rig.land_dip(minf(1.0, _air_time / 0.5))
 		if _air_time > 0.4:
 			landed.emit()
 			KK.emit_noise(get_tree(), global_position, KK.NOISE_LAND)
 		_air_time = 0.0
-		if _jump_buffer > 0.0 and not _crouching:
-			velocity.y = KK.PLAYER_JUMP_VELOCITY
-			_jump_buffer = 0.0
-			_coyote = 0.0
-			_jump_start_time = 0.16
+		_jumping = false
+		if _jump_buffer > 0.0 and (not _crouching or _can_stand()) and _action_time <= 0.0 and not is_dead:
+			_crouching = false
+			_start_jump()
+	elif is_on_floor() and _jumping and velocity.y <= 0.0:
+		# A low ceiling can cancel lift before the body leaves the floor.
+		_jumping = false
+		_jump_start_time = 0.0
+	elif is_on_floor() and not _jumping:
+		_air_time = 0.0
 	var planar_speed := Vector2(velocity.x, velocity.z).length()
 	if is_on_floor() and planar_speed > 0.5 and not is_dead:
 		_step_time += delta
@@ -213,7 +233,7 @@ func _physics_process(delta: float) -> void:
 	elif planar_speed > 0.5:
 		state = "run" if planar_speed > 5.0 else "walk"
 	if anim.current_animation != state:
-		anim.play(state, 0.18)
+		anim.play(state, 0.08 if state == "jump" else (0.1 if state == "fall" or state == "land" else 0.14))
 	if state == "walk":
 		anim.speed_scale = clampf(planar_speed / 1.4, 0.65, 3.4)
 	elif state == "run":
@@ -225,8 +245,40 @@ func _physics_process(delta: float) -> void:
 
 
 func _can_stand() -> bool:
+	# Force the query at full standing height before changing the live capsule.
 	_stand_check.force_shapecast_update()
 	return not _stand_check.is_colliding()
+
+
+func _start_jump() -> void:
+	velocity.y = KK.PLAYER_JUMP_VELOCITY
+	_coyote = 0.0
+	_jump_buffer = 0.0
+	_jump_start_time = 0.16
+	_landing_time = 0.0
+	_jumping = true
+
+
+func _try_step(horizontal_motion: Vector3) -> void:
+	# Test the raised capsule before lifting the body onto a low prop edge.
+	if horizontal_motion.length() < 0.015 or not test_move(global_transform, horizontal_motion):
+		return
+	var rise := Vector3.UP * 0.36
+	if test_move(global_transform, rise):
+		return
+	var raised := global_transform.translated(rise)
+	var reach := horizontal_motion.normalized() * (_collider.shape as CapsuleShape3D).radius * 1.25
+	if test_move(raised, reach):
+		return
+	var query := PhysicsRayQueryParameters3D.create(global_position + rise + reach,
+		global_position + reach - Vector3.UP * 0.05, KK.LAYER_WORLD | KK.LAYER_GLASS)
+	query.exclude = [get_rid()]
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty() or hit["normal"].dot(Vector3.UP) < cos(floor_max_angle):
+		return
+	var step_height: float = hit["position"].y - global_position.y
+	if step_height > 0.02 and step_height <= 0.3:
+		global_position += reach + Vector3.UP * (step_height + 0.01)
 
 
 ## Applies damage with brief immunity, knockback, and a one-shot death signal.

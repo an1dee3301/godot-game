@@ -60,14 +60,35 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	_books_multimesh(kit, room_id, book_positions)
 	kit.label(room_id, "THE ART OF TIME", Vector3(-30.4, 2.82, -8.54), PI, 34, Color(0.88, 0.73, 0.48))
 
-	# Two real cases and a low watch vitrine compose the middle ground.
+	# A sequence of timepieces leads from the arch toward the Black Star.
 	kit.model(room_id, "wooden_display_shelves_01", Transform3D(Basis.IDENTITY, Vector3(-30.0, 0, -18.1)), 1.56)
 	kit.model(room_id, "vintage_cabinet_01", Transform3D(Basis(Vector3.UP, PI), Vector3(-19.3, 0, -27.4)), 2.58)
 	kit.model(room_id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(-30.0, 1.19, -18.1)), 0.31, "none")
 	kit.model(room_id, "seadogs_compass", Transform3D(Basis.IDENTITY, Vector3(-30.0, 0.74, -18.1)), 0.035, "none")
 	kit.model(room_id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(-19.3, 1.52, -27.03)), 0.31, "none")
 	kit.model(room_id, "seadogs_compass", Transform3D(Basis.IDENTITY, Vector3(-19.3, 0.91, -27.03)), 0.035, "none")
-	_watch_case(kit, room_id, Vector3(-25.5, 0, -18.0), 2.65, kit.mat("wood_dark"), brass, kit.mat("glass"), ivory)
+	_watch_case(kit, room_id, Vector3(-25.5, 0, -20.5), 2.65, kit.mat("wood_dark"), brass, kit.mat("glass"), ivory)
+	_watch_case(kit, room_id, Vector3(-30.5, 0, -22.6), 2.3, kit.mat("wood_dark"), brass, kit.mat("glass"), ivory)
+	_watch_case(kit, room_id, Vector3(-20.9, 0, -22.1), 2.3, kit.mat("wood_dark"), brass, kit.mat("glass"), ivory)
+	kit.model(room_id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(-30.6, 1.33, -22.6)), 0.24, "none")
+	kit.model(room_id, "mantel_clock_01", Transform3D(Basis.IDENTITY, Vector3(-20.9, 1.33, -22.1)), 0.24, "none")
+	_exhibit_spot(kit, room_id, Vector3(-30.5, 5.55, -22.6), Vector3(-30.5, 1.3, -22.6), 1.05)
+	_exhibit_spot(kit, room_id, Vector3(-20.9, 5.55, -22.1), Vector3(-20.9, 1.3, -22.1), 1.05)
+
+	# The freestanding orrery is the room's middle-ground silhouette. Its narrow
+	# pedestal is cover; the overhead rings leave a walkable route on either side.
+	_orrery(kit, room_id, Vector3(-25.8, 0, -15.9))
+	kit.label(room_id, "THE CELESTIAL ENGINE", Vector3(-25.8, 1.13, -15.12), 0.0, 28, Color(0.92, 0.75, 0.46))
+	_exhibit_spot(kit, room_id, Vector3(-25.8, 5.55, -15.9), Vector3(-25.8, 2.05, -15.9), 1.65)
+
+	# Paired reading stations occupy the otherwise empty south half while the
+	# patrol's z=-12 lane and the vent at x=-20 remain open.
+	_reading_table(kit, room_id, Vector3(-31.3, 0, -15.25))
+	_reading_table(kit, room_id, Vector3(-19.2, 0, -15.25))
+	kit.model(room_id, "ArmChair_01", Transform3D(Basis(Vector3.UP, PI), Vector3(-31.3, 0, -16.65)), 1.07)
+	kit.model(room_id, "ArmChair_01", Transform3D(Basis(Vector3.UP, PI), Vector3(-19.2, 0, -16.65)), 1.07)
+	kit.model(room_id, "wooden_bookshelf_worn", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-36.5, 0, -11.4)), 2.06)
+	kit.model(room_id, "wooden_bookshelf_worn", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-15.5, 0, -13.7)), 2.06)
 
 	# A place to pause and read sits beyond the patrol turn; the chess table is
 	# deliberately separated from the jewel pedestal at (-26, -25).
@@ -78,27 +99,121 @@ static func dress(kit: LevelKit, room_id: String) -> void:
 	kit.model(room_id, "chess_set", Transform3D(Basis.IDENTITY, Vector3(-20.6, 0.86, -14.8)), 0.10, "none")
 	kit.model(room_id, "brass_candleholders", Transform3D(Basis.IDENTITY, Vector3(-32.7, 0, -27.25)), 0.8, "none")
 	# Textile islands temper the parquet without adding collision to patrol paths.
-	_box_prop(kit, room_id, Vector3(-26.0, 0.018, -20.6), Vector3(9.0, 0.022, 3.0), kit.mat("carpet_red"))
+	_box_prop(kit, room_id, Vector3(-26.0, 0.018, -20.7), Vector3(12.0, 0.022, 5.1), kit.mat("carpet_red"))
 	_box_prop(kit, room_id, Vector3(-33.0, 0.019, -26.0), Vector3(4.3, 0.022, 3.1), kit.mat("carpet_blue"))
+	_box_prop(kit, room_id, Vector3(-25.8, 0.015, -15.6), Vector3(10.0, 0.022, 3.3), kit.mat("carpet_blue"))
 
 	# Lit archival canvases at eye level; each has its own generated image in the frame.
-	_framed_art(kit, room_id, Vector3(-23.0, 2.72, -8.53), PI, 1.35, 0)
-	_framed_art(kit, room_id, Vector3(-18.4, 2.72, -8.53), PI, 1.35, 1)
-	_framed_art(kit, room_id, Vector3(-36.53, 2.9, -14.0), PI * 0.5, 1.3, 2)
+	_framed_art(kit, room_id, Vector3(-23.0, 2.72, -8.53), PI, 1.8, 0)
+	_framed_art(kit, room_id, Vector3(-18.4, 2.72, -8.53), PI, 1.8, 1)
+	_framed_art(kit, room_id, Vector3(-37.42, 3.0, -14.0), PI * 0.5, 1.75, 2)
+	_framed_art(kit, room_id, Vector3(-37.42, 3.0, -17.0), PI * 0.5, 1.75, 0)
+	_framed_art(kit, room_id, Vector3(-14.58, 3.0, -11.4), -PI * 0.5, 1.85, 1)
 
 	# Visible 2700 K fixtures make three warm islands; only the central light casts shadows.
 	_chandelier(kit, room_id, Vector3(-26.0, 4.95, -17.4), true)
 	_chandelier(kit, room_id, Vector3(-26.0, 4.95, -24.7), false)
+	_sconce(kit, room_id, Vector3(-37.3, 3.6, -11.3), PI * 0.5)
+	_sconce(kit, room_id, Vector3(-37.3, 3.6, -25.0), PI * 0.5)
+	_sconce(kit, room_id, Vector3(-14.7, 3.6, -16.5), -PI * 0.5)
+	_sconce(kit, room_id, Vector3(-14.7, 3.6, -26.8), -PI * 0.5)
 	kit.omni(room_id, Vector3(-33.05, 2.1, -27.05), Color(1.0, 0.69, 0.37), 0.6, 4.1)
 	# The dial's window casts a cool lane across the north of the room.
 	kit.spot(room_id, Vector3(-26.0, 5.25, -29.27), Vector3(-25.5, 0.3, -23.7), Color(0.56, 0.72, 1.0), 1.25, 8.0, 37.0)
-	kit.omni(room_id, Vector3(-25.6, 3.0, -21.4), Color(0.75, 0.82, 1.0), 0.24, 5.5)
+	kit.omni(room_id, Vector3(-25.6, 3.0, -21.4), Color(0.75, 0.82, 1.0), 0.35, 6.8)
 
 
 static func _box_prop(kit: LevelKit, room_id: String, pos: Vector3, size: Vector3, material: Material) -> void:
 	var mesh := BoxMesh.new()
 	mesh.size = size
 	kit.prop(room_id, mesh, Transform3D(Basis.IDENTITY, pos), material)
+
+
+static func _orrery(kit: LevelKit, room_id: String, pos: Vector3) -> void:
+	var walnut := kit.mat("wood_dark")
+	var brass := kit.mat("brass")
+	var gold := kit.mat("gold")
+	var bronze := kit.mat("bronze")
+	kit.cylinder_solid(room_id, pos, 0.73, 0.16, walnut)
+	var taper := CylinderMesh.new()
+	taper.bottom_radius = 0.57
+	taper.top_radius = 0.40
+	taper.height = 0.73
+	taper.radial_segments = 32
+	kit.prop(room_id, taper, Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.52, 0)), walnut)
+	var capital := CylinderMesh.new()
+	capital.bottom_radius = 0.55
+	capital.top_radius = 0.62
+	capital.height = 0.14
+	capital.radial_segments = 32
+	kit.prop(room_id, capital, Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.96, 0)), brass)
+	var spindle := CylinderMesh.new()
+	spindle.top_radius = 0.045
+	spindle.bottom_radius = 0.045
+	spindle.height = 1.35
+	kit.prop(room_id, spindle, Transform3D(Basis.IDENTITY, pos + Vector3(0, 1.69, 0)), bronze)
+	kit.prop(room_id, _sphere(0.28), Transform3D(Basis.IDENTITY, pos + Vector3(0, 2.34, 0)), gold)
+	for radius in [0.56, 0.89, 1.19]:
+		var orbit := TorusMesh.new()
+		orbit.inner_radius = radius - 0.014
+		orbit.outer_radius = radius + 0.014
+		orbit.rings = 64
+		orbit.ring_segments = 8
+		kit.prop(room_id, orbit, Transform3D(Basis.IDENTITY, pos + Vector3(0, 2.22, 0)), brass)
+	var inclined := TorusMesh.new()
+	inclined.inner_radius = 1.11
+	inclined.outer_radius = 1.14
+	inclined.rings = 64
+	inclined.ring_segments = 8
+	kit.prop(room_id, inclined, Transform3D(Basis(Vector3.FORWARD, 0.48), pos + Vector3(0, 2.22, 0)), bronze)
+	for planet in [Vector3(0.52, 2.22, 0.18), Vector3(-0.78, 2.22, -0.44), Vector3(0.23, 2.22, -1.14)]:
+		kit.prop(room_id, _sphere(0.11), Transform3D(Basis.IDENTITY, pos + planet), kit.mat("ivory"))
+
+
+static func _reading_table(kit: LevelKit, room_id: String, pos: Vector3) -> void:
+	kit.model(room_id, "ClassicConsole_01", Transform3D(Basis.IDENTITY, pos), 0.95)
+	var lamp_pos := pos + Vector3(0, 0.95, 0)
+	var foot := CylinderMesh.new()
+	foot.bottom_radius = 0.13
+	foot.top_radius = 0.09
+	foot.height = 0.055
+	kit.prop(room_id, foot, Transform3D(Basis.IDENTITY, lamp_pos + Vector3(0, 0.028, 0)), kit.mat("brass"))
+	var stem := CylinderMesh.new()
+	stem.bottom_radius = 0.033
+	stem.top_radius = 0.023
+	stem.height = 0.32
+	kit.prop(room_id, stem, Transform3D(Basis.IDENTITY, lamp_pos + Vector3(0, 0.22, 0)), kit.mat("brass"))
+	var shade := CylinderMesh.new()
+	shade.bottom_radius = 0.24
+	shade.top_radius = 0.12
+	shade.height = 0.23
+	kit.prop(room_id, shade, Transform3D(Basis.IDENTITY, lamp_pos + Vector3(0, 0.45, 0)), kit.mat("ivory"))
+	kit.prop(room_id, _sphere(0.055), Transform3D(Basis.IDENTITY, lamp_pos + Vector3(0, 0.35, 0)), kit.mat("emissive_warm"))
+	kit.omni(room_id, lamp_pos + Vector3(0, 0.36, 0), Color(1.0, 0.76, 0.49), 0.7, 3.3)
+	kit.model(room_id, "book_encyclopedia_set_01", Transform3D(Basis(Vector3.UP, -0.16), pos + Vector3(-0.43, 0.95, 0.05)), 0.24, "none")
+	kit.model(room_id, "seadogs_compass", Transform3D(Basis.IDENTITY, pos + Vector3(0.45, 0.95, 0.05)), 0.04, "none")
+
+
+static func _sconce(kit: LevelKit, room_id: String, pos: Vector3, yaw: float) -> void:
+	kit.model(room_id, "brass_candleholders", Transform3D(Basis(Vector3.UP, yaw), pos - Vector3(0, 0.26, 0)), 0.45, "none")
+	kit.omni(room_id, pos + Vector3(0, 0.04, 0), Color(1.0, 0.72, 0.44), 0.9, 4.5)
+
+
+static func _exhibit_spot(kit: LevelKit, room_id: String, pos: Vector3, target: Vector3, energy: float) -> void:
+	var drop := MuseumLayout.HALL_H - pos.y - 0.24
+	var stem := CylinderMesh.new()
+	stem.top_radius = 0.018
+	stem.bottom_radius = 0.018
+	stem.height = drop
+	kit.prop(room_id, stem, Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.24 + drop * 0.5, 0)), kit.mat("brass"))
+	var housing := CylinderMesh.new()
+	housing.top_radius = 0.11
+	housing.bottom_radius = 0.16
+	housing.height = 0.24
+	housing.radial_segments = 16
+	kit.prop(room_id, housing, Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.12, 0)), kit.mat("brass"))
+	kit.prop(room_id, _sphere(0.075), Transform3D(Basis.IDENTITY, pos), kit.mat("emissive_warm"))
+	kit.spot(room_id, pos, target, Color(1.0, 0.76, 0.48), energy, 5.7, 38.0)
 
 
 static func _books_multimesh(kit: LevelKit, room_id: String, positions: Array) -> void:

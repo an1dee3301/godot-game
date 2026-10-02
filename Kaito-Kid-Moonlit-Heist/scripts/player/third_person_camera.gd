@@ -72,7 +72,7 @@ func _process(delta: float) -> void:
 	_distance = lerpf(_distance, desired_distance, 1.0 - exp(-5.0 * delta))
 	_arm.spring_length = _distance
 	var height := 1.7 if _showcase else (1.2 if crouching else 1.55)
-	_dip = lerpf(_dip, 0.0, 1.0 - exp(-12.0 * delta))
+	_dip = lerpf(_dip, 0.0, 1.0 - exp(-15.0 * delta))
 	var follow_rate := 7.0 if sprinting else 13.0
 	global_position = global_position.lerp(target.global_position + Vector3.UP * (height - _dip), 1.0 - exp(-follow_rate * delta))
 	rotation = Vector3(_pitch, _yaw, 0.0)
@@ -133,7 +133,7 @@ func shake(strength: float) -> void:
 
 ## Briefly lowers the pivot after a landing, then springs it back to eye height.
 func land_dip(strength: float) -> void:
-	_dip = maxf(_dip, 0.11 * clampf(strength, 0.0, 1.0))
+	_dip = maxf(_dip, 0.055 * clampf(strength, 0.0, 1.0))
 
 
 ## Enables a slow orbit for the title screen.
