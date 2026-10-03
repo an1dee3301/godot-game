@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dobb1ewm7cs4v"
-path="res://.godot/imported/kaito_suit_M00_000_00_FaceEyeline_00.png-e798ab0df23af90e8308ab8f68c3242b.ctex"
+path.s3tc="res://.godot/imported/kaito_suit_M00_000_00_FaceEyeline_00.png-e798ab0df23af90e8308ab8f68c3242b.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "bf066aa2baac1ac065898838e250407a"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/vroid/kaito_suit_M00_000_00_FaceEyeline_00.png"
-dest_files=["res://.godot/imported/kaito_suit_M00_000_00_FaceEyeline_00.png-e798ab0df23af90e8308ab8f68c3242b.ctex"]
+dest_files=["res://.godot/imported/kaito_suit_M00_000_00_FaceEyeline_00.png-e798ab0df23af90e8308ab8f68c3242b.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/high_quality_mode=0
 compress/lossy_quality=0.7
@@ -41,4 +42,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

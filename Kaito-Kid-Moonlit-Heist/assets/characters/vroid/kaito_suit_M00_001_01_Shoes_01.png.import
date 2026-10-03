@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://beam62i3dsw28"
-path="res://.godot/imported/kaito_suit_M00_001_01_Shoes_01.png-7c1495994a0058b215f031a6aa166a04.ctex"
+path.s3tc="res://.godot/imported/kaito_suit_M00_001_01_Shoes_01.png-7c1495994a0058b215f031a6aa166a04.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "69632c207c5a8ab0b4699ca1fab2526d"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/vroid/kaito_suit_M00_001_01_Shoes_01.png"
-dest_files=["res://.godot/imported/kaito_suit_M00_001_01_Shoes_01.png-7c1495994a0058b215f031a6aa166a04.ctex"]
+dest_files=["res://.godot/imported/kaito_suit_M00_001_01_Shoes_01.png-7c1495994a0058b215f031a6aa166a04.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/high_quality_mode=0
 compress/lossy_quality=0.7
@@ -41,4 +42,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
