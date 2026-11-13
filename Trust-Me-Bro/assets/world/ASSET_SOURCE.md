@@ -23,3 +23,19 @@ Full game-profile mesh QA passed for the showground and answer module with zero 
 Accepted static-set warnings: 23 buried contact-face pairs are retained inside fitted caps, trim, timber and TV hardware; two recessed brass caps are enclosed. These do not produce exposed overlapping surfaces. The world extends below the origin because the origin is the playable surface and the basin is deep. The pad similarly extends below its origin because its top is the play surface.
 
 The complete set was inspected in Blender material and wireframe views from the front, top and three-quarter angles, then rendered with the actual Godot shared-camera perspective and all eight modeled contestants. This review confirmed clear player silhouettes, a restrained connected set and visible trap depth. The existing gameplay suite passed all 42 checks after the replacement.
+
+## Festival dressing
+
+The set dressing around the showground was modeled for this project with `tools/build_festival.py`, using the same authored-geometry approach and palette as the showground: flat PBR materials, no images, no generated media, no downloaded meshes. It was built with Blender 5.3 through the official `bpy` Python module (`pip install bpy`, then `python tools/build_festival.py`); the script also runs inside Blender with `--background --python`. These are original project assets; no external license or attribution is required.
+
+| Runtime export | Mesh/material batches | Triangles | Purpose |
+| --- | ---: | ---: | --- |
+| `festival_dressing.glb` | 13 | 51,648 | Two spectator barges with tiered stands, two lighting towers, stage lamps, string lights and bunting |
+| `crowd_fan.glb` | 2 | 1,168 | One crowd fan, instanced 60 times with per-instance colour |
+| `party_balloon.glb` | 2 | 1,012 | One balloon with string, tinted per instance |
+| `sailboat.glb` | 6 | 978 | Small sailing dinghy for the lagoon |
+| `buoy.glb` | 3 | 1,240 | Channel buoy with a lamp |
+
+Editable sources are saved beside the others in `tools/source`. `festival_layout.json` records seat, lamp and balloon anchor positions; `scripts/stage_show.gd` mirrors those formulas so the game does not need the JSON at runtime. Materials named `bulb_*` are emissive and are dimmed by the game during Lights Out. The dressing adds no collision.
+
+The lagoon, the slop in the trap basin, light beams and particles are procedural shaders and engine particles written in GDScript, not image assets. The lagoon surface was raised to y=-4.95 so hulls sit in the water; the y=-6 elimination plane and y=-8 catch floor are unchanged.

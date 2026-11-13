@@ -17,6 +17,14 @@ var paused: bool = false
 var camera_home: Vector3 = Vector3(0,16,24)
 var _countdown_number: int = 0
 var _score_memory: Dictionary = {}
+var shake_enabled: bool = true
+var _shake: float = 0.0
+var _shake_clock: float = 0.0
+var _view_offset: Vector2 = Vector2(0.0,0.5)
+var _view_size: float = 17.0
+var _drumroll_started: bool = false
+var _last_kick: Vector2 = Vector2.ZERO
+var _heights: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -65,6 +73,7 @@ func _ready() -> void:
 	hud.mute_requested.connect(_toggle_mute)
 	hud.ui_sound_requested.connect(sfx.play)
 	hud.pause_requested.connect(_toggle_pause)
+	hud.shake_toggled.connect(func(enabled: bool) -> void: shake_enabled = enabled)
 	hud.help_overlay.visibility_changed.connect(_help_visibility_changed)
 	if hud.has_signal("host_requested"): hud.host_requested.connect(_host_room)
 	if hud.has_signal("join_requested"): hud.join_requested.connect(_join_room)
@@ -88,6 +97,40 @@ func _process(_delta: float) -> void:
 	_countdown_number = count
 	if arena.has_method("set_pressure"):
 		arena.set_pressure(clampf((3.0-rounds.time_left)/3.0,0.0,1.0) if rounds.state == rounds.State.QUESTION else 0.0)
+	var closing: bool = rounds.state == rounds.State.QUESTION and rounds.time_left <= 2.4
+	if closing and not _drumroll_started: sfx.play("drumroll")
+	_drumroll_started = closing
+	_update_camera(_delta)
+	_watch_splashes()
+
+func _watch_splashes() -> void:
+	# Whoever drops through a trapdoor lands in the slop below.
+	for actor in rounds.contestants:
+		var height: float = actor.global_position.y
+		var before: float = float(_heights.get(actor.contestant_id,height))
+		_heights[actor.contestant_id] = height
+		if before > -5.2 and height <= -5.2 and rounds.state != rounds.State.MENU and absf(actor.global_position.x) < 7.2 and absf(actor.global_position.z) < 7.2:
+			arena.stage_show.splash(actor.global_position,Color("c9a4ff"))
+			sfx.play("splash")
+			add_shake(0.28)
+
+func _update_camera(delta: float) -> void:
+	# The shared camera never moves: framing eases through lens offsets, and impact
+	# shake is a few centimetres of the same offsets. Its transform stays fixed.
+	var blend: float = 1.0 - exp(-delta * 5.0)
+	camera.size = lerpf(camera.size,_view_size,blend)
+	_shake = maxf(0.0,_shake - delta * 2.6)
+	_shake_clock += delta
+	var kick: Vector2 = Vector2.ZERO
+	if shake_enabled and _shake > 0.0 and not get_tree().paused:
+		var power: float = _shake * _shake * 0.34
+		kick = Vector2(sin(_shake_clock * 71.0) + sin(_shake_clock * 43.0),cos(_shake_clock * 59.0) + sin(_shake_clock * 37.0)) * power * 0.5
+	camera.h_offset = lerpf(camera.h_offset - _last_kick.x,_view_offset.x,blend) + kick.x
+	camera.v_offset = lerpf(camera.v_offset - _last_kick.y,_view_offset.y,blend) + kick.y
+	_last_kick = kick
+
+func add_shake(amount: float) -> void:
+	_shake = clampf(maxf(_shake,amount),0.0,1.0)
 
 func _showcase_cast(enabled: bool) -> void:
 	# The title screen presents the four authored mascots as a cast, on the set.
@@ -116,19 +159,35 @@ func _present_phase(phase: int) -> void:
 	match phase:
 		rounds.State.MENU:
 			arena.quiz_screen.show_title()
+			arena.stage_show.set_mode("idle")
 		rounds.State.INTRO:
 			_frame_camera(false)
 			_showcase_cast(false)
 			feedback.clear()
+			arena.stage_show.set_mode("intro")
+			arena.stage_show.cheer(0.8)
+			sfx.set_round(rounds.round_index)
+			sfx.play("cheer")
+			if camera.size < 20.5: camera.size = 21.4
 			for actor in rounds.contestants: _score_memory[actor.contestant_id] = actor.score
 			arena.quiz_screen.show_round(rounds.round_index + 1,rounds.ROUNDS[rounds.round_index].title,rounds.ROUNDS[rounds.round_index].rule)
 		rounds.State.QUESTION:
 			sfx.play("go")
+			arena.stage_show.set_mode("question")
 			arena.quiz_screen.show_question(str(rounds.current_question.get("prompt","")),rounds.current_question.get("answers",[]))
 		rounds.State.REVEAL:
+			add_shake(0.75)
+			var survivors: int = 0
+			for actor in rounds.contestants:
+				if actor.active: survivors += 1
+			sfx.play("reveal")
+			sfx.play("cheer" if survivors > 0 else "aww")
+			arena.stage_show.cheer(1.2 if survivors > 0 else 0.5)
 			if rounds.current_question.has("correct"):
 				var correct: int = int(rounds.current_question.correct)
 				arena.quiz_screen.reveal(correct,str(rounds.current_question.answers[correct]))
+				arena.stage_show.set_mode("reveal",arena.tile_centers[correct],arena.COLORS[correct])
+				if survivors > 0: arena.stage_show.cannons(arena.COLORS[correct])
 			for actor in rounds.contestants:
 				var points: int = actor.score - int(_score_memory.get(actor.contestant_id,actor.score))
 				if points != 0:
@@ -138,12 +197,18 @@ func _present_phase(phase: int) -> void:
 				_score_memory[actor.contestant_id] = actor.score
 		rounds.State.GACHA:
 			arena.quiz_screen.show_intermission()
+			arena.stage_show.set_mode("gacha")
 			var entries: Array = []
 			for actor in rounds.contestants:
 				if not actor.perk.is_empty():
 					entries.append({"id":actor.contestant_id,"name":actor.display_name,"perk":actor.perk,"tint":actor.tint})
 			hud.update_gacha_entries(entries)
 		rounds.State.RESULTS:
+			arena.stage_show.set_mode("results")
+			arena.stage_show.cheer(1.3)
+			sfx.play("fanfare")
+			sfx.play("cheer")
+			add_shake(0.5)
 			var best: int = 0
 			for actor in rounds.contestants: best = maxi(best,actor.score)
 			for actor in rounds.contestants:
@@ -159,7 +224,11 @@ func _actor_feedback(actor: RigidBody3D, event: String, intensity: float) -> voi
 	# Existing action cues belong to RoundManager; these contact cues are local.
 	if event == "land" and intensity > 0.7: sfx.play("land")
 	elif event == "jump": sfx.play("jump")
-	elif event == "hit" and intensity > 0.8: sfx.play("hit")
+	elif event == "hit" and intensity > 0.8:
+		sfx.play("hit")
+		add_shake(0.22 + intensity * 0.16)
+		arena.stage_show.cheer(0.55)
+
 
 func _start(humans: int) -> void:
 	if network.active: network.close_session()
@@ -191,9 +260,8 @@ func _menu() -> void:
 
 func _frame_camera(menu_view: bool) -> void:
 	# Every participant receives the same stage framing; no local follow cameras.
-	camera.h_offset = 0.0
-	camera.size = 17.0 if menu_view else 19.5
-	camera.v_offset = 0.5 if menu_view else 4.35
+	_view_size = 17.0 if menu_view else 19.5
+	_view_offset = Vector2(0.0,0.5 if menu_view else 4.35)
 
 func _host_room(player_name: String, port: int = 24816) -> void:
 	_set_paused(false)

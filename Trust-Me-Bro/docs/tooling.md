@@ -53,3 +53,7 @@ Prefer CC0 assets for easy redistribution. Keep the license and source record wi
 ## Rebuilding the current world
 
 Run Blender with `--background --python tools/build_showground.py` from the project folder. `tools/build_party_world.py` forwards to that same build. The source writes `assets/world/party_garden.glb` (the filename is retained for loader compatibility), the reusable answer platform, modeled clouds, editable Blender sources, and triangle/material inventories. The runtime environment is one connected showground with a deep trap basin, not the previous collection of floating garden islands. See `assets/world/ASSET_SOURCE.md` for the current provenance and mesh review.
+
+## Rebuilding the festival dressing
+
+`tools/build_festival.py` writes the barges, lighting towers, string lights, crowd fan, balloon, sailboat and buoy to `assets/world`. Run it inside Blender (`--background --python tools/build_festival.py`) or, where a Blender install is not available, with the official `bpy` module: `pip install bpy` into a Python 3.13 environment, then `python tools/build_festival.py`.

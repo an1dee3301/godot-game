@@ -59,5 +59,30 @@
   "fresh_source_import_verified": true,
   "fresh_source_launch_verified": true,
   "public_tv_replication_verified": true,
-  "public_tv_answer_privacy_verified": true
+  "public_tv_answer_privacy_verified": true,
+  "festival_update": {
+    "tests_rerun": [
+      "gameplay 43/43",
+      "bot match 23/23",
+      "quiz bank 1619/1619",
+      "hud 36/36",
+      "character feedback 23/23",
+      "quiz screen 821/821",
+      "network 33/33 across four ENet processes"
+    ],
+    "runtime_errors": 0,
+    "godot": "4.8.dev3.official.51105ccbe (Linux, headless and software-rendered capture)",
+    "blender": "5.3.0 via the bpy Python module",
+    "visual_review_scenes": [
+      "title",
+      "question",
+      "intro",
+      "reveal",
+      "gacha",
+      "blackout",
+      "cubes",
+      "results"
+    ],
+    "not_verified": "Frame rate on real GPU hardware; captures here used a software renderer."
+  }
 }

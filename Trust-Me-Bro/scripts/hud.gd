@@ -61,6 +61,57 @@ class PartyIcon extends Control:
 		style.set_corner_radius_all(radius)
 		return style
 
+class TimerRing extends Control:
+	var value: float = 1.0
+	var hot: bool = false
+	func _draw() -> void:
+		var c: Vector2 = size * 0.5
+		var r: float = minf(size.x,size.y) * 0.5 - 8.0
+		draw_arc(c,r,0.0,TAU,56,Color(1,1,1,0.15),8.0,true)
+		if value > 0.002:
+			draw_arc(c,r,-PI / 2.0,-PI / 2.0 + TAU * clampf(value,0.0,1.0),56,Color("ff7469") if hot else Color("ffcf57"),8.0,true)
+
+class RoundPips extends Control:
+	var index: int = 0
+	func _draw() -> void:
+		for i in 5:
+			var at: Vector2 = Vector2(7.0 + i * 22.0,size.y * 0.5)
+			if i < index: draw_circle(at,5.0,Color("5edcb2"))
+			elif i == index:
+				draw_circle(at,7.5,Color("ffcf57"))
+				draw_circle(at,3.0,Color("233e73"))
+			else: draw_circle(at,5.0,Color(1,1,1,0.25))
+
+class ConfettiLayer extends Control:
+	## Paper drifting over the results card. Drawn, not textured.
+	var pieces: Array[Dictionary] = []
+	func start() -> void:
+		pieces.clear()
+		var palette: Array[Color] = [Color("ff7469"),Color("ffcf57"),Color("5edcb2"),Color("458dff"),Color("fff9e8"),Color("b397ef")]
+		for i in 90:
+			pieces.append({"at":Vector2(randf() * 1280.0,randf() * -800.0),"speed":randf_range(90.0,220.0),"sway":randf() * TAU,"spin":randf() * TAU,"size":randf_range(7.0,13.0),"color":palette[i % palette.size()]})
+		set_process(true)
+	func stop() -> void:
+		pieces.clear()
+		set_process(false)
+		queue_redraw()
+	func _process(delta: float) -> void:
+		for piece: Dictionary in pieces:
+			piece.sway += delta * 2.4
+			piece.spin += delta * 5.0
+			piece.at += Vector2(sin(piece.sway) * 42.0,piece.speed) * delta
+			if piece.at.y > 830.0: piece.at = Vector2(randf() * 1280.0,-20.0)
+		queue_redraw()
+	func _draw() -> void:
+		for piece: Dictionary in pieces:
+			var squash: float = absf(sin(piece.spin))
+			var extent: Vector2 = Vector2(piece.size,piece.size * 0.55 * maxf(squash,0.15))
+			draw_set_transform(piece.at,piece.spin * 0.4,Vector2.ONE)
+			draw_rect(Rect2(-extent * 0.5,extent),piece.color)
+		draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+
+signal shake_toggled(enabled: bool)
+
 var root: Control
 var menu: Control
 var game: Control
@@ -173,6 +224,24 @@ var _join_tab: Button
 var _button_tweens: Dictionary = {}
 var _last_focus: Control
 var _banner_is_reveal: bool = false
+var _timer_ring: TimerRing
+var _round_pips: RoundPips
+var _standing_chips: Array[Panel] = []
+var _standing_ranks: Array[Label] = []
+var _standing_portraits: Array[TextureRect] = []
+var _standing_scores: Array[Label] = []
+var _avatars: Array[Texture2D] = []
+var _styles: Dictionary = {}
+var _confetti: ConfettiLayer
+var _cut: ColorRect
+var _logo: Panel
+var _logo_star: PartyIcon
+var _clock: float = 0.0
+var _last_tick: int = -1
+var _shown_scores: Dictionary = {}
+var _gain: Label
+var _shake_on: bool = true
+var _settings_shake: Button
 
 func _ready() -> void:
 	layer = 10
@@ -199,6 +268,10 @@ func _ready() -> void:
 	theme.default_font = _body_font
 	theme.default_font_size = 16
 	root.theme = theme
+	for i in 8:
+		var path: String = "res://assets/characters/portraits/avatar_%d.png" % i
+		_avatars.append(load(path) if ResourceLoader.exists(path) else null)
+	_build_vignette()
 	menu = _screen("ChooseYourParty")
 	game = _screen("PartyHUD")
 	lobby = _screen("FriendsLobby")
@@ -211,12 +284,18 @@ func _ready() -> void:
 	_build_results()
 	_build_utilities()
 	_build_settings()
-	_flash_panel = _panel(root,Rect2(240,692,800,26),INK,16)
-	_flash = _label(_flash_panel,"",14,WHITE,Rect2(15,0,770,26))
+	_flash_panel = _panel(root,Rect2(270,198,740,36),INK,18,YELLOW,2,true)
+	_flash = _label(_flash_panel,"",15,WHITE,Rect2(18,0,704,36),true)
 	_flash.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_flash.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_flash.clip_text = true
 	_flash_panel.hide()
+	_cut = ColorRect.new()
+	_cut.color = Color(INK,0.0)
+	_cut.size = Vector2(1280,800)
+	_cut.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_cut)
+	_overlay_shades.append(_cut)
 	get_viewport().size_changed.connect(_fit)
 	_fit()
 	show_menu()
@@ -231,9 +310,49 @@ func _fit() -> void:
 		shade.size = view / fit
 
 func _process(delta: float) -> void:
+	_clock += delta
 	if _flash_timer > 0.0:
 		_flash_timer -= delta
 		if _flash_timer <= 0.0: _flash_panel.hide()
+	if menu.visible and is_instance_valid(_logo):
+		_logo.rotation = -0.025 + sin(_clock * 1.3) * 0.012
+		_logo.position.y = 53.0 + sin(_clock * 1.7) * 4.0
+		_logo_star.rotation = 0.22 + sin(_clock * 2.2) * 0.25
+		if is_instance_valid(_title_play_button) and not _title_play_button.has_focus() and _title_page.visible:
+			_title_play_button.scale = Vector2.ONE * (1.0 + 0.018 * sin(_clock * 3.4))
+
+func _build_vignette() -> void:
+	# A soft stage vignette keeps eyes on the pads without hiding the set.
+	var shade: ColorRect = ColorRect.new()
+	shade.name = "StageVignette"
+	shade.size = Vector2(1280,800)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shader: Shader = Shader.new()
+	shader.code = """shader_type canvas_item;
+void fragment(){
+	vec2 d = (UV - vec2(0.5)) * vec2(1.05, 1.2);
+	float edge = smoothstep(0.42, 0.95, length(d));
+	COLOR = vec4(0.05, 0.10, 0.24, edge * 0.42);
+}
+"""
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = shader
+	shade.material = material
+	root.add_child(shade)
+	_overlay_shades.append(shade)
+
+func _cached_style(key: String,color: Color,radius: int,outline: Color = Color.TRANSPARENT,width: int = 0) -> StyleBoxFlat:
+	if not _styles.has(key):
+		var style: StyleBoxFlat = _style(color,radius,outline,width)
+		style.set_content_margin_all(0)
+		_styles[key] = style
+	return _styles[key]
+
+func _cut_in() -> void:
+	# A quick curtain between menu and stage.
+	if not is_instance_valid(_cut) or not is_inside_tree(): return
+	_cut.color = Color(INK,1.0)
+	create_tween().tween_property(_cut,"color:a",0.0,0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 func _screen(node_name: String) -> Control:
 	var control: Control = Control.new()
@@ -386,11 +505,15 @@ func _build_menu() -> void:
 	_title_page.size = Vector2(1280,800)
 	_title_page.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu.add_child(_title_page)
-	var logo_back: Panel = _panel(_title_page,Rect2(32,53,456,237),INK,34)
+	var logo_back: Panel = _panel(_title_page,Rect2(32,53,456,237),INK,34,YELLOW,4,true)
 	logo_back.rotation = -0.025
+	logo_back.pivot_offset = Vector2(228,118)
+	_logo = logo_back
 	_label(logo_back,"Trust me,",70,CREAM,Rect2(24,5,408,99),true)
 	_label(logo_back,"BRO!",112,YELLOW,Rect2(27,83,401,130),true)
-	_icon(logo_back,Vector2(342,124),68,CORAL).rotation = 0.22
+	_logo_star = _icon(logo_back,Vector2(342,124),68,CORAL)
+	_logo_star.pivot_offset = Vector2(34,34)
+	_logo_star.rotation = 0.22
 	var tagline: Label = _label(_title_page,"A quiz party. A terrible idea.",22,INK,Rect2(53,303,460,42),true)
 	_outlined(tagline,3,CREAM)
 	_title_play_button = _button(_title_page,"Play party",Rect2(56,373,356,68),CORAL,INK,30)
@@ -555,9 +678,14 @@ func _select_humans(amount: int) -> void:
 	_human_note.text = "%d bots will join the party." % [8 - _selected_humans]
 
 func _build_game() -> void:
-	var round_panel: Panel = _panel(game,Rect2(24,24,130,42),INK,18)
-	_round_label = _label(round_panel,"ROUND 1 / 5",15,WHITE,Rect2(11,0,108,42),true)
+	var round_panel: Panel = _panel(game,Rect2(24,24,134,62),INK,20,Color(1,1,1,0.22),2,true)
+	_round_label = _label(round_panel,"ROUND 1 / 5",15,WHITE,Rect2(13,5,108,28),true)
 	_round_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_round_pips = RoundPips.new()
+	_round_pips.position = Vector2(14,35)
+	_round_pips.size = Vector2(106,18)
+	_round_pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	round_panel.add_child(_round_pips)
 	_rule_label = _label(round_panel,"",14,CREAM,Rect2())
 	_rule_label.hide()
 	_question_panel = _panel(game,Rect2(228,20,846,90),CREAM,22)
@@ -591,9 +719,13 @@ func _build_game() -> void:
 		answer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		answer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_answer_labels.append(answer)
-	_timer_panel = _panel(game,Rect2(1142,85,114,103),INK,21)
-
-	_timer = _label(_timer_panel,"12",64,WHITE,Rect2(8,3,98,95),true)
+	_timer_panel = _panel(game,Rect2(1142,82,114,114),INK,57,Color(1,1,1,0.22),2,true)
+	_timer_panel.pivot_offset = Vector2(57,57)
+	_timer_ring = TimerRing.new()
+	_timer_ring.size = Vector2(114,114)
+	_timer_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_timer_panel.add_child(_timer_ring)
+	_timer = _label(_timer_panel,"12",50,WHITE,Rect2(8,8,98,98),true)
 	_timer.add_theme_font_override("font",_data_font)
 	_timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -621,8 +753,24 @@ func _build_game() -> void:
 	_perk.clip_text = true
 	_outlined(_perk,3,INK)
 	for i in 8:
-		var card: Panel = _panel(game,Rect2(24,694,168,82),CREAM,15)
+		var chip: Panel = _panel(game,Rect2(210 + i * 128,757,122,36),CREAM,18)
+		_standing_chips.append(chip)
+		var rank: Label = _label(chip,str(i + 1),13,INK,Rect2(9,0,18,36),true)
+		rank.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_standing_ranks.append(rank)
+		_standing_portraits.append(_portrait(chip,Vector2(27,1),Vector2(34,34),i))
+		var points: Label = _label(chip,"0",16,INK,Rect2(62,0,50,36),true)
+		points.add_theme_font_override("font",_data_font)
+		points.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		points.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_standing_scores.append(points)
+	_gain = _label(game,"+100",30,YELLOW,Rect2(60,640,150,44),true)
+	_outlined(_gain,5,INK)
+	_gain.hide()
+	for i in 8:
+		var card: Panel = _panel(game,Rect2(24,694,168,82),CREAM,15,WHITE,3,true)
 		_player_cards.append(card)
+		card.pivot_offset = Vector2(84,41)
 		card.hide()
 		var icon: PartyIcon = _icon(card,Vector2(5,5),45,COLORS[i],"face")
 		_player_icons.append(icon)
@@ -833,6 +981,11 @@ func _build_results() -> void:
 	_results_rows.size = Vector2(545,374)
 	_results_rows.add_theme_constant_override("separation",6)
 	card.add_child(_results_rows)
+	_confetti = ConfettiLayer.new()
+	_confetti.size = Vector2(1280,800)
+	_confetti.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confetti.set_process(false)
+	results_overlay.add_child(_confetti)
 	_restart_button = _button(card,"Another party!",Rect2(459,493,545,54),CORAL,INK,25)
 	_restart_button.pressed.connect(func() -> void: restart_requested.emit())
 	_result_menu_button = _button(card,"Back to menu",Rect2(459,563,545,35),Color("e2e9ef"),INK,17)
@@ -859,12 +1012,20 @@ func _build_settings() -> void:
 		mute_requested.emit()
 		_settings_sound.text = "Music & sound: off" if _muted else "Music & sound: on"
 	)
-	_label(card,"Shared camera • No camera shake",14,MUTED,Rect2(31,236,418,35))
+	_settings_shake = _button(card,"Screen shake: on",Rect2(30,227,420,49),Color("e5ecf0"),INK,20)
+	_settings_shake.pressed.connect(func() -> void:
+		_shake_on = not _shake_on
+		_settings_shake.text = "Screen shake: on" if _shake_on else "Screen shake: off"
+		shake_toggled.emit(_shake_on)
+	)
 	_settings_close = _button(card,"All set",Rect2(30,298,420,49),CORAL,INK,23)
 	_settings_close.pressed.connect(_close_settings)
-	_trap_focus([_settings_sound,_settings_close])
+	_trap_focus([_settings_sound,_settings_shake,_settings_close])
 
 func show_menu() -> void:
+	if is_instance_valid(game) and game.visible: _cut_in()
+	if is_instance_valid(_confetti): _confetti.stop()
+	_shown_scores.clear()
 	_score_cache.clear()
 	_connection_status.text = ""
 	menu.show()
@@ -880,6 +1041,9 @@ func show_menu() -> void:
 	_back_to_title()
 
 func show_game() -> void:
+	if not game.visible: _cut_in()
+	_confetti.stop()
+	_shown_scores.clear()
 	get_viewport().gui_release_focus()
 	menu.hide()
 	lobby.hide()
@@ -894,6 +1058,8 @@ func update_round(index: int,title: String,rule: String) -> void:
 	set_question_visible(false)
 	_round_index = index
 	_round_label.text = "ROUND %d / 5" % [index + 1]
+	_round_pips.index = index
+	_round_pips.queue_redraw()
 	_rule_label.text = title.capitalize()
 	_rule_label.tooltip_text = rule
 	for i in _round_tokens.size():
@@ -927,9 +1093,19 @@ func update_timer(seconds: float,total: float) -> void:
 		_timer.text = "0"
 		_timer_bar.value = 0.0
 		return
-	_timer.text = str(maxi(0,int(ceil(seconds))))
+	var whole: int = maxi(0,int(ceil(seconds)))
+	_timer.text = str(whole)
 	_timer.add_theme_color_override("font_color",CORAL if seconds <= 3.0 else WHITE)
 	_timer_bar.value = clampf(seconds / maxf(total,0.1),0.0,1.0)
+	_timer_ring.value = _timer_bar.value
+	_timer_ring.hot = seconds <= 3.0
+	_timer_ring.queue_redraw()
+	if whole != _last_tick:
+		_last_tick = whole
+		if whole <= 3 and whole > 0 and is_inside_tree():
+			# The clock thumps on each of the last three seconds.
+			_timer_panel.scale = Vector2.ONE * 1.16
+			create_tween().tween_property(_timer_panel,"scale",Vector2.ONE,0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func set_local_player(index: int) -> void:
 	var selected: int = clampi(index,0,7)
@@ -951,10 +1127,49 @@ func update_scores(contestants: Array) -> void:
 		var alive: bool = bool(actor.active)
 		_player_cards[i].add_theme_stylebox_override("panel",_style(CREAM if alive else Color("d7e0e8"),18))
 		_player_portraits[i].modulate.a = 1.0 if alive else 0.54
-		if i == _local_player_index: _local_safe = alive
+		if i == _local_player_index:
+			_local_safe = alive
+			var points: int = int(actor.score)
+			var before: int = int(_shown_scores.get(i,points))
+			_shown_scores[i] = points
+			if points != before and is_inside_tree(): _pop_score(_player_cards[i],points - before)
+	_update_standings(contestants)
 	if _banner_is_reveal:
 		_banner_title.text = "SAFE!" if _local_safe else "NOPE!"
 		banner.add_theme_stylebox_override("panel",_style(MINT if _local_safe else CORAL,22))
+
+func _pop_score(card: Panel,change: int) -> void:
+	card.scale = Vector2.ONE * 1.14
+	create_tween().tween_property(card,"scale",Vector2.ONE,0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_gain.text = ("+%d" % change) if change > 0 else str(change)
+	_gain.add_theme_color_override("font_color",YELLOW if change > 0 else CORAL)
+	_gain.position = Vector2(60,650)
+	_gain.modulate.a = 1.0
+	_gain.show()
+	var tween: Tween = create_tween().set_parallel(true)
+	tween.tween_property(_gain,"position:y",612.0,0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_gain,"modulate:a",0.0,0.3).set_delay(0.6)
+	tween.chain().tween_callback(_gain.hide)
+
+func _update_standings(contestants: Array) -> void:
+	# Everyone's score at a glance, leader first; your chip is gold.
+	var ordered: Array = contestants.duplicate()
+	ordered.sort_custom(func(a: Variant,b: Variant) -> bool:
+		return int(a.score) > int(b.score) if int(a.score) != int(b.score) else int(a.contestant_id) < int(b.contestant_id))
+	for i in _standing_chips.size():
+		_standing_chips[i].visible = i < ordered.size()
+		if i >= ordered.size(): continue
+		var actor: Variant = ordered[i]
+		var id: int = int(actor.contestant_id)
+		var mine: bool = id == _local_player_index
+		var alive: bool = bool(actor.active)
+		_standing_ranks[i].text = str(i + 1)
+		_standing_scores[i].text = str(int(actor.score))
+		_standing_portraits[i].texture = _avatars[id % 8]
+		_standing_portraits[i].modulate.a = 1.0 if alive else 0.45
+		var tint: Color = actor.tint
+		var key: String = "chip:%s:%s:%s" % [tint.to_html(),mine,alive]
+		_standing_chips[i].add_theme_stylebox_override("panel",_cached_style(key,YELLOW.lightened(0.25) if mine else (CREAM if alive else Color("cfd9e2")),18,tint if alive else Color("aab7c4"),3))
 
 func set_status(content: String) -> void:
 	# Retained for state consumers. The studio screen carries all match copy.
@@ -969,7 +1184,7 @@ func set_perk(content: String) -> void:
 	var secret: int = content.find("SECRET: ")
 	if secret >= 0:
 		_perk.text = content.substr(secret + 8,1)
-		_perk.position = Vector2(210,713)
+		_perk.position = Vector2(196,700)
 		_perk.size = Vector2(64,52)
 		_perk.add_theme_font_size_override("font_size",35)
 		_perk.show()
@@ -992,13 +1207,13 @@ func show_banner(title: String,subtitle: String,color: Color = MINT) -> void:
 		_timer_bar.value = 0.0
 		_timer_panel.hide()
 		display_title = "SAFE!" if _local_safe else "NOPE!"
-		banner.position = Vector2(515,706)
-		banner.size = Vector2(250,62)
+		banner.position = Vector2(515,700)
+		banner.size = Vector2(250,52)
 		_banner_eyebrow.hide()
 		_banner_subtitle.hide()
 		_banner_title.position = Vector2(12,0)
-		_banner_title.size = Vector2(226,62)
-		_banner_title.add_theme_font_size_override("font_size",35)
+		_banner_title.size = Vector2(226,52)
+		_banner_title.add_theme_font_size_override("font_size",32)
 		banner.add_theme_stylebox_override("panel",_style(MINT if _local_safe else CORAL,22))
 	else:
 		banner.position = Vector2(345,274)
@@ -1012,7 +1227,8 @@ func show_banner(title: String,subtitle: String,color: Color = MINT) -> void:
 		_banner_subtitle.position = Vector2(30,147)
 		_banner_subtitle.size = Vector2(530,75)
 		_banner_subtitle.add_theme_font_size_override("font_size",15 if subtitle.length() > 130 else 18)
-		banner.add_theme_stylebox_override("panel",_style(CREAM,27))
+		banner.add_theme_stylebox_override("panel",_style(CREAM,27,color,5,true))
+		_banner_eyebrow.add_theme_color_override("font_color",color.darkened(0.25))
 	_banner_title.text = display_title
 	_banner_subtitle.text = subtitle
 	banner.show()
@@ -1041,6 +1257,7 @@ func show_results(contestants: Array) -> void:
 	pause_overlay.hide()
 	help_overlay.hide()
 	results_overlay.show()
+	_confetti.start()
 	var ordered: Array = contestants.duplicate()
 	ordered.sort_custom(func(a: Variant,b: Variant) -> bool: return int(a.score) > int(b.score))
 	for child: Node in _results_rows.get_children():
@@ -1080,6 +1297,12 @@ func show_results(contestants: Array) -> void:
 		var player_name: Label = _label(row,str(actor.display_name).replace(" · YOU"," ★"),16,INK)
 		player_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_label(row,"%d" % [int(actor.score)],19,INK,Rect2(),true)
+		if is_inside_tree():
+			# Rows deal in one after another, last place first.
+			card.modulate.a = 0.0
+			var deal: Tween = card.create_tween()
+			deal.tween_interval(0.12 + (ordered.size() - 1 - i) * 0.09)
+			deal.tween_property(card,"modulate:a",1.0,0.22)
 	_restart_button.visible = not _network_enabled or _network_host
 	_result_menu_button.text = "LEAVE PARTY" if _network_enabled else "Back to menu"
 	if _restart_button.visible:
@@ -1105,11 +1328,20 @@ func set_spectator(value: bool) -> void:
 		set_perk("YOU'RE OUT. YOUR FRIENDS ARE STILL FAIR GAME!")
 
 func flash_message(content: String,color: Color = WHITE) -> void:
-	# Audio, character reactions and the studio screen communicate match events.
+	# Bluffs, crowns and swaps get a short ticker under the giant screen.
 	_flash.text = content
-	_flash.add_theme_color_override("font_color",color)
-	_flash_panel.hide()
-	_flash_timer = 0.0
+	_flash.add_theme_color_override("font_color",color.lightened(0.35))
+	if content.is_empty() or not game.visible or results_overlay.visible:
+		_flash_panel.hide()
+		_flash_timer = 0.0
+		return
+	_flash_panel.add_theme_stylebox_override("panel",_style(INK,18,color,2,true))
+	_flash_panel.show()
+	_flash_timer = 2.6
+	_flash_panel.pivot_offset = _flash_panel.size * 0.5
+	_flash_panel.scale = Vector2(0.9,0.9)
+	if is_inside_tree(): create_tween().tween_property(_flash_panel,"scale",Vector2.ONE,0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	else: _flash_panel.scale = Vector2.ONE
 
 func set_muted(value: bool) -> void:
 	_muted = value

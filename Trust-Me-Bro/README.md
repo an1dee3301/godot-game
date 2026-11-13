@@ -6,6 +6,21 @@ An original quiz party with a cohesive Blender-authored game-show set, four expr
 
 ![Title screen and modeled mascot cast](docs/title.png)
 
+## The festival update
+
+![The buzzer: light beams, confetti cannons and the slop pit](docs/reveal.png)
+
+The showground now sits in a toon lagoon with a full show around it:
+
+- **A crowd.** Sixty fans on two moored spectator barges hop in time, lean in as the clock runs down and go wild at the buzzer.
+- **Stage lighting.** Lighting towers and barge masts throw beams that sweep during intros, park on the pad corners while you answer, and snap to the correct pad at the reveal. String lights, a marquee chase around the giant screen, balloons, sailboats and buoys dress the set. Lights Out dims all of it.
+- **The slop pit.** Wrong answers drop you through a trapdoor into bubbling purple slop, with a splash.
+- **Reveal drama.** A drumroll in the final seconds, a column of light on the right answer, confetti cannons from both towers, optional screen shake (Settings), and fireworks over the lagoon for the winner.
+- **A fuller HUD.** A countdown ring that thumps on the last three seconds, round progress pips, a live standings strip for all eight contestants, a score pop on your card, and a ticker for bluffs, crown grabs and last-second swaps.
+- **New sound.** The synthesized score re-voices itself each round (key, tempo and layers), with crowd cheers and groans, a reveal sting, a winner's fanfare and a little room reverb.
+
+All of it is presentation only: rules, scoring, physics and networking are unchanged, and the shared camera still never moves.
+
 ## Play
 
 On macOS, double-click **Play.command**. Or open `project.godot` in **Godot 4.5+** and press **F5**. This version was built and verified with Godot 4.8.dev3.
@@ -63,9 +78,9 @@ The deck shuffles answer positions and balances categories, without repeating a 
 
 The connected cream-and-timber showground, deep navy trap basin, integrated Cheer Squad balcony, marquee, beveled platforms, props, four mascot types, and portraits were made in Blender for this project. They use original meshes and materials. No AI-generated images/video or Nintendo assets are used. Sources and provenance are in `assets/world/ASSET_SOURCE.md`, `assets/characters/ASSET_SOURCE.md`, and `assets/props/ASSET_SOURCE.md`. Editable `.blend` files are included under `art/source` and `tools/source`; those folders are excluded from Godot importing and platform builds.
 
-The question and four color-matched answers appear on a giant physical screen above the arena. The gameplay overlay has only a countdown, round number, local portrait/score and pause button. The full leaderboard appears after the match. Controls and sound live inside pause.
+The question and four color-matched answers appear on a giant physical screen above the arena. The gameplay overlay has a countdown ring, round progress, your portrait and score, a compact standings strip and a pause button. The full leaderboard appears after the match. Controls and sound live inside pause.
 
-The fixed orthographic gameplay camera is identical on host, clients and couch screens, with the screen, balcony and answer pads visible together. The viewport preserves its aspect ratio. Remote bodies interpolate host snapshots; clients do not simulate competing physics or award their own points. Original music and cartoon cues are synthesized locally.
+The fixed orthographic gameplay camera is identical on host, clients and couch screens, with the screen, balcony and answer pads visible together. The viewport preserves its aspect ratio. Remote bodies interpolate host snapshots; clients do not simulate competing physics or award their own points. Original music, crowd reactions and cartoon cues are synthesized locally. Screen shake only nudges the lens offsets and can be turned off in Settings.
 
 Mascots blink, lean into running, anticipate shoves, tuck into dives, squash on landing and celebrate scores. Short dust rings, impact bursts and score popups make contact and rewards readable without changing the authoritative physics. A quick **SAFE! / NOPE!** callout leaves falling players visible while the studio screen shows the correct answer. Rules get four seconds of reading time before the three-second countdown; Lucky Slop shows each perk and its recipient.
 

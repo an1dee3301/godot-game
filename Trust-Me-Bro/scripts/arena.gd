@@ -10,6 +10,8 @@ const PLATFORM = preload("res://assets/world/answer_platform.glb")
 const CLOUD = preload("res://assets/world/marshmallow_cloud.glb")
 const SHOW_FONT = preload("res://assets/fonts/Fredoka.ttf")
 const QuizScreenScript = preload("res://scripts/quiz_screen.gd")
+const StageShowScript = preload("res://scripts/stage_show.gd")
+const WATER_Y: float = -4.95
 
 var tile_centers: Array[Vector3] = [Vector3(-3.4,0,-3.4),Vector3(3.4,0,-3.4),Vector3(-3.4,0,3.4),Vector3(3.4,0,3.4)]
 var tiles: Array = []
@@ -31,7 +33,6 @@ var _clock: float = 0.0
 var _mat_cache: Dictionary = {}
 var _finale_step: int = 0
 var _round_index: int = 0
-var _confetti_root: Node3D
 var _ice_marks: Array[Node3D] = []
 var _ice_materials: Dictionary = {}
 var _pad_meshes: Array = []
@@ -44,6 +45,12 @@ var _pressure: float = 0.0
 var _warning_materials: Array[StandardMaterial3D] = []
 var _show_font: FontVariation
 var quiz_screen: Node3D
+var stage_show: Node3D
+var _slop: MeshInstance3D
+var _pillar: MeshInstance3D
+var _pillar_material: ShaderMaterial
+var _pillar_level: float = 0.0
+var _medallion_materials: Array[StandardMaterial3D] = []
 
 func _ready() -> void:
 	name = "Arena"
@@ -59,12 +66,21 @@ func _ready() -> void:
 	add_child(quiz_screen)
 	_build_clouds()
 	_build_sweeper()
-	_confetti_root = Node3D.new()
-	_confetti_root.name = "CelebrationConfetti"
-	add_child(_confetti_root)
+	_build_slop()
+	_build_pillar()
+	stage_show = StageShowScript.new()
+	add_child(stage_show)
 
 func _process(delta: float) -> void:
 	_clock += delta
+	if is_instance_valid(stage_show): stage_show.set_tension(_pressure)
+	if _pillar_level > 0.002 or _pillar.visible:
+		_pillar_level = lerpf(_pillar_level,0.0,1.0 - exp(-delta * 0.9))
+		_pillar.visible = _pillar_level > 0.01
+		_pillar_material.set_shader_parameter("strength",_pillar_level * (0.85 + 0.15 * sin(_clock * 14.0)))
+	for i in _medallion_materials.size():
+		var lit: float = 1.0 if i == _highlight_index else 0.0
+		_medallion_materials[i].emission_energy_multiplier = lerpf(_medallion_materials[i].emission_energy_multiplier,(0.42 + sin(_clock * 9.0) * 0.14) * lit + 0.12 + _pressure * 0.25 * (0.5 + 0.5 * sin(_clock * 10.0)),1.0 - exp(-delta * 8.0))
 	if not _warning_materials.is_empty():
 		var pulse: float = (0.5 + 0.5 * sin(_clock * (8.0 + _pressure * 7.0))) * _pressure
 		for material in _warning_materials:
@@ -90,30 +106,40 @@ func _physics_process(delta: float) -> void:
 func _build_lighting() -> void:
 	var world: WorldEnvironment = WorldEnvironment.new()
 	_environment = Environment.new()
-	_environment.background_mode = Environment.BG_COLOR
 	_environment.background_mode = Environment.BG_SKY
 	var sky: Sky = Sky.new()
 	var sky_material: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("79b8ce")
-	sky_material.sky_horizon_color = Color("f7dfb6")
-	sky_material.ground_bottom_color = Color("7aaca2")
-	sky_material.ground_horizon_color = Color("f7dfb6")
-	sky_material.sky_energy_multiplier = 0.7
-	sky_material.ground_energy_multiplier = 0.7
+	sky_material.sky_top_color = Color("4f9fd6")
+	sky_material.sky_horizon_color = Color("ffd9a8")
+	sky_material.ground_bottom_color = Color("3f97a8")
+	sky_material.ground_horizon_color = Color("ffd9a8")
+	sky_material.sky_energy_multiplier = 0.8
+	sky_material.ground_energy_multiplier = 0.8
 	sky.sky_material = sky_material
 	_environment.sky = sky
 	_environment.background_color = Color("accfcb")
 	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_environment.ambient_light_color = Color("cbdce8")
-	_environment.ambient_light_energy = 0.20
-	_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	_environment.ambient_light_color = Color("c9d6f2")
+	_environment.ambient_light_energy = 0.22
+	# A gentle filmic curve, bloom on emissive bulbs and a little extra colour.
+	_environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_environment.tonemap_white = 1.9
+	_environment.glow_enabled = true
+	_environment.glow_intensity = 0.42
+	_environment.glow_strength = 0.9
+	_environment.glow_bloom = 0.0
+	_environment.glow_hdr_threshold = 1.15
+	_environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	_environment.adjustment_enabled = true
+	_environment.adjustment_saturation = 1.1
+	_environment.adjustment_contrast = 1.05
 	world.environment = _environment
 	add_child(world)
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.name = "WarmShowgroundSun"
 	sun.rotation_degrees = Vector3(-48,-32,-8)
-	sun.light_color = Color("fff0cf")
-	sun.light_energy = 0.42
+	sun.light_color = Color("ffe9c4")
+	sun.light_energy = 0.5
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 55.0
 	sun.shadow_normal_bias = 2.5
@@ -125,27 +151,62 @@ func _build_lighting() -> void:
 	var fill: DirectionalLight3D = DirectionalLight3D.new()
 	fill.name = "BlueSkyFill"
 	fill.rotation_degrees = Vector3(-30,140,0)
-	fill.light_color = Color("c5ecff")
-	fill.light_energy = 0.08
+	fill.light_color = Color("a9dcff")
+	fill.light_energy = 0.1
 	add_child(fill)
 	_lights.append(fill)
 
 func _build_water() -> void:
 	_water = MeshInstance3D.new()
-	_water.name = "QuietShowgroundLagoon"
+	_water.name = "PartyLagoon"
 	var plane: PlaneMesh = PlaneMesh.new()
-	plane.size = Vector2(180,180)
-	plane.subdivide_depth = 24
-	plane.subdivide_width = 24
+	plane.size = Vector2(220,220)
 	_water.mesh = plane
-	_water.position.y = -7.7
+	_water.position.y = WATER_Y
 	var shader: Shader = Shader.new()
 	shader.code = """shader_type spatial;
 render_mode unshaded, cull_disabled;
+// A toon lagoon: depth bands around the showground, foam where hulls meet the
+// water, drifting ripple contours and the odd sparkle. Entirely procedural.
 uniform vec3 water_tint = vec3(1.0);
 varying vec3 world_pos;
-void vertex(){world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;VERTEX.y+=sin(VERTEX.x*0.2+TIME*0.25)*0.025;}
-void fragment(){float wave=sin(world_pos.x*0.16+world_pos.z*0.22+TIME*0.15)*0.5+0.5;float line=smoothstep(0.98,1.0,sin(world_pos.x*0.18+world_pos.z*0.75+TIME*0.18));ALBEDO=(mix(vec3(0.30,0.56,0.57),vec3(0.39,0.64,0.63),wave)+vec3(0.05,0.065,0.05)*line)*water_tint;}
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){
+	vec2 i = floor(p); vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float box(vec2 p, vec2 half){
+	vec2 d = abs(p) - half;
+	return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+void vertex(){ world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment(){
+	vec2 p = world_pos.xz;
+	// The trap basin is open to the slop below, not the lagoon.
+	if (abs(p.x) < 7.25 && abs(p.y) < 7.25) discard;
+	vec2 q = (p - vec2(0.0, -1.7)) / vec2(11.05, 11.8);
+	float shore = (pow(pow(abs(q.x), 4.0) + pow(abs(q.y), 4.0), 0.25) - 1.0) * 11.0;
+	shore = min(shore, box(vec2(abs(p.x) - 13.6, p.y + 9.4), vec2(2.15, 5.7)));
+	float slow = noise(p * 0.22 + vec2(TIME * 0.05, TIME * 0.035));
+	float fine = noise(p * 0.75 + vec2(-TIME * 0.11, TIME * 0.16) + slow * 1.5);
+	float depth = smoothstep(0.0, 13.0, shore + slow * 3.0);
+	vec3 color = mix(vec3(0.33, 0.76, 0.74), vec3(0.15, 0.55, 0.66), smoothstep(0.0, 0.4, depth));
+	color = mix(color, vec3(0.09, 0.37, 0.58), smoothstep(0.35, 1.0, depth));
+	// Ripple contours: thin isolines of the drifting noise.
+	float contour = 1.0 - smoothstep(0.0, 0.035, abs(fine - 0.5));
+	contour += (1.0 - smoothstep(0.0, 0.02, abs(fine - 0.72))) * 0.6;
+	color += vec3(0.11, 0.15, 0.13) * contour * (0.55 + 0.45 * slow);
+	// Foam hugging every hull, plus slow rings travelling outward.
+	float lap = shore + (fine - 0.5) * 0.7 + sin(TIME * 1.3 + p.x * 0.6 + p.y * 0.4) * 0.1;
+	float foam = 1.0 - smoothstep(0.32, 0.5, lap);
+	float ring = 1.0 - smoothstep(0.0, 0.07, abs(fract(shore * 0.32 - TIME * 0.11) - 0.5));
+	foam = max(foam, ring * (1.0 - smoothstep(0.6, 6.5, shore)) * step(0.0, shore) * (0.35 + 0.65 * fine) * 0.75);
+	color = mix(color, vec3(0.96, 1.0, 0.97), clamp(foam, 0.0, 1.0));
+	float sparkle = step(0.965, noise(p * 2.4 + vec2(TIME * 0.5, 0.0))) * step(0.6, noise(p * 1.1 - vec2(0.0, TIME * 0.7)));
+	color += vec3(0.5) * sparkle;
+	ALBEDO = color * water_tint;
+}
 """
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = shader
@@ -153,6 +214,81 @@ void fragment(){float wave=sin(world_pos.x*0.16+world_pos.z*0.22+TIME*0.15)*0.5+
 	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_water)
 	_static_box(self,Vector3(100,0.5,100),Vector3(0,-8,0))
+
+func _build_slop() -> void:
+	# Whatever is in the trap basin, nobody wants to land in it.
+	_slop = MeshInstance3D.new()
+	_slop.name = "TrapBasinSlop"
+	var plane: PlaneMesh = PlaneMesh.new()
+	plane.size = Vector2(14.4,14.4)
+	_slop.mesh = plane
+	_slop.position.y = -5.75
+	var shader: Shader = Shader.new()
+	shader.code = """shader_type spatial;
+render_mode unshaded;
+uniform float level = 1.0;
+varying vec3 world_pos;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){
+	vec2 i = floor(p); vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void vertex(){ world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment(){
+	vec2 p = world_pos.xz;
+	float swirl = noise(p * 0.45 + vec2(TIME * 0.09, -TIME * 0.06));
+	float goo = noise(p * 1.1 + swirl * 2.4 + vec2(0.0, TIME * 0.12));
+	vec3 color = mix(vec3(0.20, 0.10, 0.38), vec3(0.38, 0.20, 0.62), smoothstep(0.3, 0.7, goo));
+	color = mix(color, vec3(0.66, 0.45, 0.9), 1.0 - smoothstep(0.0, 0.05, abs(goo - 0.62)));
+	// Lazy bubbles pop on a grid of cells.
+	vec2 cell = floor(p * 0.7);
+	vec2 local = fract(p * 0.7) - 0.5;
+	float life = fract(TIME * (0.12 + hash(cell) * 0.2) + hash(cell + 7.0));
+	float radius = life * 0.36 * step(0.55, hash(cell + 3.0));
+	float bubble = 1.0 - smoothstep(0.0, 0.045, abs(length(local + (vec2(hash(cell + 1.0), hash(cell + 2.0)) - 0.5) * 0.4) - radius));
+	color += vec3(0.45, 0.35, 0.5) * bubble * (1.0 - life);
+	ALBEDO = color * level;
+}
+"""
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = shader
+	_slop.material_override = material
+	_slop.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_slop)
+
+func _build_pillar() -> void:
+	# A column of light lands on the correct pad at the buzzer.
+	_pillar = MeshInstance3D.new()
+	_pillar.name = "CorrectAnswerLight"
+	var column: CylinderMesh = CylinderMesh.new()
+	column.top_radius = 2.2
+	column.bottom_radius = 2.9
+	column.height = 9.0
+	column.radial_segments = 28
+	column.rings = 1
+	column.cap_top = false
+	column.cap_bottom = false
+	_pillar.mesh = column
+	var shader: Shader = Shader.new()
+	shader.code = """shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform float strength = 0.0;
+varying float height;
+void vertex(){ height = VERTEX.y / 9.0 + 0.5; }
+void fragment(){
+	float rim = pow(abs(dot(normalize(NORMAL), normalize(VIEW))), 1.3);
+	ALBEDO = tint.rgb;
+	ALPHA = rim * pow(1.0 - clamp(height, 0.0, 1.0), 1.7) * strength * 0.75;
+}
+"""
+	_pillar_material = ShaderMaterial.new()
+	_pillar_material.shader = shader
+	_pillar.material_override = _pillar_material
+	_pillar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_pillar.hide()
+	add_child(_pillar)
 
 func _build_pad(index: int) -> void:
 	var root: Node3D = Node3D.new()
@@ -196,6 +332,12 @@ func _build_pad(index: int) -> void:
 			instance.set_meta("normal_%d" % surface,material)
 	var disk: MeshInstance3D = _cylinder(visual,1.4,0.018,Vector3(0,0.039,0),COLORS[index].lightened(0.17))
 	disk.name = "AnswerMedallion"
+	var medallion: StandardMaterial3D = (disk.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+	medallion.emission_enabled = true
+	medallion.emission = COLORS[index].lightened(0.3)
+	medallion.emission_energy_multiplier = 0.12
+	disk.material_override = medallion
+	_medallion_materials.append(medallion)
 	var rim: MeshInstance3D = MeshInstance3D.new()
 	var torus: TorusMesh = TorusMesh.new()
 	torus.inner_radius = 1.40
@@ -337,7 +479,10 @@ func set_blackout(value: bool) -> void:
 	_environment.background_mode = Environment.BG_COLOR if value else Environment.BG_SKY
 	_environment.background_color = Color("192f54") if value else Color("accfcb")
 	if is_instance_valid(_water):
-		(_water.material_override as ShaderMaterial).set_shader_parameter("water_tint",Vector3(0.16,0.28,0.47) if value else Vector3.ONE)
+		(_water.material_override as ShaderMaterial).set_shader_parameter("water_tint",Vector3(0.10,0.17,0.34) if value else Vector3.ONE)
+	if is_instance_valid(_slop):
+		(_slop.material_override as ShaderMaterial).set_shader_parameter("level",0.3 if value else 1.0)
+	if is_instance_valid(stage_show): stage_show.set_dark(value)
 
 func open_wrong_tiles(correct: int) -> void:
 	for i in tiles.size():
@@ -352,6 +497,7 @@ func open_wrong_tiles(correct: int) -> void:
 
 func restore_tiles() -> void:
 	_highlight_index = -1
+	_pillar_level = 0.0
 	set_pressure(0.0)
 	for i in tiles.size():
 		_stop_pad_tween(i)
@@ -393,6 +539,10 @@ func set_answer_highlight(correct: int) -> void:
 	_highlight_index = correct
 	_tile_labels[correct].modulate = CREAM
 	spawn_confetti(tile_centers[correct] + Vector3(0,2.2,0),COLORS[correct])
+	_pillar.position = tile_centers[correct] + Vector3(0,4.5,0)
+	_pillar_material.set_shader_parameter("tint",COLORS[correct].lightened(0.35))
+	_pillar_level = 1.0
+	_pillar.show()
 
 func get_network_state() -> Dictionary:
 	var heights: Array[float] = []
@@ -429,23 +579,13 @@ func apply_network_state(data: Dictionary) -> void:
 	var belt: bool = bool(data.get("conveyor",false))
 	if belt != conveyor_active: set_conveyor(belt)
 	_finale_step = int(data.get("finale",0))
-	_highlight_index = int(data.get("highlight",-1))
+	var incoming_highlight: int = int(data.get("highlight",-1))
+	if incoming_highlight >= 0 and incoming_highlight != _highlight_index: set_answer_highlight(incoming_highlight)
+	_highlight_index = incoming_highlight
 	for i in _tile_labels.size(): _tile_labels[i].modulate = CREAM if i == _highlight_index else INK
 
 func spawn_confetti(pos: Vector3,color: Color) -> void:
-	if not is_instance_valid(_confetti_root): return
-	var burst: Node3D = Node3D.new()
-	burst.position = pos
-	_confetti_root.add_child(burst)
-	for i in 16:
-		var piece: MeshInstance3D = _box(burst,Vector3(0.09,0.21,0.035),Vector3.ZERO,color if i % 3 != 0 else CREAM)
-		piece.rotation = Vector3(randf() * PI,randf() * PI,randf() * PI)
-		var destination: Vector3 = Vector3(randf_range(-3.2,3.2),randf_range(-2.0,0.5),randf_range(-3.2,3.2))
-		var tween: Tween = create_tween().set_parallel(true)
-		tween.tween_property(piece,"position",destination,1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tween.tween_property(piece,"rotation",piece.rotation + Vector3(5,3,7),1.2)
-		tween.tween_property(piece,"scale",Vector3.ZERO,0.25).set_delay(0.95)
-	get_tree().create_timer(1.4,false).timeout.connect(burst.queue_free)
+	if is_instance_valid(stage_show) and stage_show.is_inside_tree(): stage_show.celebrate_at(pos,color)
 
 func _material(color: Color,emissive: bool = false) -> StandardMaterial3D:
 	var key: String = color.to_html() + ("e" if emissive else "m")
