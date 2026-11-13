@@ -1,0 +1,101 @@
+{
+  "showground": {
+    "meshes": 17,
+    "triangles": 49068,
+    "materials": [
+      "navy",
+      "wood",
+      "cream",
+      "deep",
+      "yellow",
+      "blue",
+      "wood_dark",
+      "wood_light",
+      "coral",
+      "Screen_Face",
+      "Screen_Answer_A",
+      "Screen_Answer_B",
+      "Screen_Answer_C",
+      "Screen_Answer_D",
+      "leaf_dark",
+      "leaf",
+      "leaf_light"
+    ]
+  },
+  "answer_platform": {
+    "meshes": 5,
+    "triangles": 1760,
+    "materials": [
+      "navy",
+      "cream",
+      "signal",
+      "white",
+      "yellow"
+    ]
+  },
+  "authoring_source": "tools/source/party_showground.blend",
+  "palette": {
+    "cream": "fff1d5",
+    "white": "fffdf0",
+    "navy": "263854",
+    "deep": "172c45",
+    "wood": "bb8057",
+    "wood_light": "e1af78",
+    "wood_dark": "845841",
+    "coral": "ef6b65",
+    "coral_dark": "c74a55",
+    "blue": "68aed8",
+    "mint": "67bdae",
+    "yellow": "edc765",
+    "leaf": "4b986f",
+    "leaf_light": "7cbd82",
+    "leaf_dark": "33745b",
+    "signal": "edc765",
+    "Screen_Face": "fff4df",
+    "Screen_Answer_A": "fa636b",
+    "Screen_Answer_B": "51a6f5",
+    "Screen_Answer_C": "47cda4",
+    "Screen_Answer_D": "ffcf4d"
+  },
+  "quiz_screen": {
+    "face_front_z": -13.5,
+    "face_center": [
+      0,
+      5.2,
+      -13.5
+    ],
+    "face_size": [
+      22.1,
+      4.32
+    ],
+    "question_zone_y": [
+      4.68,
+      7.2
+    ],
+    "answer_centers_x": [
+      -8.145,
+      -2.715,
+      2.715,
+      8.145
+    ],
+    "answer_center_y": 3.85,
+    "answer_size": [
+      5.2,
+      1.34
+    ],
+    "answer_front_z": -13.42,
+    "question_text_z": -13.47,
+    "answer_text_z": -13.39
+  },
+  "gameplay_bounds": {
+    "pad_centres": [
+      -3.4,
+      3.4
+    ],
+    "pad_size": 6.5,
+    "pad_top": 0,
+    "balcony_top": 1.5,
+    "balcony_z": -10,
+    "fall_threshold": -6
+  }
+}

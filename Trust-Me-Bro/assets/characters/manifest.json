@@ -1,0 +1,30 @@
+{
+  "author": "Original modeled assets for Trust Me, Bro!",
+  "pipeline": "Blender geometry modeling; no generated images or video",
+  "characters": [
+    {
+      "character": "Bun",
+      "triangles": 11232,
+      "file": "bun.glb",
+      "bytes": 272520
+    },
+    {
+      "character": "Cub",
+      "triangles": 11840,
+      "file": "cub.glb",
+      "bytes": 288436
+    },
+    {
+      "character": "Pip",
+      "triangles": 10792,
+      "file": "pip.glb",
+      "bytes": 252724
+    },
+    {
+      "character": "Sprout",
+      "triangles": 11840,
+      "file": "sprout.glb",
+      "bytes": 296856
+    }
+  ]
+}

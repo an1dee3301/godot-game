@@ -1,0 +1,9 @@
+.godot/
+builds/
+*.blend1
+*.blend2
+__pycache__/
+*.pyc
+# The development bridge is injected temporarily and must never ship.
+mcp_interaction_server.gd
+mcp_interaction_server.gd.uid

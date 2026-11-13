@@ -1,0 +1,156 @@
+{
+  "answer_block": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "hidden back-to-back faces: answer_block (104 pairs) - delete to save tris",
+      "asset lowest point z=-0.525 (not resting on ground plane z=0)"
+    ],
+    "ground_z": -0.525,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [
+      {
+        "where": "answer_block",
+        "tri_pairs": 104
+      }
+    ],
+    "enclosed": [],
+    "objects": {
+      "answer_block": {
+        "verts": 552,
+        "faces": 610,
+        "tris": 1084,
+        "ngons": 0,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 0,
+        "islands": 5,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 2
+      }
+    }
+  },
+  "banana": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "asset lowest point z=-0.23 (not resting on ground plane z=0)"
+    ],
+    "ground_z": -0.23,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [],
+    "enclosed": [],
+    "objects": {
+      "banana": {
+        "verts": 264,
+        "faces": 296,
+        "tris": 508,
+        "ngons": 0,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 0,
+        "islands": 5,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 4
+      }
+    }
+  },
+  "smoke_bomb": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "asset lowest point z=-0.33 (not resting on ground plane z=0)"
+    ],
+    "ground_z": -0.33,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [],
+    "enclosed": [],
+    "objects": {
+      "smoke_bomb": {
+        "verts": 550,
+        "faces": 596,
+        "tris": 1076,
+        "ngons": 0,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 0,
+        "islands": 6,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 4
+      }
+    }
+  },
+  "crown": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "asset lowest point z=-0.25 (not resting on ground plane z=0)"
+    ],
+    "ground_z": -0.25,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [],
+    "enclosed": [],
+    "objects": {
+      "crown": {
+        "verts": 1320,
+        "faces": 1422,
+        "tris": 2568,
+        "ngons": 0,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 0,
+        "islands": 19,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 4
+      }
+    }
+  }
+}
