@@ -1,0 +1,436 @@
+{
+  "ok": true,
+  "pass": true,
+  "errors": [],
+  "warnings": [
+    "hidden back-to-back faces: Showground_yellow<->Showground_coral (18 pairs) - delete to save tris",
+    "hidden back-to-back faces: Showground_wood<->Showground_cream (3 pairs) - delete to save tris",
+    "hidden back-to-back faces: Showground_navy<->Showground_wood (2 pairs) - delete to save tris",
+    "2 parts fully enclosed, not touching (eyes/internals?): ['Showground_yellow', 'Showground_yellow']",
+    "asset lowest point z=-7.25 (not resting on ground plane z=0)"
+  ],
+  "ground_z": -7.25,
+  "zfighting": [],
+  "floating": [],
+  "back_to_back": [
+    {
+      "where": "Showground_yellow<->Showground_coral",
+      "tri_pairs": 18
+    },
+    {
+      "where": "Showground_wood<->Showground_cream",
+      "tri_pairs": 3
+    },
+    {
+      "where": "Showground_navy<->Showground_wood",
+      "tri_pairs": 2
+    }
+  ],
+  "enclosed": [
+    {
+      "object": "Showground_yellow",
+      "island_verts": 222,
+      "center": [
+        -9.38,
+        4.2,
+        -0.3
+      ]
+    },
+    {
+      "object": "Showground_yellow",
+      "island_verts": 222,
+      "center": [
+        -9.71,
+        4.391,
+        -0.3
+      ]
+    }
+  ],
+  "objects": {
+    "Showground_navy": {
+      "verts": 4928,
+      "faces": 4958,
+      "tris": 9840,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 7,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_wood": {
+      "verts": 2144,
+      "faces": 2166,
+      "tris": 4264,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 7,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_cream": {
+      "verts": 3936,
+      "faces": 3954,
+      "tris": 7836,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 11,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_deep": {
+      "verts": 1152,
+      "faces": 1252,
+      "tris": 2284,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 5,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_yellow": {
+      "verts": 3940,
+      "faces": 4272,
+      "tris": 7804,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 19,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_blue": {
+      "verts": 576,
+      "faces": 588,
+      "tris": 1128,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 6,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_wood_dark": {
+      "verts": 384,
+      "faces": 392,
+      "tris": 752,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 4,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_wood_light": {
+      "verts": 2616,
+      "faces": 2678,
+      "tris": 5120,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 28,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_coral": {
+      "verts": 956,
+      "faces": 1022,
+      "tris": 1888,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 6,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Screen_Face": {
+      "verts": 224,
+      "faces": 248,
+      "tris": 444,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Screen_Answer_A": {
+      "verts": 224,
+      "faces": 248,
+      "tris": 444,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Screen_Answer_B": {
+      "verts": 224,
+      "faces": 248,
+      "tris": 444,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Screen_Answer_C": {
+      "verts": 224,
+      "faces": 248,
+      "tris": 444,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Screen_Answer_D": {
+      "verts": 224,
+      "faces": 248,
+      "tris": 444,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_leaf_dark": {
+      "verts": 990,
+      "faces": 1100,
+      "tris": 1972,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 2,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_leaf": {
+      "verts": 1110,
+      "faces": 1200,
+      "tris": 2200,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 5,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Showground_leaf_light": {
+      "verts": 888,
+      "faces": 960,
+      "tris": 1760,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 4,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    }
+  },
+  "review_notes": [
+    "No UVs are required: all materials use authored uniform PBR colors with no image textures.",
+    "The scene uses an intentionally open trap basin and a game-space origin at the pad top, so the world source extends below that origin."
+  ],
+  "asset": "party_garden.glb",
+  "authoring_source": "tools/source/party_showground.blend",
+  "warning_dispositions": {
+    "buried_contact_faces": "23 opposite contact-face pairs are retained inside fitted caps, trim, timber and TV hardware. No exposed coplanar surfaces were found.",
+    "enclosed_hardware": "Two brass hardware caps are intentionally recessed inside the fascia.",
+    "origin": "The gameplay origin is the pad top. The open basin extends to y=-7.25 so actors pass the y=-6 elimination plane."
+  }
+}

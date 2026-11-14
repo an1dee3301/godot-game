@@ -1,0 +1,636 @@
+{
+  "checker": "Standalone Blender structural checks; no external skills or packages",
+  "blender": "5.2.2 LTS",
+  "coordinate_system": "Blender Z up, -Y front; glTF export converts to game Y up",
+  "characters": {
+    "bun": {
+      "source": "art/source/bun.blend",
+      "pass": true,
+      "errors": [],
+      "meshes": [
+        {
+          "name": "SM_Body",
+          "vertices": 666,
+          "evaluated_triangles": 1320,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeL",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_Head",
+          "vertices": 2170,
+          "evaluated_triangles": 4296,
+          "material_slots": 4,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeR",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        }
+      ],
+      "pivots": {
+        "Body": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Head": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.4
+          ]
+        },
+        "ArmL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "ArmR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "FootL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "FootR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "EyeL": {
+          "parent": "Head",
+          "location": [
+            -0.19,
+            -0.352,
+            0.095
+          ]
+        },
+        "EyeR": {
+          "parent": "Head",
+          "location": [
+            0.19,
+            -0.352,
+            0.095
+          ]
+        }
+      },
+      "evaluated_triangles": 11232,
+      "external_images": [],
+      "world_bounds": {
+        "min": [
+          -0.775,
+          -0.509,
+          -0.9
+        ],
+        "max": [
+          0.775,
+          0.57,
+          1.453081
+        ],
+        "dimensions": [
+          1.55,
+          1.079,
+          2.353081
+        ]
+      },
+      "mesh_count": 8
+    },
+    "cub": {
+      "source": "art/source/cub.blend",
+      "pass": true,
+      "errors": [],
+      "meshes": [
+        {
+          "name": "SM_Body",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeL",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeR",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_Head",
+          "vertices": 2700,
+          "evaluated_triangles": 5344,
+          "material_slots": 6,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        }
+      ],
+      "pivots": {
+        "Body": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Head": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.4
+          ]
+        },
+        "ArmL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "ArmR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "FootL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "FootR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "EyeL": {
+          "parent": "Head",
+          "location": [
+            -0.19,
+            -0.352,
+            0.095
+          ]
+        },
+        "EyeR": {
+          "parent": "Head",
+          "location": [
+            0.19,
+            -0.352,
+            0.095
+          ]
+        }
+      },
+      "evaluated_triangles": 11840,
+      "external_images": [],
+      "world_bounds": {
+        "min": [
+          -0.775,
+          -0.55,
+          -0.9
+        ],
+        "max": [
+          0.775,
+          0.39,
+          1.005
+        ],
+        "dimensions": [
+          1.55,
+          0.94,
+          1.905
+        ]
+      },
+      "mesh_count": 8
+    },
+    "pip": {
+      "source": "art/source/pip.blend",
+      "pass": true,
+      "errors": [],
+      "meshes": [
+        {
+          "name": "SM_Body",
+          "vertices": 666,
+          "evaluated_triangles": 1320,
+          "material_slots": 3,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeL",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeR",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_Head",
+          "vertices": 1948,
+          "evaluated_triangles": 3856,
+          "material_slots": 6,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        }
+      ],
+      "pivots": {
+        "Body": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Head": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.4
+          ]
+        },
+        "ArmL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "ArmR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "FootL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "FootR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "EyeL": {
+          "parent": "Head",
+          "location": [
+            -0.19,
+            -0.352,
+            0.095
+          ]
+        },
+        "EyeR": {
+          "parent": "Head",
+          "location": [
+            0.19,
+            -0.352,
+            0.095
+          ]
+        }
+      },
+      "evaluated_triangles": 10792,
+      "external_images": [],
+      "world_bounds": {
+        "min": [
+          -0.775,
+          -0.61,
+          -0.9
+        ],
+        "max": [
+          0.775,
+          0.59,
+          1.12285
+        ],
+        "dimensions": [
+          1.55,
+          1.2,
+          2.02285
+        ]
+      },
+      "mesh_count": 8
+    },
+    "sprout": {
+      "source": "art/source/sprout.blend",
+      "pass": true,
+      "errors": [],
+      "meshes": [
+        {
+          "name": "SM_Body",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeL",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_Head",
+          "vertices": 2700,
+          "evaluated_triangles": 5344,
+          "material_slots": 6,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_EyeR",
+          "vertices": 530,
+          "evaluated_triangles": 1048,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootL",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_ArmR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        },
+        {
+          "name": "SM_FootR",
+          "vertices": 444,
+          "evaluated_triangles": 880,
+          "material_slots": 2,
+          "boundary_edges": 0,
+          "finite_geometry": true
+        }
+      ],
+      "pivots": {
+        "Body": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Head": {
+          "parent": "PartyMascot",
+          "location": [
+            0.0,
+            0.0,
+            0.4
+          ]
+        },
+        "ArmL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "ArmR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.43,
+            0.0,
+            -0.08
+          ]
+        },
+        "FootL": {
+          "parent": "PartyMascot",
+          "location": [
+            -0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "FootR": {
+          "parent": "PartyMascot",
+          "location": [
+            0.235,
+            0.0,
+            -0.62
+          ]
+        },
+        "EyeL": {
+          "parent": "Head",
+          "location": [
+            -0.19,
+            -0.352,
+            0.095
+          ]
+        },
+        "EyeR": {
+          "parent": "Head",
+          "location": [
+            0.19,
+            -0.352,
+            0.095
+          ]
+        }
+      },
+      "evaluated_triangles": 11840,
+      "external_images": [],
+      "world_bounds": {
+        "min": [
+          -0.775,
+          -0.509,
+          -0.9
+        ],
+        "max": [
+          0.775,
+          0.39,
+          1.107146
+        ],
+        "dimensions": [
+          1.55,
+          0.899,
+          2.007146
+        ]
+      },
+      "mesh_count": 8
+    }
+  },
+  "pass": true
+}

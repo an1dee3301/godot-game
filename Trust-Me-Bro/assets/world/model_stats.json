@@ -1,0 +1,43 @@
+{
+  "garden": {
+    "meshes": 17,
+    "triangles": 49068,
+    "materials": [
+      "navy",
+      "wood",
+      "cream",
+      "deep",
+      "yellow",
+      "blue",
+      "wood_dark",
+      "wood_light",
+      "coral",
+      "Screen_Face",
+      "Screen_Answer_A",
+      "Screen_Answer_B",
+      "Screen_Answer_C",
+      "Screen_Answer_D",
+      "leaf_dark",
+      "leaf",
+      "leaf_light"
+    ]
+  },
+  "answer_platform": {
+    "meshes": 5,
+    "triangles": 1760,
+    "materials": [
+      "navy",
+      "cream",
+      "signal",
+      "white",
+      "yellow"
+    ]
+  },
+  "cloud": {
+    "meshes": 1,
+    "triangles": 1760,
+    "materials": [
+      "white"
+    ]
+  }
+}

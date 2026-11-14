@@ -1,0 +1,32 @@
+; Trust Me, Bro! — a shared-view physics quiz show.
+config_version=5
+
+[application]
+config/name="Trust Me, Bro!"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
+config/icon="res://assets/characters/portraits/avatar_0.png"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/size/window_width_override=1280
+window/size/window_height_override=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[physics]
+common/physics_ticks_per_second=60
+3d/default_gravity=19.0
+
+[layer_names]
+3d_physics/layer_1="Studio"
+3d_physics/layer_2="Contestants"
+3d_physics/layer_3="Answer cubes and junk"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.12, 0.12, 0.24, 1)

@@ -1,0 +1,46 @@
+{
+  "answer_block": {
+    "triangles": 1084,
+    "objects": 1,
+    "materials": 2,
+    "dimensions_m": [
+      1.098,
+      1.05,
+      1.098
+    ],
+    "bytes": 31668
+  },
+  "banana": {
+    "triangles": 508,
+    "objects": 1,
+    "materials": 4,
+    "dimensions_m": [
+      1.0376,
+      0.4882,
+      0.2
+    ],
+    "bytes": 20820
+  },
+  "smoke_bomb": {
+    "triangles": 1076,
+    "objects": 1,
+    "materials": 4,
+    "dimensions_m": [
+      0.6,
+      0.827,
+      0.607
+    ],
+    "bytes": 45216
+  },
+  "crown": {
+    "triangles": 2568,
+    "objects": 1,
+    "materials": 4,
+    "dimensions_m": [
+      0.9313,
+      0.698,
+      1.066
+    ],
+    "bytes": 123968
+  }
+}

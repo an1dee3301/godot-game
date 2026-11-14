@@ -1,0 +1,58 @@
+{
+  "festival_dressing": {
+    "meshes": 13,
+    "triangles": 51648,
+    "materials": [
+      "blue",
+      "bulb_blue",
+      "bulb_coral",
+      "bulb_mint",
+      "bulb_warm",
+      "coral",
+      "cream",
+      "mint",
+      "navy",
+      "rope",
+      "wood",
+      "wood_light",
+      "yellow"
+    ]
+  },
+  "crowd_fan": {
+    "meshes": 2,
+    "triangles": 1168,
+    "materials": [
+      "fan_body",
+      "fan_face"
+    ]
+  },
+  "party_balloon": {
+    "meshes": 2,
+    "triangles": 1012,
+    "materials": [
+      "balloon",
+      "rope"
+    ]
+  },
+  "sailboat": {
+    "meshes": 6,
+    "triangles": 978,
+    "materials": [
+      "coral",
+      "cream",
+      "sail",
+      "wood",
+      "wood_light",
+      "yellow"
+    ]
+  },
+  "buoy": {
+    "meshes": 3,
+    "triangles": 1240,
+    "materials": [
+      "bulb_warm",
+      "coral",
+      "cream"
+    ]
+  }
+}

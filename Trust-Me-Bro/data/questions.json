@@ -1,0 +1,2245 @@
+{
+  "version": 2,
+  "questions": [
+    {
+      "id": "science_01",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "Which object is at the center of our solar system?",
+      "answers": [
+        "The Sun",
+        "Earth",
+        "The Moon",
+        "Jupiter"
+      ],
+      "correct": 0,
+      "explanation": "The planets orbit the Sun."
+    },
+    {
+      "id": "science_02",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "What is the chemical formula for water?",
+      "answers": [
+        "H2O",
+        "CO2",
+        "O2",
+        "NaCl"
+      ],
+      "correct": 0,
+      "explanation": "A water molecule has two hydrogen atoms and one oxygen atom."
+    },
+    {
+      "id": "science_03",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "Which force pulls objects toward Earth?",
+      "answers": [
+        "Gravity",
+        "Magnetism",
+        "Friction",
+        "Buoyancy"
+      ],
+      "correct": 0,
+      "explanation": "Earth's gravity attracts objects toward its center."
+    },
+    {
+      "id": "science_04",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "Which planet is closest to the Sun?",
+      "answers": [
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Earth"
+      ],
+      "correct": 0,
+      "explanation": "Mercury has the smallest orbit of the eight planets."
+    },
+    {
+      "id": "science_05",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "What do we call liquid water turning into vapor?",
+      "answers": [
+        "Evaporation",
+        "Freezing",
+        "Melting",
+        "Condensation"
+      ],
+      "correct": 0,
+      "explanation": "Evaporation changes a liquid into a gas."
+    },
+    {
+      "id": "science_06",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "Which organ pumps blood around the body?",
+      "answers": [
+        "Heart",
+        "Liver",
+        "Lung",
+        "Stomach"
+      ],
+      "correct": 0,
+      "explanation": "The heart contracts to move blood through blood vessels."
+    },
+    {
+      "id": "science_07",
+      "category": "Science",
+      "difficulty": "easy",
+      "prompt": "What does a thermometer measure?",
+      "answers": [
+        "Temperature",
+        "Distance",
+        "Speed",
+        "Mass"
+      ],
+      "correct": 0,
+      "explanation": "A thermometer measures temperature."
+    },
+    {
+      "id": "science_08",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "What is the chemical symbol for gold?",
+      "answers": [
+        "Au",
+        "Ag",
+        "Gd",
+        "Go"
+      ],
+      "correct": 0,
+      "explanation": "Gold's chemical symbol is Au, from the Latin aurum."
+    },
+    {
+      "id": "science_09",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "Which gas makes up most of Earth's atmosphere?",
+      "answers": [
+        "Nitrogen",
+        "Oxygen",
+        "Carbon dioxide",
+        "Hydrogen"
+      ],
+      "correct": 0,
+      "explanation": "Nitrogen makes up about 78 percent of dry air by volume."
+    },
+    {
+      "id": "science_10",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "What is the SI unit of electric current?",
+      "answers": [
+        "Ampere",
+        "Volt",
+        "Watt",
+        "Ohm"
+      ],
+      "correct": 0,
+      "explanation": "The ampere is the SI base unit of electric current."
+    },
+    {
+      "id": "science_11",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "Which particle has a negative electric charge?",
+      "answers": [
+        "Electron",
+        "Proton",
+        "Neutron",
+        "Photon"
+      ],
+      "correct": 0,
+      "explanation": "Electrons carry negative electric charge."
+    },
+    {
+      "id": "science_12",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "Which planet is the largest in our solar system?",
+      "answers": [
+        "Jupiter",
+        "Saturn",
+        "Neptune",
+        "Earth"
+      ],
+      "correct": 0,
+      "explanation": "Jupiter is the largest of the eight planets."
+    },
+    {
+      "id": "science_13",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "What is the SI unit of force?",
+      "answers": [
+        "Newton",
+        "Joule",
+        "Pascal",
+        "Watt"
+      ],
+      "correct": 0,
+      "explanation": "One newton accelerates one kilogram at one meter per second squared."
+    },
+    {
+      "id": "science_14",
+      "category": "Science",
+      "difficulty": "medium",
+      "prompt": "What does a pH below 7 indicate in an aqueous solution?",
+      "answers": [
+        "Acidic",
+        "Neutral",
+        "Alkaline",
+        "Magnetic"
+      ],
+      "correct": 0,
+      "explanation": "At ordinary room temperature, a pH below 7 is acidic."
+    },
+    {
+      "id": "science_15",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "What is the atomic number of carbon?",
+      "answers": [
+        "6",
+        "8",
+        "12",
+        "14"
+      ],
+      "correct": 0,
+      "explanation": "Carbon has six protons in its nucleus."
+    },
+    {
+      "id": "science_16",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "Which process powers the Sun's core?",
+      "answers": [
+        "Nuclear fusion",
+        "Combustion",
+        "Nuclear fission",
+        "Evaporation"
+      ],
+      "correct": 0,
+      "explanation": "Hydrogen nuclei fuse into helium in the Sun's core."
+    },
+    {
+      "id": "science_17",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "Which wave has a longer wavelength than red light?",
+      "answers": [
+        "Infrared",
+        "Ultraviolet",
+        "X-ray",
+        "Gamma ray"
+      ],
+      "correct": 0,
+      "explanation": "Infrared lies just beyond red in the electromagnetic spectrum."
+    },
+    {
+      "id": "science_18",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "What is the SI base unit of amount of substance?",
+      "answers": [
+        "Mole",
+        "Gram",
+        "Liter",
+        "Kelvin"
+      ],
+      "correct": 0,
+      "explanation": "The mole measures amount of substance."
+    },
+    {
+      "id": "science_19",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "Which part of an atom contains protons and neutrons?",
+      "answers": [
+        "Nucleus",
+        "Electron shell",
+        "Chemical bond",
+        "Photon cloud"
+      ],
+      "correct": 0,
+      "explanation": "Protons and neutrons are found in the atomic nucleus."
+    },
+    {
+      "id": "science_20",
+      "category": "Science",
+      "difficulty": "hard",
+      "prompt": "Why can we see the Moon shining at night?",
+      "answers": [
+        "It reflects sunlight",
+        "It burns hydrogen",
+        "It makes lightning",
+        "It stores daylight"
+      ],
+      "correct": 0,
+      "explanation": "Most visible moonlight is reflected sunlight."
+    },
+    {
+      "id": "nature_01",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "Which of these animals is a mammal?",
+      "answers": [
+        "Dolphin",
+        "Shark",
+        "Crocodile",
+        "Penguin"
+      ],
+      "correct": 0,
+      "explanation": "Dolphins breathe air and feed their young milk."
+    },
+    {
+      "id": "nature_02",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "How many legs does an adult insect have?",
+      "answers": [
+        "6",
+        "4",
+        "8",
+        "10"
+      ],
+      "correct": 0,
+      "explanation": "Adult insects have three pairs of legs."
+    },
+    {
+      "id": "nature_03",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "What does a caterpillar become after metamorphosis?",
+      "answers": [
+        "A butterfly or moth",
+        "A beetle",
+        "A spider",
+        "A bee"
+      ],
+      "correct": 0,
+      "explanation": "Caterpillars are the larval stage of butterflies and moths."
+    },
+    {
+      "id": "nature_04",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "Which part of a plant usually absorbs water from soil?",
+      "answers": [
+        "Roots",
+        "Petals",
+        "Fruit",
+        "Seeds"
+      ],
+      "correct": 0,
+      "explanation": "Roots absorb water and minerals from the soil."
+    },
+    {
+      "id": "nature_05",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "Which animal is the largest living species?",
+      "answers": [
+        "Blue whale",
+        "African elephant",
+        "Giraffe",
+        "Whale shark"
+      ],
+      "correct": 0,
+      "explanation": "The blue whale is the largest living animal species."
+    },
+    {
+      "id": "nature_06",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "Which animal is a reptile?",
+      "answers": [
+        "Crocodile",
+        "Frog",
+        "Salmon",
+        "Dolphin"
+      ],
+      "correct": 0,
+      "explanation": "Crocodiles are reptiles."
+    },
+    {
+      "id": "nature_07",
+      "category": "Nature",
+      "difficulty": "easy",
+      "prompt": "What do bees collect from flowers to make honey?",
+      "answers": [
+        "Nectar",
+        "Pollen only",
+        "Tree bark",
+        "Morning dew"
+      ],
+      "correct": 0,
+      "explanation": "Honey bees convert floral nectar into honey."
+    },
+    {
+      "id": "nature_08",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "How many legs does a spider have?",
+      "answers": [
+        "8",
+        "6",
+        "10",
+        "12"
+      ],
+      "correct": 0,
+      "explanation": "Spiders are arachnids with four pairs of legs."
+    },
+    {
+      "id": "nature_09",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "What is an animal with a backbone called?",
+      "answers": [
+        "Vertebrate",
+        "Invertebrate",
+        "Mollusk",
+        "Arthropod"
+      ],
+      "correct": 0,
+      "explanation": "Vertebrates have a backbone or vertebral column."
+    },
+    {
+      "id": "nature_10",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "Which gas do plants take in for photosynthesis?",
+      "answers": [
+        "Carbon dioxide",
+        "Helium",
+        "Nitrogen",
+        "Neon"
+      ],
+      "correct": 0,
+      "explanation": "Photosynthesis uses carbon dioxide and water to make sugars."
+    },
+    {
+      "id": "nature_11",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "Which structure helps most fish breathe underwater?",
+      "answers": [
+        "Gills",
+        "Lungs",
+        "Feathers",
+        "Antennae"
+      ],
+      "correct": 0,
+      "explanation": "Gills extract dissolved oxygen from water."
+    },
+    {
+      "id": "nature_12",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "Which of these is a fungus?",
+      "answers": [
+        "Mushroom",
+        "Oak tree",
+        "Fern",
+        "Moss"
+      ],
+      "correct": 0,
+      "explanation": "Mushrooms are the fruiting bodies of some fungi."
+    },
+    {
+      "id": "nature_13",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "What is the green pigment used in photosynthesis?",
+      "answers": [
+        "Chlorophyll",
+        "Melanin",
+        "Hemoglobin",
+        "Keratin"
+      ],
+      "correct": 0,
+      "explanation": "Chlorophyll absorbs light used in photosynthesis."
+    },
+    {
+      "id": "nature_14",
+      "category": "Nature",
+      "difficulty": "medium",
+      "prompt": "Which biome is known for very low rainfall?",
+      "answers": [
+        "Desert",
+        "Rainforest",
+        "Wetland",
+        "Mangrove"
+      ],
+      "correct": 0,
+      "explanation": "Deserts receive very little precipitation."
+    },
+    {
+      "id": "nature_15",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "Which group includes snails and octopuses?",
+      "answers": [
+        "Mollusks",
+        "Reptiles",
+        "Insects",
+        "Arachnids"
+      ],
+      "correct": 0,
+      "explanation": "Snails and octopuses are both mollusks."
+    },
+    {
+      "id": "nature_16",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "What do we call a relationship that benefits both species?",
+      "answers": [
+        "Mutualism",
+        "Parasitism",
+        "Predation",
+        "Competition"
+      ],
+      "correct": 0,
+      "explanation": "Mutualism benefits both organisms in the relationship."
+    },
+    {
+      "id": "nature_17",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "What is the main structural material in an insect's exoskeleton?",
+      "answers": [
+        "Chitin",
+        "Cellulose",
+        "Calcium phosphate",
+        "Silica"
+      ],
+      "correct": 0,
+      "explanation": "Arthropod exoskeletons contain the polysaccharide chitin."
+    },
+    {
+      "id": "nature_18",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "Which tissue carries water upward in vascular plants?",
+      "answers": [
+        "Xylem",
+        "Phloem",
+        "Epidermis",
+        "Pollen"
+      ],
+      "correct": 0,
+      "explanation": "Xylem transports water and dissolved minerals from roots."
+    },
+    {
+      "id": "nature_19",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "What is the study of fungi called?",
+      "answers": [
+        "Mycology",
+        "Entomology",
+        "Ornithology",
+        "Geology"
+      ],
+      "correct": 0,
+      "explanation": "Mycology is the scientific study of fungi."
+    },
+    {
+      "id": "nature_20",
+      "category": "Nature",
+      "difficulty": "hard",
+      "prompt": "What is an animal that eats both plants and animals?",
+      "answers": [
+        "Omnivore",
+        "Herbivore",
+        "Carnivore",
+        "Detritivore"
+      ],
+      "correct": 0,
+      "explanation": "Omnivores consume both plant and animal food."
+    },
+    {
+      "id": "world_01",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "On which continent is most of Egypt located?",
+      "answers": [
+        "Africa",
+        "Europe",
+        "South America",
+        "Australia"
+      ],
+      "correct": 0,
+      "explanation": "Egypt is in northeastern Africa, with the Sinai Peninsula in Asia."
+    },
+    {
+      "id": "world_02",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "What is the largest ocean on Earth?",
+      "answers": [
+        "Pacific Ocean",
+        "Atlantic Ocean",
+        "Indian Ocean",
+        "Arctic Ocean"
+      ],
+      "correct": 0,
+      "explanation": "The Pacific covers more area than any other ocean."
+    },
+    {
+      "id": "world_03",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "Which country is home to the Eiffel Tower?",
+      "answers": [
+        "France",
+        "Italy",
+        "Spain",
+        "Germany"
+      ],
+      "correct": 0,
+      "explanation": "The Eiffel Tower stands in Paris, France."
+    },
+    {
+      "id": "world_04",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "Which direction is opposite north?",
+      "answers": [
+        "South",
+        "East",
+        "West",
+        "Northeast"
+      ],
+      "correct": 0,
+      "explanation": "North and south are opposite compass directions."
+    },
+    {
+      "id": "world_05",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "Which continent contains the South Pole?",
+      "answers": [
+        "Antarctica",
+        "Asia",
+        "Europe",
+        "Africa"
+      ],
+      "correct": 0,
+      "explanation": "The geographic South Pole lies on Antarctica."
+    },
+    {
+      "id": "world_06",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "Which country is famous for the ancient pyramids at Giza?",
+      "answers": [
+        "Egypt",
+        "Greece",
+        "Mexico",
+        "India"
+      ],
+      "correct": 0,
+      "explanation": "The Giza pyramid complex is in Egypt."
+    },
+    {
+      "id": "world_07",
+      "category": "World",
+      "difficulty": "easy",
+      "prompt": "What is the capital of Japan?",
+      "answers": [
+        "Tokyo",
+        "Kyoto",
+        "Osaka",
+        "Seoul"
+      ],
+      "correct": 0,
+      "explanation": "Tokyo is Japan's capital."
+    },
+    {
+      "id": "world_08",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "What is the capital of Australia?",
+      "answers": [
+        "Canberra",
+        "Sydney",
+        "Melbourne",
+        "Perth"
+      ],
+      "correct": 0,
+      "explanation": "Canberra is Australia's national capital."
+    },
+    {
+      "id": "world_09",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "Which ocean lies between Africa and Australia?",
+      "answers": [
+        "Indian Ocean",
+        "Atlantic Ocean",
+        "Arctic Ocean",
+        "Southern Ocean"
+      ],
+      "correct": 0,
+      "explanation": "The Indian Ocean lies east of Africa and west of Australia."
+    },
+    {
+      "id": "world_10",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "Which country contains the cities Rome and Venice?",
+      "answers": [
+        "Italy",
+        "France",
+        "Portugal",
+        "Croatia"
+      ],
+      "correct": 0,
+      "explanation": "Rome and Venice are both in Italy."
+    },
+    {
+      "id": "world_11",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "Which line divides Earth into northern and southern halves?",
+      "answers": [
+        "Equator",
+        "Prime meridian",
+        "Tropic of Cancer",
+        "International Date Line"
+      ],
+      "correct": 0,
+      "explanation": "The equator is the line of zero degrees latitude."
+    },
+    {
+      "id": "world_12",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "Which mountain range contains Mount Everest?",
+      "answers": [
+        "Himalayas",
+        "Andes",
+        "Alps",
+        "Rockies"
+      ],
+      "correct": 0,
+      "explanation": "Everest is part of the Himalayan mountain range."
+    },
+    {
+      "id": "world_13",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "Which country is home to Machu Picchu?",
+      "answers": [
+        "Peru",
+        "Chile",
+        "Bolivia",
+        "Ecuador"
+      ],
+      "correct": 0,
+      "explanation": "Machu Picchu is an Inca site in Peru."
+    },
+    {
+      "id": "world_14",
+      "category": "World",
+      "difficulty": "medium",
+      "prompt": "What is the capital of Canada?",
+      "answers": [
+        "Ottawa",
+        "Toronto",
+        "Vancouver",
+        "Montreal"
+      ],
+      "correct": 0,
+      "explanation": "Ottawa is the federal capital of Canada."
+    },
+    {
+      "id": "world_15",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "Which country contains the ancient city of Petra?",
+      "answers": [
+        "Jordan",
+        "Morocco",
+        "Türkiye",
+        "Oman"
+      ],
+      "correct": 0,
+      "explanation": "Petra is a historic city in southern Jordan."
+    },
+    {
+      "id": "world_16",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "Which strait separates Spain from Morocco?",
+      "answers": [
+        "Gibraltar",
+        "Bering",
+        "Malacca",
+        "Hormuz"
+      ],
+      "correct": 0,
+      "explanation": "The Strait of Gibraltar links the Atlantic Ocean and Mediterranean Sea."
+    },
+    {
+      "id": "world_17",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "Which river flows through Vienna and Budapest?",
+      "answers": [
+        "Danube",
+        "Rhine",
+        "Seine",
+        "Thames"
+      ],
+      "correct": 0,
+      "explanation": "Vienna and Budapest both lie on the Danube."
+    },
+    {
+      "id": "world_18",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "Which country completely surrounds Lesotho?",
+      "answers": [
+        "South Africa",
+        "Botswana",
+        "Namibia",
+        "Zimbabwe"
+      ],
+      "correct": 0,
+      "explanation": "Lesotho is an enclave within South Africa."
+    },
+    {
+      "id": "world_19",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "What is the name for zero degrees longitude?",
+      "answers": [
+        "Prime meridian",
+        "Equator",
+        "Arctic Circle",
+        "Tropic of Capricorn"
+      ],
+      "correct": 0,
+      "explanation": "The prime meridian is the reference line for longitude."
+    },
+    {
+      "id": "world_20",
+      "category": "World",
+      "difficulty": "hard",
+      "prompt": "Which desert stretches across Mongolia and northern China?",
+      "answers": [
+        "Gobi",
+        "Sahara",
+        "Atacama",
+        "Kalahari"
+      ],
+      "correct": 0,
+      "explanation": "The Gobi occupies parts of Mongolia and northern China."
+    },
+    {
+      "id": "history_01",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "Which civilization built the pyramids at Giza?",
+      "answers": [
+        "Ancient Egyptians",
+        "Vikings",
+        "Aztecs",
+        "Ancient Romans"
+      ],
+      "correct": 0,
+      "explanation": "The Giza pyramids were built during Egypt's Old Kingdom."
+    },
+    {
+      "id": "history_02",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "Which city was the center of the ancient Roman Empire?",
+      "answers": [
+        "Rome",
+        "Athens",
+        "Paris",
+        "Cairo"
+      ],
+      "correct": 0,
+      "explanation": "Rome gave the Roman Empire its name."
+    },
+    {
+      "id": "history_03",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "Who was the first person to walk on the Moon?",
+      "answers": [
+        "Neil Armstrong",
+        "Yuri Gagarin",
+        "Buzz Aldrin",
+        "Alan Shepard"
+      ],
+      "correct": 0,
+      "explanation": "Neil Armstrong stepped onto the Moon during Apollo 11 in 1969."
+    },
+    {
+      "id": "history_04",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "In which year did World War II end?",
+      "answers": [
+        "1945",
+        "1939",
+        "1918",
+        "1963"
+      ],
+      "correct": 0,
+      "explanation": "World War II ended in 1945."
+    },
+    {
+      "id": "history_05",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "Which ancient people are associated with longships?",
+      "answers": [
+        "Vikings",
+        "Incas",
+        "Aztecs",
+        "Samurai"
+      ],
+      "correct": 0,
+      "explanation": "Viking longships supported travel, trade and raids."
+    },
+    {
+      "id": "history_06",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "Which historical wall is in northern China?",
+      "answers": [
+        "Great Wall",
+        "Hadrian's Wall",
+        "Berlin Wall",
+        "Western Wall"
+      ],
+      "correct": 0,
+      "explanation": "The Great Wall comprises fortifications across northern China."
+    },
+    {
+      "id": "history_07",
+      "category": "History",
+      "difficulty": "easy",
+      "prompt": "What material gave the Bronze Age its name?",
+      "answers": [
+        "Bronze",
+        "Iron",
+        "Steel",
+        "Aluminum"
+      ],
+      "correct": 0,
+      "explanation": "Bronze is an alloy usually made from copper and tin."
+    },
+    {
+      "id": "history_08",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "In which year did Apollo 11 land humans on the Moon?",
+      "answers": [
+        "1969",
+        "1959",
+        "1979",
+        "1989"
+      ],
+      "correct": 0,
+      "explanation": "Apollo 11 landed on the Moon in July 1969."
+    },
+    {
+      "id": "history_09",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Which ship sank on its maiden voyage in 1912?",
+      "answers": [
+        "Titanic",
+        "Mayflower",
+        "Endeavour",
+        "Beagle"
+      ],
+      "correct": 0,
+      "explanation": "RMS Titanic struck an iceberg and sank in April 1912."
+    },
+    {
+      "id": "history_10",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Which city was buried by Mount Vesuvius in AD 79?",
+      "answers": [
+        "Pompeii",
+        "Sparta",
+        "Troy",
+        "Carthage"
+      ],
+      "correct": 0,
+      "explanation": "Vesuvius buried Pompeii beneath volcanic material."
+    },
+    {
+      "id": "history_11",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Who is associated with movable-type printing in 15th-century Europe?",
+      "answers": [
+        "Johannes Gutenberg",
+        "Isaac Newton",
+        "Galileo Galilei",
+        "Marco Polo"
+      ],
+      "correct": 0,
+      "explanation": "Gutenberg developed a movable metal-type printing system in Europe."
+    },
+    {
+      "id": "history_12",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Which civilization built Machu Picchu?",
+      "answers": [
+        "Inca",
+        "Maya",
+        "Roman",
+        "Egyptian"
+      ],
+      "correct": 0,
+      "explanation": "Machu Picchu was built during the Inca Empire."
+    },
+    {
+      "id": "history_13",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Who wrote the Declaration of Independence's main draft?",
+      "answers": [
+        "Thomas Jefferson",
+        "George Washington",
+        "Abraham Lincoln",
+        "Benjamin Franklin"
+      ],
+      "correct": 0,
+      "explanation": "Thomas Jefferson prepared the main draft in 1776."
+    },
+    {
+      "id": "history_14",
+      "category": "History",
+      "difficulty": "medium",
+      "prompt": "Which ocean did the 1620 Mayflower voyage cross?",
+      "answers": [
+        "Atlantic",
+        "Pacific",
+        "Indian",
+        "Arctic"
+      ],
+      "correct": 0,
+      "explanation": "The Mayflower crossed the Atlantic from England to North America."
+    },
+    {
+      "id": "history_15",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "In which year was Magna Carta first issued?",
+      "answers": [
+        "1215",
+        "1066",
+        "1492",
+        "1649"
+      ],
+      "correct": 0,
+      "explanation": "King John issued Magna Carta in 1215."
+    },
+    {
+      "id": "history_16",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "Who became the first human to orbit Earth in 1961?",
+      "answers": [
+        "Yuri Gagarin",
+        "John Glenn",
+        "Neil Armstrong",
+        "Valentina Tereshkova"
+      ],
+      "correct": 0,
+      "explanation": "Yuri Gagarin orbited Earth aboard Vostok 1 in 1961."
+    },
+    {
+      "id": "history_17",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "Which empire used the city of Tenochtitlan as its capital?",
+      "answers": [
+        "Aztec",
+        "Inca",
+        "Mongol",
+        "Ottoman"
+      ],
+      "correct": 0,
+      "explanation": "Tenochtitlan was the capital of the Aztec Empire."
+    },
+    {
+      "id": "history_18",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "Which period followed the Stone Age in the three-age system?",
+      "answers": [
+        "Bronze Age",
+        "Iron Age",
+        "Industrial Age",
+        "Space Age"
+      ],
+      "correct": 0,
+      "explanation": "The three-age system orders Stone, Bronze and Iron Ages."
+    },
+    {
+      "id": "history_19",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "In which year did the Berlin Wall open?",
+      "answers": [
+        "1989",
+        "1979",
+        "1999",
+        "1969"
+      ],
+      "correct": 0,
+      "explanation": "The Berlin Wall's border crossings opened in November 1989."
+    },
+    {
+      "id": "history_20",
+      "category": "History",
+      "difficulty": "hard",
+      "prompt": "Which treaty was signed on 28 June 1919 after World War I?",
+      "answers": [
+        "Versailles",
+        "Tordesillas",
+        "Utrecht",
+        "Westphalia"
+      ],
+      "correct": 0,
+      "explanation": "The Treaty of Versailles was signed in 1919."
+    },
+    {
+      "id": "arts_01",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Who painted the Mona Lisa?",
+      "answers": [
+        "Leonardo da Vinci",
+        "Vincent van Gogh",
+        "Claude Monet",
+        "Pablo Picasso"
+      ],
+      "correct": 0,
+      "explanation": "Leonardo da Vinci painted the Mona Lisa."
+    },
+    {
+      "id": "arts_02",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Who wrote Romeo and Juliet?",
+      "answers": [
+        "William Shakespeare",
+        "Charles Dickens",
+        "Jane Austen",
+        "J. R. R. Tolkien"
+      ],
+      "correct": 0,
+      "explanation": "Romeo and Juliet is a tragedy by William Shakespeare."
+    },
+    {
+      "id": "arts_03",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Which art form uses folded paper?",
+      "answers": [
+        "Origami",
+        "Pottery",
+        "Weaving",
+        "Mosaic"
+      ],
+      "correct": 0,
+      "explanation": "Origami creates forms by folding paper."
+    },
+    {
+      "id": "arts_04",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Which instrument has black and white keys?",
+      "answers": [
+        "Piano",
+        "Trumpet",
+        "Flute",
+        "Violin"
+      ],
+      "correct": 0,
+      "explanation": "A piano keyboard has white and black keys."
+    },
+    {
+      "id": "arts_05",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "What do we call a person who leads an orchestra?",
+      "answers": [
+        "Conductor",
+        "Sculptor",
+        "Editor",
+        "Curator"
+      ],
+      "correct": 0,
+      "explanation": "The conductor directs an orchestra's performance."
+    },
+    {
+      "id": "arts_06",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Which art form shapes clay and fires it in a kiln?",
+      "answers": [
+        "Pottery",
+        "Embroidery",
+        "Origami",
+        "Printmaking"
+      ],
+      "correct": 0,
+      "explanation": "Firing hardens clay objects into ceramics."
+    },
+    {
+      "id": "arts_07",
+      "category": "Arts",
+      "difficulty": "easy",
+      "prompt": "Which instrument normally has six strings?",
+      "answers": [
+        "Guitar",
+        "Trumpet",
+        "Clarinet",
+        "Flute"
+      ],
+      "correct": 0,
+      "explanation": "A standard guitar has six strings."
+    },
+    {
+      "id": "arts_08",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Who painted The Starry Night in 1889?",
+      "answers": [
+        "Vincent van Gogh",
+        "Salvador Dalí",
+        "Johannes Vermeer",
+        "Henri Matisse"
+      ],
+      "correct": 0,
+      "explanation": "Van Gogh painted The Starry Night in 1889."
+    },
+    {
+      "id": "arts_09",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Who wrote Pride and Prejudice?",
+      "answers": [
+        "Jane Austen",
+        "Mary Shelley",
+        "Emily Brontë",
+        "Virginia Woolf"
+      ],
+      "correct": 0,
+      "explanation": "Pride and Prejudice was published by Jane Austen in 1813."
+    },
+    {
+      "id": "arts_10",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "What is a picture assembled from small pieces called?",
+      "answers": [
+        "Mosaic",
+        "Sonnet",
+        "Symphony",
+        "Ballet"
+      ],
+      "correct": 0,
+      "explanation": "Mosaics arrange small pieces into a larger image."
+    },
+    {
+      "id": "arts_11",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Which musical term means to play softly?",
+      "answers": [
+        "Piano",
+        "Forte",
+        "Presto",
+        "Allegro"
+      ],
+      "correct": 0,
+      "explanation": "The dynamic marking piano means softly."
+    },
+    {
+      "id": "arts_12",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Which color of light combines with red to make yellow?",
+      "answers": [
+        "Green",
+        "Blue",
+        "Violet",
+        "Cyan"
+      ],
+      "correct": 0,
+      "explanation": "Red and green light combine additively to make yellow."
+    },
+    {
+      "id": "arts_13",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Who created the fictional detective Sherlock Holmes?",
+      "answers": [
+        "Arthur Conan Doyle",
+        "Agatha Christie",
+        "Jules Verne",
+        "H. G. Wells"
+      ],
+      "correct": 0,
+      "explanation": "Arthur Conan Doyle introduced Sherlock Holmes in 1887."
+    },
+    {
+      "id": "arts_14",
+      "category": "Arts",
+      "difficulty": "medium",
+      "prompt": "Which instrument belongs to the woodwind family?",
+      "answers": [
+        "Clarinet",
+        "Trumpet",
+        "Trombone",
+        "Tuba"
+      ],
+      "correct": 0,
+      "explanation": "A clarinet is a single-reed woodwind instrument."
+    },
+    {
+      "id": "arts_15",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "How many lines are in a traditional sonnet?",
+      "answers": [
+        "14",
+        "12",
+        "16",
+        "18"
+      ],
+      "correct": 0,
+      "explanation": "A traditional sonnet has fourteen lines."
+    },
+    {
+      "id": "arts_16",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "Which composer wrote The Four Seasons violin concertos?",
+      "answers": [
+        "Antonio Vivaldi",
+        "Wolfgang Mozart",
+        "Frédéric Chopin",
+        "Claude Debussy"
+      ],
+      "correct": 0,
+      "explanation": "Vivaldi's The Four Seasons consists of four violin concertos."
+    },
+    {
+      "id": "arts_17",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "Which clef is also called the G clef?",
+      "answers": [
+        "Treble",
+        "Bass",
+        "Alto",
+        "Tenor"
+      ],
+      "correct": 0,
+      "explanation": "The treble clef marks the G line on the staff."
+    },
+    {
+      "id": "arts_18",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "Who wrote Frankenstein, first published in 1818?",
+      "answers": [
+        "Mary Shelley",
+        "Bram Stoker",
+        "Oscar Wilde",
+        "Robert Louis Stevenson"
+      ],
+      "correct": 0,
+      "explanation": "Mary Shelley wrote Frankenstein."
+    },
+    {
+      "id": "arts_19",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "What is the term for painting on wet plaster?",
+      "answers": [
+        "Fresco",
+        "Etching",
+        "Collage",
+        "Lithography"
+      ],
+      "correct": 0,
+      "explanation": "Fresco pigments are applied to freshly laid wet plaster."
+    },
+    {
+      "id": "arts_20",
+      "category": "Arts",
+      "difficulty": "hard",
+      "prompt": "Which painter is associated with the water-lily series?",
+      "answers": [
+        "Claude Monet",
+        "Paul Cézanne",
+        "Edvard Munch",
+        "Gustav Klimt"
+      ],
+      "correct": 0,
+      "explanation": "Monet painted many views of water lilies in his garden."
+    },
+    {
+      "id": "sports_01",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "Which sport uses a racket and a shuttlecock?",
+      "answers": [
+        "Badminton",
+        "Tennis",
+        "Squash",
+        "Table tennis"
+      ],
+      "correct": 0,
+      "explanation": "Badminton players hit a shuttlecock over a net."
+    },
+    {
+      "id": "sports_02",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "Which sport uses a hoop mounted above the court?",
+      "answers": [
+        "Basketball",
+        "Rugby",
+        "Baseball",
+        "Ice hockey"
+      ],
+      "correct": 0,
+      "explanation": "Basketball players score by putting the ball through a hoop."
+    },
+    {
+      "id": "sports_03",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "In which sport would you use a putter?",
+      "answers": [
+        "Golf",
+        "Cricket",
+        "Tennis",
+        "Fencing"
+      ],
+      "correct": 0,
+      "explanation": "A putter is a golf club used mainly on the green."
+    },
+    {
+      "id": "sports_04",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "What is the name of the person who enforces match rules?",
+      "answers": [
+        "Referee",
+        "Goalpost",
+        "Spectator",
+        "Sponsor"
+      ],
+      "correct": 0,
+      "explanation": "A referee or umpire applies the rules during a match."
+    },
+    {
+      "id": "sports_05",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "Which swimming stroke is named after an insect?",
+      "answers": [
+        "Butterfly",
+        "Dragonfly",
+        "Beetle",
+        "Cricket"
+      ],
+      "correct": 0,
+      "explanation": "Butterfly is a competitive swimming stroke."
+    },
+    {
+      "id": "sports_06",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "Which sport takes place on an ice rink?",
+      "answers": [
+        "Ice hockey",
+        "Field hockey",
+        "Handball",
+        "Volleyball"
+      ],
+      "correct": 0,
+      "explanation": "Ice hockey is played on an ice rink."
+    },
+    {
+      "id": "sports_07",
+      "category": "Sports",
+      "difficulty": "easy",
+      "prompt": "What do archers shoot at a target?",
+      "answers": [
+        "Arrows",
+        "Discs",
+        "Balls",
+        "Darts"
+      ],
+      "correct": 0,
+      "explanation": "Archery uses a bow to shoot arrows."
+    },
+    {
+      "id": "sports_08",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "How many players per team are on an indoor volleyball court?",
+      "answers": [
+        "6",
+        "5",
+        "7",
+        "9"
+      ],
+      "correct": 0,
+      "explanation": "Standard indoor volleyball fields six players per team."
+    },
+    {
+      "id": "sports_09",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "How many players per team are on a basketball court?",
+      "answers": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "correct": 0,
+      "explanation": "A basketball team has five players on the court."
+    },
+    {
+      "id": "sports_10",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "How many points is a basketball free throw worth?",
+      "answers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "correct": 0,
+      "explanation": "A successful free throw scores one point."
+    },
+    {
+      "id": "sports_11",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "What is the score of zero called in tennis?",
+      "answers": [
+        "Love",
+        "Nil",
+        "Blank",
+        "Duck"
+      ],
+      "correct": 0,
+      "explanation": "Tennis traditionally uses love for a score of zero."
+    },
+    {
+      "id": "sports_12",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "How many rings are on the Olympic symbol?",
+      "answers": [
+        "5",
+        "4",
+        "6",
+        "7"
+      ],
+      "correct": 0,
+      "explanation": "The Olympic symbol contains five interlaced rings."
+    },
+    {
+      "id": "sports_13",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "What is the official marathon distance?",
+      "answers": [
+        "42.195 km",
+        "40 km",
+        "45 km",
+        "50 km"
+      ],
+      "correct": 0,
+      "explanation": "The standardized marathon distance is 42.195 kilometers."
+    },
+    {
+      "id": "sports_14",
+      "category": "Sports",
+      "difficulty": "medium",
+      "prompt": "Which athletics event combines a hop, a step and a jump?",
+      "answers": [
+        "Triple jump",
+        "Long jump",
+        "High jump",
+        "Pole vault"
+      ],
+      "correct": 0,
+      "explanation": "The triple jump uses a hop, a step and a jump in sequence."
+    },
+    {
+      "id": "sports_15",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "How many hurdles does each athlete clear in a 110 m hurdles race?",
+      "answers": [
+        "10",
+        "8",
+        "12",
+        "14"
+      ],
+      "correct": 0,
+      "explanation": "The 110 meter hurdles race has ten hurdles per lane."
+    },
+    {
+      "id": "sports_16",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "How many players per side are on a doubles tennis court?",
+      "answers": [
+        "2",
+        "1",
+        "3",
+        "4"
+      ],
+      "correct": 0,
+      "explanation": "Doubles tennis is played by two players on each side."
+    },
+    {
+      "id": "sports_17",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "In standard baseball, how many strikes make a strikeout?",
+      "answers": [
+        "3",
+        "2",
+        "4",
+        "5"
+      ],
+      "correct": 0,
+      "explanation": "A batter is usually out after three strikes."
+    },
+    {
+      "id": "sports_18",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "How many pins are set up in ten-pin bowling?",
+      "answers": [
+        "10",
+        "9",
+        "12",
+        "15"
+      ],
+      "correct": 0,
+      "explanation": "Ten-pin bowling begins each frame with ten pins."
+    },
+    {
+      "id": "sports_19",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "Which fencing weapon permits the whole body as a target?",
+      "answers": [
+        "Épée",
+        "Foil",
+        "Sabre",
+        "Rapier"
+      ],
+      "correct": 0,
+      "explanation": "In épée fencing, the valid target is the entire body."
+    },
+    {
+      "id": "sports_20",
+      "category": "Sports",
+      "difficulty": "hard",
+      "prompt": "How many events make up a decathlon?",
+      "answers": [
+        "10",
+        "7",
+        "8",
+        "12"
+      ],
+      "correct": 0,
+      "explanation": "A decathlon combines ten track-and-field events."
+    },
+    {
+      "id": "games_01",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "How many faces does a standard cubic die have?",
+      "answers": [
+        "6",
+        "4",
+        "8",
+        "12"
+      ],
+      "correct": 0,
+      "explanation": "A cube has six square faces."
+    },
+    {
+      "id": "games_02",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "How many squares are on a standard tic-tac-toe grid?",
+      "answers": [
+        "9",
+        "6",
+        "12",
+        "16"
+      ],
+      "correct": 0,
+      "explanation": "Tic-tac-toe uses a three-by-three grid."
+    },
+    {
+      "id": "games_03",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "Which chess piece is the one a player must protect from checkmate?",
+      "answers": [
+        "King",
+        "Queen",
+        "Knight",
+        "Bishop"
+      ],
+      "correct": 0,
+      "explanation": "Checkmate occurs when a king cannot escape check."
+    },
+    {
+      "id": "games_04",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "What does co-op mean in games?",
+      "answers": [
+        "Cooperative play",
+        "Coin operation",
+        "Combat option",
+        "Computer opponent"
+      ],
+      "correct": 0,
+      "explanation": "Co-op players work together toward shared goals."
+    },
+    {
+      "id": "games_05",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "How many cards are in a standard deck without jokers?",
+      "answers": [
+        "52",
+        "48",
+        "54",
+        "60"
+      ],
+      "correct": 0,
+      "explanation": "A standard deck contains four suits of thirteen cards."
+    },
+    {
+      "id": "games_06",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "Which suit is usually printed in red on playing cards?",
+      "answers": [
+        "Hearts",
+        "Clubs",
+        "Spades",
+        "None of these"
+      ],
+      "correct": 0,
+      "explanation": "Hearts and diamonds are normally printed in red."
+    },
+    {
+      "id": "games_07",
+      "category": "Games",
+      "difficulty": "easy",
+      "prompt": "In a game menu, what does SFX usually control?",
+      "answers": [
+        "Sound effects",
+        "Screen size",
+        "Save files",
+        "Shader quality"
+      ],
+      "correct": 0,
+      "explanation": "SFX is a common abbreviation for sound effects."
+    },
+    {
+      "id": "games_08",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "How many squares are on a standard chessboard?",
+      "answers": [
+        "64",
+        "48",
+        "72",
+        "81"
+      ],
+      "correct": 0,
+      "explanation": "A chessboard has eight rows and eight columns."
+    },
+    {
+      "id": "games_09",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "How many pieces does each player start with in chess?",
+      "answers": [
+        "16",
+        "12",
+        "14",
+        "18"
+      ],
+      "correct": 0,
+      "explanation": "Each chess player begins with eight pawns and eight other pieces."
+    },
+    {
+      "id": "games_10",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "Which chess piece moves in an L shape?",
+      "answers": [
+        "Knight",
+        "Bishop",
+        "Rook",
+        "Queen"
+      ],
+      "correct": 0,
+      "explanation": "A knight moves two squares along one axis and one along the other."
+    },
+    {
+      "id": "games_11",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "How many blocks form each classic Tetris piece?",
+      "answers": [
+        "4",
+        "3",
+        "5",
+        "6"
+      ],
+      "correct": 0,
+      "explanation": "Tetris pieces are tetrominoes made of four squares."
+    },
+    {
+      "id": "games_12",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "In Connect Four, how many discs in a row are needed to win?",
+      "answers": [
+        "4",
+        "3",
+        "5",
+        "6"
+      ],
+      "correct": 0,
+      "explanation": "The objective is a line of four discs."
+    },
+    {
+      "id": "games_13",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "What does NPC mean in a game?",
+      "answers": [
+        "Non-player character",
+        "New player class",
+        "Network party code",
+        "Next playable chapter"
+      ],
+      "correct": 0,
+      "explanation": "NPC means non-player character."
+    },
+    {
+      "id": "games_14",
+      "category": "Games",
+      "difficulty": "medium",
+      "prompt": "Which number system uses only the digits 0 and 1?",
+      "answers": [
+        "Binary",
+        "Decimal",
+        "Hexadecimal",
+        "Roman numerals"
+      ],
+      "correct": 0,
+      "explanation": "Binary represents numbers using two digits."
+    },
+    {
+      "id": "games_15",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "How many tiles are in a standard double-six domino set?",
+      "answers": [
+        "28",
+        "21",
+        "36",
+        "42"
+      ],
+      "correct": 0,
+      "explanation": "The unordered pairs from zero through six total twenty-eight tiles."
+    },
+    {
+      "id": "games_16",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "Which chess piece moves any distance along ranks and files?",
+      "answers": [
+        "Rook",
+        "Bishop",
+        "Knight",
+        "King"
+      ],
+      "correct": 0,
+      "explanation": "A rook moves horizontally or vertically without jumping pieces."
+    },
+    {
+      "id": "games_17",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "How many checkers does each player start with in backgammon?",
+      "answers": [
+        "15",
+        "12",
+        "16",
+        "18"
+      ],
+      "correct": 0,
+      "explanation": "Each backgammon player starts with fifteen checkers."
+    },
+    {
+      "id": "games_18",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "What is a perfect information game?",
+      "answers": [
+        "All game state is visible",
+        "Nobody can lose",
+        "Every move is random",
+        "The rules never end"
+      ],
+      "correct": 0,
+      "explanation": "In perfect information games, players can see all relevant game state."
+    },
+    {
+      "id": "games_19",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "In programming, what is a Boolean value?",
+      "answers": [
+        "True or false",
+        "Any whole number",
+        "A text paragraph",
+        "A 3D position"
+      ],
+      "correct": 0,
+      "explanation": "Boolean values represent true and false."
+    },
+    {
+      "id": "games_20",
+      "category": "Games",
+      "difficulty": "hard",
+      "prompt": "How many different tetromino shapes exist when rotations are equivalent?",
+      "answers": [
+        "7",
+        "5",
+        "6",
+        "8"
+      ],
+      "correct": 0,
+      "explanation": "Classic Tetris uses the seven one-sided tetrominoes."
+    },
+    {
+      "id": "brain_teasers_01",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "What is 7 + 8?",
+      "answers": [
+        "15",
+        "14",
+        "16",
+        "17"
+      ],
+      "correct": 0,
+      "explanation": "Adding seven and eight gives fifteen."
+    },
+    {
+      "id": "brain_teasers_02",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "How many sides does a hexagon have?",
+      "answers": [
+        "6",
+        "5",
+        "7",
+        "8"
+      ],
+      "correct": 0,
+      "explanation": "A hexagon is a six-sided polygon."
+    },
+    {
+      "id": "brain_teasers_03",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "What number comes next: 2, 4, 6, 8, ...?",
+      "answers": [
+        "10",
+        "9",
+        "11",
+        "12"
+      ],
+      "correct": 0,
+      "explanation": "The sequence increases by two each time."
+    },
+    {
+      "id": "brain_teasers_04",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "What is half of 50?",
+      "answers": [
+        "25",
+        "20",
+        "15",
+        "30"
+      ],
+      "correct": 0,
+      "explanation": "Fifty divided by two is twenty-five."
+    },
+    {
+      "id": "brain_teasers_05",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "How many minutes are in two hours?",
+      "answers": [
+        "120",
+        "60",
+        "90",
+        "180"
+      ],
+      "correct": 0,
+      "explanation": "Each hour has sixty minutes."
+    },
+    {
+      "id": "brain_teasers_06",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "A square has how many equal sides?",
+      "answers": [
+        "4",
+        "3",
+        "5",
+        "6"
+      ],
+      "correct": 0,
+      "explanation": "A square has four sides of equal length."
+    },
+    {
+      "id": "brain_teasers_07",
+      "category": "Brain Teasers",
+      "difficulty": "easy",
+      "prompt": "If today is Monday, what day is two days later?",
+      "answers": [
+        "Wednesday",
+        "Tuesday",
+        "Thursday",
+        "Friday"
+      ],
+      "correct": 0,
+      "explanation": "One day later is Tuesday and two days later is Wednesday."
+    },
+    {
+      "id": "brain_teasers_08",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "What is 12 × 8?",
+      "answers": [
+        "96",
+        "84",
+        "88",
+        "108"
+      ],
+      "correct": 0,
+      "explanation": "Twelve multiplied by eight equals ninety-six."
+    },
+    {
+      "id": "brain_teasers_09",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "How many degrees are in a triangle's interior angles?",
+      "answers": [
+        "180",
+        "90",
+        "270",
+        "360"
+      ],
+      "correct": 0,
+      "explanation": "In Euclidean geometry, a triangle's angles total 180 degrees."
+    },
+    {
+      "id": "brain_teasers_10",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "Which number is the smallest prime?",
+      "answers": [
+        "2",
+        "0",
+        "1",
+        "3"
+      ],
+      "correct": 0,
+      "explanation": "Two is the smallest integer with exactly two positive divisors."
+    },
+    {
+      "id": "brain_teasers_11",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "What is 25 percent of 80?",
+      "answers": [
+        "20",
+        "15",
+        "25",
+        "40"
+      ],
+      "correct": 0,
+      "explanation": "One quarter of eighty is twenty."
+    },
+    {
+      "id": "brain_teasers_12",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "What number comes next: 1, 1, 2, 3, 5, ...?",
+      "answers": [
+        "8",
+        "6",
+        "7",
+        "9"
+      ],
+      "correct": 0,
+      "explanation": "Each term is the sum of the previous two."
+    },
+    {
+      "id": "brain_teasers_13",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "How many edges does a cube have?",
+      "answers": [
+        "12",
+        "6",
+        "8",
+        "16"
+      ],
+      "correct": 0,
+      "explanation": "A cube has twelve edges, eight vertices and six faces."
+    },
+    {
+      "id": "brain_teasers_14",
+      "category": "Brain Teasers",
+      "difficulty": "medium",
+      "prompt": "A 3:00 clock shows what smaller angle between its hands?",
+      "answers": [
+        "90 degrees",
+        "45 degrees",
+        "60 degrees",
+        "180 degrees"
+      ],
+      "correct": 0,
+      "explanation": "At three o'clock the hands form a right angle."
+    },
+    {
+      "id": "brain_teasers_15",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "What is the sum of the integers from 1 through 10?",
+      "answers": [
+        "55",
+        "45",
+        "50",
+        "60"
+      ],
+      "correct": 0,
+      "explanation": "Pairing one with ten, two with nine and so on gives five elevens."
+    },
+    {
+      "id": "brain_teasers_16",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "What is 2 to the power of 8?",
+      "answers": [
+        "256",
+        "128",
+        "512",
+        "64"
+      ],
+      "correct": 0,
+      "explanation": "Multiplying two by itself eight times gives 256."
+    },
+    {
+      "id": "brain_teasers_17",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "A bag has 3 red balls and 2 blue. What fraction are blue?",
+      "answers": [
+        "2/5",
+        "1/2",
+        "3/5",
+        "2/3"
+      ],
+      "correct": 0,
+      "explanation": "Two of the five balls are blue."
+    },
+    {
+      "id": "brain_teasers_18",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "What is the least common multiple of 6 and 8?",
+      "answers": [
+        "24",
+        "12",
+        "36",
+        "48"
+      ],
+      "correct": 0,
+      "explanation": "Twenty-four is the smallest positive multiple shared by six and eight."
+    },
+    {
+      "id": "brain_teasers_19",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "How many diagonals does a regular pentagon have?",
+      "answers": [
+        "5",
+        "4",
+        "6",
+        "10"
+      ],
+      "correct": 0,
+      "explanation": "A pentagon has five pairs of non-adjacent vertices."
+    },
+    {
+      "id": "brain_teasers_20",
+      "category": "Brain Teasers",
+      "difficulty": "hard",
+      "prompt": "A rectangle is 7 units long and 4 wide. What is its perimeter?",
+      "answers": [
+        "22 units",
+        "28 units",
+        "11 units",
+        "18 units"
+      ],
+      "correct": 0,
+      "explanation": "The perimeter is twice the sum of length and width."
+    }
+  ]
+}
